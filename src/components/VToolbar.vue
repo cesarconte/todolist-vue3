@@ -545,27 +545,27 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
       </v-card-title>
       <v-card-text>
         <v-form class="form form-add-project" ref="form" @submit.prevent="addNewProject">
-          <v-text-field
+          <v-select
             v-model="dataStore.newProject.title"
             label="Project Title"
             prepend-inner-icon="mdi-format-title"
-            type="text"
             variant="plain"
             color="red-darken-2"
             clearable
             required
-          ></v-text-field>
+            :items="dataStore.projectTemplates"
+          ></v-select>
           <v-divider class="mb-4"></v-divider>
-          <v-text-field
+          <v-select
             v-model="dataStore.newProject.icon"
             label="Project Icon"
             prepend-inner-icon="mdi-symbol"
-            type="text"
             variant="plain"
             color="red-darken-2"
             clearable
             required
-          ></v-text-field>
+            :items="dataStore.icons"
+          ></v-select>
           <v-divider class="mb-4"></v-divider>
           <v-select
             v-model="dataStore.newProject.color"

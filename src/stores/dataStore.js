@@ -35,10 +35,12 @@ export const useDataStore = defineStore('data', () => {
   const userData = ref([])
   const tasksData = ref([])
   const projectsData = ref([])
+  const projectTemplatesData = ref([])
   const labelsData = ref([])
   const prioritiesData = ref([])
   const statusesData = ref([])
   const colorsData = ref([])
+  const iconsData = ref([])
   const newTask = ref({
     title: '',
     description: '',
@@ -82,10 +84,12 @@ export const useDataStore = defineStore('data', () => {
   const listeners = ref({
     tasks: null,
     projects: null,
+    projectTemplates: null,
     labels: null,
     priorities: null,
     statuses: null,
-    colors: null
+    colors: null,
+    icons: null
   })
 
   // Getters (computed properties for reactive data access)
@@ -94,6 +98,9 @@ export const useDataStore = defineStore('data', () => {
   })
   const projects = computed(() => {
     return projectsData.value
+  })
+  const projectTemplates = computed(() => {
+    return projectTemplatesData.value
   })
   const labels = computed(() => {
     return labelsData.value
@@ -106,6 +113,9 @@ export const useDataStore = defineStore('data', () => {
   })
   const colors = computed(() => {
     return colorsData.value
+  })
+  const icons = computed(() => {
+    return iconsData.value
   })
   const newTaskData = computed(() => {
     return newTask.value
@@ -138,6 +148,12 @@ export const useDataStore = defineStore('data', () => {
       title: project.title
     }))
   })
+  const projectTemplateItems = computed(() => {
+    return projectTemplatesData.value.map((projectTemplate) => ({
+      value: projectTemplate.title,
+      title: projectTemplate.title
+    }))
+  })
   const labelItems = computed(() => {
     return labelsData.value.map((label) => ({
       value: label.title,
@@ -160,6 +176,13 @@ export const useDataStore = defineStore('data', () => {
     return colorsData.value.map((color) => ({
       value: color.title,
       title: color.title
+    }))
+  })
+  const iconItems = computed(() => {
+    // Add iconItems computed property
+    return iconsData.value.map((icon) => ({
+      value: icon.title, // Assuming your icon documents have a 'title' field
+      title: icon.title
     }))
   })
 
@@ -682,10 +705,12 @@ export const useDataStore = defineStore('data', () => {
     subscribeToCollection('users', userData)
     subscribeToCollection('tasks', tasksData)
     subscribeToCollection('projects', projectsData)
+    subscribeToCollection('projectTemplates', projectTemplatesData)
     subscribeToCollection('labels', labelsData)
     subscribeToCollection('priorities', prioritiesData)
     subscribeToCollection('statuses', statusesData)
     subscribeToCollection('colors', colorsData)
+    subscribeToCollection('icons', iconsData)
   })
 
   onUnmounted(unsubscribeAll)
@@ -703,21 +728,27 @@ export const useDataStore = defineStore('data', () => {
     // Getters
     tasks,
     projects,
+    projectTemplates,
     labels,
     priorities,
     statuses,
     colors,
+    icons,
     tasksData,
     projectsData,
+    projectTemplatesData,
     labelsData,
     prioritiesData,
     statusesData,
     colorsData,
+    iconsData,
     projectItems,
+    projectTemplateItems,
     labelItems,
     priorityItems,
     statusItems,
     colorItems,
+    iconItems,
     newTaskData,
     editedTaskData,
     newProjectData,
