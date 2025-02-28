@@ -191,11 +191,11 @@ const addNewProject = async () => {
     // Close the drawer
     drawer.value = false
     // Optionally display a success message
-    alert("Project " + dataStore.newProject.title + " added successfully!") 
+    alert('Project ' + dataStore.newProject.title + ' added successfully!')
   } catch (error) {
     // Handle errors, e.g., display an error message
-    console.error("Error adding project:", error)
-    alert("An error occurred while adding the project.")
+    console.error('Error adding project:', error)
+    alert('An error occurred while adding the project.')
   }
 }
 
@@ -565,7 +565,14 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
             clearable
             required
             :items="dataStore.icons"
-          ></v-select>
+          >
+            <template v-slot:item="{ item }">
+              <div class="d-flex align-center pa-3">
+                <v-icon left class="mr-4 d-block">{{ item.value }}</v-icon>
+                <span class="d-block">{{ item.value }}</span>
+              </div>
+            </template>
+          </v-select>
           <v-divider class="mb-4"></v-divider>
           <v-select
             v-model="dataStore.newProject.color"
