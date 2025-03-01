@@ -45,9 +45,15 @@ const events = computed(() => {
   }
 })
 
-onMounted(() => {
+// onMounted(() => {
+//   if (userStore.isLoggedIn) {
+//     taskStore.getTasksByProjectPaginated() // Fetch tasks when HomeView mounts
+//   }
+// })
+onMounted(async () => {
   if (userStore.isLoggedIn) {
-    taskStore.getTasksByProjectPaginated() // Fetch tasks when HomeView mounts
+    await taskStore.getTasksByProjectPaginated()
+    notificationsStore.scheduleNotifications(dataStore.tasksData)
   }
 })
 // Helper function to get the weekdays array from the selected title
