@@ -19,6 +19,15 @@ const showAlert = ref(false)
 
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
+  // Check if user is not logged in
+  if (!userStore.isLoggedIn) {
+    dataStore.reset() // Reset data store
+    taskStore.resetAll() // Reset task store
+    taskStore.filteredTasks.value = [] // Clear filtered tasks
+    showCards.value = false // Hide cards
+    return
+  }
+
   // Check if any filter is active
   const hasFiltersSelected =
     taskStore.selectedProjects.length > 0 ||
@@ -43,10 +52,13 @@ watchEffect(async () => {
 })
 
 // Define the handleProjectClick function to show an alert if the user is not logged in
-const handleProjectClick = () => {
+const handleFilterClick = () => {
   if (!userStore.isLoggedIn) {
     showAlert.value = true // Show the alert
     taskStore.selectedProjects = [] // Clear the selected projects
+    taskStore.selectedPriorities = [] // Clear the selected priorities
+    taskStore.selectedLabels = [] // Clear the selected labels
+    taskStore.selectedStatuses = [] // Clear the selected statuses
   }
 }
 
@@ -150,10 +162,10 @@ when you pass JavaScript Date objects to the where clause. */
           <v-autocomplete
             v-model="taskStore.selectedProjects"
             :items="userStore.isLoggedIn ? dataStore.projectItems : []"
+            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects'"
             item-value="value"
             item-title="title"
             label="Filter by project"
-            placeholder="Select project..."
             variant="outlined"
             rounded
             clearable
@@ -164,7 +176,7 @@ when you pass JavaScript Date objects to the where clause. */
             chips
             closable-chips
             color="red-accent-1"
-            @click="handleProjectClick"
+            @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :title="item.title" />
@@ -174,11 +186,11 @@ when you pass JavaScript Date objects to the where clause. */
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.selectedPriorities"
-            :items="dataStore.priorityItems"
+            :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
             item-value="value"
             item-title="title"
             label="Filter by priority"
-            placeholder="Select priority..."
+            :placeholder="userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'"
             variant="outlined"
             rounded
             clearable
@@ -189,6 +201,7 @@ when you pass JavaScript Date objects to the where clause. */
             closable-chips
             multiple
             color="red-accent-1"
+            @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :title="item.title" />
@@ -201,11 +214,11 @@ when you pass JavaScript Date objects to the where clause. */
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.selectedLabels"
-            :items="dataStore.labelItems"
+            :items="userStore.isLoggedIn ? dataStore.labelItems : []"
             item-value="value"
             item-title="title"
             label="Filter by label"
-            placeholder="Select label..."
+            :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
             variant="outlined"
             rounded
             clearable
@@ -216,6 +229,7 @@ when you pass JavaScript Date objects to the where clause. */
             chips
             closable-chips
             color="red-accent-1"
+            @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :title="item.title" />
@@ -225,11 +239,11 @@ when you pass JavaScript Date objects to the where clause. */
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.selectedStatuses"
-            :items="dataStore.statusItems"
+            :items="userStore.isLoggedIn ? dataStore.statusItems : []"
             item-value="value"
             item-text="text"
             label="Filter by status"
-            placeholder="Select status..."
+            :placeholder="userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'"
             variant="outlined"
             rounded
             clearable
@@ -240,6 +254,7 @@ when you pass JavaScript Date objects to the where clause. */
             closable-chips
             multiple
             color="red-accent-1"
+            @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :title="item.title" />
