@@ -21,12 +21,7 @@ const showAlert = ref(false)
 watchEffect(async () => {
   // Check if any filter is active
   const hasFiltersSelected =
-    taskStore.searchTaskTitle ||
-    taskStore.selectedProjects.length > 0 ||
-    taskStore.selectedPriorities.length > 0 ||
-    taskStore.selectedStatuses.length > 0 ||
-    taskStore.selectedLabels.length > 0 ||
-    taskStore.selectedEndDate
+    taskStore.searchTaskTitle
 
   if (userStore.isLoggedIn) {
     // Check if logged in only before fetching data
@@ -153,7 +148,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         width="32rem"
         class="mt-8 mx-auto rounded-pill"
       >
-        Please log in to use filters.
+        Please log in to perform a search.
       </v-alert>
 
       <v-row

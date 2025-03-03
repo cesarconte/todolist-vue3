@@ -21,7 +21,6 @@ const showAlert = ref(false)
 watchEffect(async () => {
   // Check if any filter is active
   const hasFiltersSelected =
-    taskStore.searchTaskTitle ||
     taskStore.selectedProjects.length > 0 ||
     taskStore.selectedPriorities.length > 0 ||
     taskStore.selectedStatuses.length > 0 ||
@@ -42,6 +41,14 @@ watchEffect(async () => {
     showAlert.value = true
   }
 })
+
+// Define the handleProjectClick function to show an alert if the user is not logged in
+const handleProjectClick = () => {
+  if (!userStore.isLoggedIn) {
+    showAlert.value = true // Show the alert
+    taskStore.selectedProjects = [] // Clear the selected projects
+  }
+}
 
 // Define the submitEditedTask function to save the edited task to Firestore
 const submitEditedTask = async () => {
@@ -142,7 +149,7 @@ when you pass JavaScript Date objects to the where clause. */
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.selectedProjects"
-            :items="dataStore.projectItems"
+            :items="userStore.isLoggedIn ? dataStore.projectItems : []"
             item-value="value"
             item-title="title"
             label="Filter by project"
@@ -157,6 +164,7 @@ when you pass JavaScript Date objects to the where clause. */
             chips
             closable-chips
             color="red-accent-1"
+            @click="handleProjectClick"
           >
             <template v-slot:item="{ props, item }">
               <v-list-item v-bind="props" :title="item.title" />
