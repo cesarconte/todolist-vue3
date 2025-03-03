@@ -4,30 +4,49 @@ import { doc, updateDoc, getDoc } from 'firebase/firestore'
 import { useUserStore } from '@/stores/userStore'
 import { useDataStore } from '@/stores/dataStore'
 
+/**
+ * Notification Store - Manages all notification-related functionality
+ * Handles user settings, browser permissions, scheduling, and display
+ */
 export const useNotificationsStore = defineStore('notifications', {
+  // State management for notifications
   state: () => ({
+    // User notification preferences
     notificationSettings: {
-      enabled: false,
-      time: []
+      enabled: false, // Global toggle for notifications
+      time: [] // Array of notification times before task due (in hours)
     },
-    activeNotifications: [],
-    timeouts: [], // Array de objetos { id: timeoutId, scheduledTime: timestamp }
+
+    // Active in-app notifications to display
+    activeNotifications: [], // Array of {id, message, show, timestamp}
+
+    // Scheduled timeout references for notifications
+    timeouts: [], // Array of {id: timeoutID, scheduledTime: timestamp, taskId}
+
+    // Snackbar/toast notification system
     showSnackbar: {
-      show: false,
-      message: ''
+      show: false, // Visibility state
+      message: '' // Display message
     },
+
+    // Browser capability detection
     browserSupport: {
-      notifications: 'Notification' in window,
-      serviceWorker: 'serviceWorker' in navigator,
-      pushManager: 'PushManager' in window
+      notifications: 'Notification' in window, // HTML5 Notification API support
+      serviceWorker: 'serviceWorker' in navigator, // Service Worker registration
+      pushManager: 'PushManager' in window // Push API support
     }
   }),
 
+  // Computed properties derived from state
   getters: {
+    /**
+     * Gets formatted string of next scheduled notification time
+     * @returns {string} Human-readable date string or default message
+     */
     nextScheduledCheck: (state) => {
-      if (state.timeouts.length === 0) return 'No hay notificaciones programadas'
+      if (state.timeouts.length === 0) return 'No scheduled notifications'
       const nextTime = Math.min(...state.timeouts.map((t) => t.scheduledTime))
-      return new Date(nextTime).toLocaleString('es-ES', {
+      return new Date(nextTime).toLocaleString('en-US', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
@@ -36,23 +55,35 @@ export const useNotificationsStore = defineStore('notifications', {
       })
     },
 
+    /**
+     * Checks if browser supports all required notification features
+     * @returns {boolean} True if all features are supported
+     */
     hasFullSupport: (state) => {
       return Object.values(state.browserSupport).every(Boolean)
     }
   },
 
+  // Business logic and async operations
   actions: {
+    /**
+     * Loads user notification settings from Firestore
+     * Automatically schedules notifications if enabled
+     */
     async loadSettings() {
       const userStore = useUserStore()
       try {
         if (!userStore.user) return
 
+        // Fetch user document from Firestore
         const userDoc = await getDoc(doc(db, 'users', userStore.user.uid))
         if (userDoc.exists()) {
           const data = userDoc.data()
           if (data.notificationSettings) {
+            // Update local state with stored settings
             this.notificationSettings = data.notificationSettings
-            // Programar notificaciones al cargar configuración
+
+            // Schedule notifications if enabled
             if (this.notificationSettings.enabled) {
               const dataStore = useDataStore()
               this.scheduleNotifications(dataStore.tasksData)
@@ -60,45 +91,57 @@ export const useNotificationsStore = defineStore('notifications', {
           }
         }
       } catch (error) {
-        this.handleError('Error cargando configuración', error)
+        this.handleError('Error loading settings', error)
       }
     },
 
+    /**
+     * Saves current notification settings to Firestore
+     * Re-schedules notifications with updated settings
+     */
     async saveSettings() {
       const userStore = useUserStore()
       try {
         if (!userStore.user) return
 
+        // Update Firestore document with current settings
         await updateDoc(doc(db, 'users', userStore.user.uid), {
           notificationSettings: this.notificationSettings
         })
 
-        // Re-programar notificaciones
+        // Clear existing timeouts and reschedule
         this.clearTimeouts()
         if (this.notificationSettings.enabled) {
           const dataStore = useDataStore()
           this.scheduleNotifications(dataStore.tasksData)
         }
       } catch (error) {
-        this.handleError('Error guardando configuración', error)
+        this.handleError('Error saving settings', error)
         throw error
       }
     },
 
+    /**
+     * Verifies browser notification support and permissions
+     * @returns {Promise<boolean>} True if notifications are supported and allowed
+     */
     async verifyNotificationSupport() {
       try {
+        // Basic API support check
         if (!this.browserSupport.notifications) {
-          throw new Error('Las notificaciones no están soportadas en tu navegador')
+          throw new Error('Notifications are not supported in your browser')
         }
 
+        // Permission state checks
         if (Notification.permission === 'denied') {
-          throw new Error('Las notificaciones están bloqueadas en la configuración del navegador')
+          throw new Error('Notifications are blocked in browser settings')
         }
 
+        // Request permission if not determined
         if (Notification.permission !== 'granted') {
           const permission = await Notification.requestPermission()
           if (permission !== 'granted') {
-            throw new Error('Permiso no concedido para notificaciones')
+            throw new Error('Permission not granted for notifications')
           }
         }
         return true
@@ -108,48 +151,83 @@ export const useNotificationsStore = defineStore('notifications', {
       }
     },
 
+    /**
+     * Sends a test notification to verify functionality
+     */
     async sendTestNotification() {
       try {
         const verified = await this.verifyNotificationSupport()
         if (!verified) return
 
-        new Notification('Prueba de Notificación', {
-          body: 'Esta es una notificación de prueba de tu lista de tareas',
-          icon: '/notification-icon.png',
-          vibrate: [200, 100, 200]
+        // Create system notification
+        new Notification('Test Notification', {
+          body: 'This is a test notification from TodoList!',
+          icon: '/notification-icon.png', // Custom icon for notification ==> dónde está la imagen?
+          vibrate: [200, 100, 200] // Vibration pattern for mobile devices
         })
 
+        // Show confirmation in UI
         this.showSnackbar = {
           show: true,
-          message: 'Notificación de prueba enviada correctamente ✅'
+          message: 'Test notification sent successfully ✅'
         }
       } catch (error) {
         this.handleError(error.message, error)
       }
     },
 
+    /**
+     * Schedules notifications for all tasks based on user preferences
+     * @param {Array} tasks - List of tasks to schedule notifications for
+     */
     scheduleNotifications(tasks) {
       if (!tasks || !this.notificationSettings.enabled) return
 
       const now = Date.now()
-      this.clearTimeouts()
+      this.clearTimeouts() // Clear existing schedules
 
       tasks.forEach((task) => {
         if (!task.endDate) return
 
+        // Convert Firestore timestamp to milliseconds
         const taskEndTime = task.endDate.toDate().getTime()
+
+        // Create timeout for each notification time
         this.notificationSettings.time.forEach((time) => {
+          // Calculate notification time (end time - hours)
           const notificationTime = taskEndTime - time * 3600000
 
           if (notificationTime > now) {
-            const timeoutId = setTimeout(() => {
-              this.showNotification(
-                `¡La tarea "${task.title}" vence en ${time} ${time === 1 ? 'hora' : 'horas'}!`
-              )
-              // Eliminar el timeout después de ejecutarse
-              this.timeouts = this.timeouts.filter((t) => t.id !== timeoutId)
-            }, notificationTime - now)
+            let hours = Math.floor(time)
+            const decimalPart = time - hours
+            let minutes = Math.round(decimalPart * 60)
 
+            if (minutes === 60) {
+              minutes = 0
+              hours += 1
+            }
+
+            let timeString = ''
+            if (hours > 0 && minutes > 0) {
+              timeString = `${hours} ${hours === 1 ? 'hour' : 'hours'} and ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`
+            } else if (hours > 0) {
+              timeString = `${hours} ${hours === 1 ? 'hour' : 'hours'}`
+            } else {
+              timeString = `${minutes} ${minutes === 1 ? 'minute' : 'minutes'}`
+            }
+
+            // Schedule the timeout
+            const timeoutId = setTimeout(() => {
+              // Show notification when time arrives
+              this.showNotification(
+                `Task "${task.title}" is due in ${timeString}!`
+              )
+
+              // Clean up executed timeout
+              this.timeouts = this.timeouts.filter((t) => t.id !== timeoutId)
+            }, notificationTime - now) // Delay until notification time
+
+            // Store timeout reference
             this.timeouts.push({
               id: timeoutId,
               scheduledTime: notificationTime,
@@ -160,7 +238,12 @@ export const useNotificationsStore = defineStore('notifications', {
       })
     },
 
+    /**
+     * Displays a notification in UI and system tray
+     * @param {string} message - Notification content to display
+     */
     showNotification(message) {
+      // Add to in-app notifications list
       this.activeNotifications.push({
         id: Date.now(),
         message,
@@ -168,33 +251,47 @@ export const useNotificationsStore = defineStore('notifications', {
         timestamp: new Date().toISOString()
       })
 
-      // Mostrar notificación del sistema si está soportado
+      // Create system notification if supported
       if (this.browserSupport.notifications && Notification.permission === 'granted') {
-        new Notification('Recordatorio de Tarea', {
+        new Notification('Task Reminder', {
           body: message,
-          icon: '/task-notification-icon.png'
+          icon: '/task-notification-icon.png' // Custom icon for notification ==> dónde está la imagen?
         })
       }
     },
 
+    /**
+     * Clears all scheduled notification timeouts
+     * Prevents memory leaks and duplicate notifications
+     */
     clearTimeouts() {
       this.timeouts.forEach((t) => clearTimeout(t.id))
       this.timeouts = []
     },
 
+    /**
+     * Resets active in-app notifications
+     */
     clearNotifications() {
       this.activeNotifications = []
     },
 
+    /**
+     * Centralized error handling for notification operations
+     * @param {string} message - User-friendly error message
+     * @param {Error} error - Original error object
+     */
     handleError(message, error) {
-      console.error('Error en notificaciones:', error)
+      console.error('Notification error:', error)
+
+      // Show error in UI
       this.showSnackbar = {
         show: true,
-        message: `${message}: ${error.message || 'Error desconocido'}`
+        message: `${message}: ${error.message || 'Unknown error'}`
       }
 
-      // Revertir estado si hay error de permisos
-      if (error.message.includes('Permiso no concedido')) {
+      // Automatically disable notifications if permission denied
+      if (error.message.includes('Permission not granted')) {
         this.notificationSettings.enabled = false
       }
     }

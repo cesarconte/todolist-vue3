@@ -231,6 +231,15 @@ const handleProjectClick = (project) => {
   drawer.value = false
 }
 
+const handleNotificationsClick = () => {
+  if (!userStore.isLoggedIn) {
+    alert('Debes iniciar sesión para acceder a las notificaciones')
+    router.push({ path: '/login' })
+    return
+  }
+  showNotificationsSettings.value = !showNotificationsSettings.value
+}
+
 const rules = useMaxLengthRule()
 const loginParagraph = ref(null)
 
@@ -276,23 +285,29 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
         {{ loginLogoutText }}
       </v-tooltip>
     </v-btn>
-    <v-btn
-      icon
-      aria-label="Notifications"
-      @click="showNotificationsSettings = !showNotificationsSettings"
-      class="notifications-btn"
-    >
-      <v-icon>mdi-bell-outline</v-icon>
-      <v-badge
-        v-if="unreadNotificationsCount > 0"
-        :content="unreadNotificationsCount"
-        color="blue-accent-4"
-        class="badge"
-      />
-      <v-tooltip activator="parent" location="bottom" class="notifications-btn tooltip"
-        >Notifications</v-tooltip
-      >
-    </v-btn>
+    <v-tooltip location="bottom">
+      <template v-slot:activator="{ props }">
+        <div v-bind="props">
+          <v-btn
+            icon
+            aria-label="Notifications"
+            @click="handleNotificationsClick"
+            :disabled="!userStore.isLoggedIn"
+            class="notifications-btn"
+          >
+            <v-icon>mdi-bell-outline</v-icon>
+            <v-badge
+              v-if="unreadNotificationsCount > 0"
+              :content="unreadNotificationsCount"
+              color="blue-accent-4"
+              class="badge"
+            />
+          </v-btn>
+        </div>
+      </template>
+      <span v-if="!userStore.isLoggedIn">Sign in to view notifications</span>
+      <span v-else>Notifications</span>
+    </v-tooltip>
     <v-btn icon aria-label="Settings">
       <v-icon>mdi-cog-outline</v-icon>
       <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"

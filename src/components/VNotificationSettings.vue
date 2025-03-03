@@ -1,10 +1,15 @@
 <script setup>
 import { computed, ref, watch, onMounted } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
+import { useUserStore } from '@/stores/userStore.js'
 
+// Variables
 const notificationsStore = useNotificationsStore()
+const userStore = useUserStore()
 const isLoading = ref(false)
 const saveError = ref(null)
+const emit = defineEmits(['close'])
+
 const browserSupport = ref({
   notifications: 'Notification' in window,
   serviceWorker: 'serviceWorker' in navigator,
@@ -12,48 +17,59 @@ const browserSupport = ref({
 })
 
 // Computed properties
-const hasFullSupport = computed(() => 
-  Object.values(browserSupport.value).every(Boolean)
-)
+const hasFullSupport = computed(() => Object.values(browserSupport.value).every(Boolean))
 
-const switchLabel = computed(() => 
-  notificationsStore.notificationSettings.enabled 
-    ? 'Notifications enabled' 
+const switchLabel = computed(() =>
+  notificationsStore.notificationSettings.enabled
+    ? 'Notifications enabled'
     : 'Notifications disabled'
 )
 
-const switchColor = computed(() => 
-  notificationsStore.notificationSettings.enabled 
-    ? 'red-darken-2' 
-    : 'grey-darken-1'
+const switchColor = computed(() =>
+  notificationsStore.notificationSettings.enabled ? 'red-darken-2' : 'grey-darken-1'
 )
 
-const isDisabled = computed(() => 
-  isLoading.value || !hasFullSupport.value
+const isDisabled = computed(
+  () => isLoading.value || !notificationsStore.hasFullSupport || !userStore.isLoggedIn // Añadida verificación de autenticación
 )
 
-// Cargar configuraciones iniciales
+// Verificación inicial de autenticación y carga de configuraciones de notificación
 onMounted(async () => {
-  try {
-    isLoading.value = true
-    await notificationsStore.loadSettings()
-  } catch (error) {
-    handleError('Error loading settings', error)
-  } finally {
-    isLoading.value = false
+  if (!userStore.isLoggedIn) {
+    notificationsStore.showSnackbar = {
+      show: true,
+      message: 'You must be logged in to access notification settings'
+    }
+    emit('close') // Cierra automáticamente el diálogo si no está autenticado
+  } else {
+    try {
+      isLoading.value = true
+      await notificationsStore.loadSettings()
+    } catch (error) {
+      handleError('Error loading settings', error)
+    } finally {
+      isLoading.value = false
+    }
   }
 })
 
-// Watcher para guardar cambios
+// Watcher para guardar cambios cuando se modifica la configuración
 watch(
   () => notificationsStore.notificationSettings,
   async (newSettings) => {
+    if (!userStore.isLoggedIn) {
+      notificationsStore.showSnackbar = {
+        show: true,
+        message: 'Authentication required to modify settings'
+      }
+      return
+    }
+
     try {
       isLoading.value = true
       saveError.value = null
-      
       await notificationsStore.saveSettings()
-      
+
       if (newSettings.enabled) {
         const verified = await verifyNotifications()
         if (!verified) {
@@ -86,7 +102,7 @@ const verifyNotifications = async () => {
         throw new Error('Permission not granted')
       }
     }
-    
+
     return true
   } catch (error) {
     handleError(error.message, error)
@@ -125,9 +141,12 @@ const notificationTimeOptions = [
           <v-icon v-bind="props" color="warning" class="ml-2">mdi-alert</v-icon>
         </template>
         <span class="text-caption">
-          Browser notification features: 
-          <span v-for="(value, key) in browserSupport" :key="key" 
-                :class="value ? 'text-success' : 'text-error'">
+          Browser notification features:
+          <span
+            v-for="(value, key) in browserSupport"
+            :key="key"
+            :class="value ? 'text-success' : 'text-error'"
+          >
             {{ key }}: {{ value ? '✓' : '✗' }}
           </span>
         </span>
@@ -148,9 +167,7 @@ const notificationTimeOptions = [
         </v-alert>
 
         <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
-          <template v-slot:title>
-            Limited Browser Support
-          </template>
+          <template v-slot:title> Limited Browser Support </template>
           Some notification features are not available in your current browser.
         </v-alert>
 
@@ -168,9 +185,11 @@ const notificationTimeOptions = [
               :color="notificationsStore.notificationSettings.enabled ? 'success' : 'error'"
               size="24"
             >
-              {{ notificationsStore.notificationSettings.enabled 
-                 ? 'mdi-check-circle' 
-                 : 'mdi-close-circle' }}
+              {{
+                notificationsStore.notificationSettings.enabled
+                  ? 'mdi-check-circle'
+                  : 'mdi-close-circle'
+              }}
             </v-icon>
           </template>
         </v-switch>
@@ -191,19 +210,10 @@ const notificationTimeOptions = [
           hide-details
         >
           <template v-slot:selection="{ item, index }">
-            <v-chip
-              v-if="index < 2"
-              :color="switchColor"
-              class="ma-1"
-              label
-              size="small"
-            >
+            <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
               {{ item.title }}
             </v-chip>
-            <span
-              v-if="index === 2"
-              class="text-grey text-caption ml-1"
-            >
+            <span v-if="index === 2" class="text-grey text-caption ml-1">
               +{{ notificationsStore.notificationSettings.time.length - 2 }} more
             </span>
           </template>

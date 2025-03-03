@@ -343,6 +343,7 @@ export const useDataStore = defineStore('data', () => {
       return
     }
     isSaving.value = true
+
     try {
       // Check if all fields are filled
       if (validTaskForm(editedTask) && editedTask.startDate <= editedTask.endDate) {
@@ -356,9 +357,12 @@ export const useDataStore = defineStore('data', () => {
 
         // Check if the user owns the task
         if (taskData.createdBy === userStore.userId) {
+          const isCompleted = editedTask.status === 'Done'
+
           // Update the task in Firestore
           await updateDoc(taskRef, {
             ...editedTask,
+            completed: isCompleted,
             startDate: new Date(editedTask.startDate),
             endDate: new Date(editedTask.endDate),
             updatedAt: new Date(),
@@ -380,7 +384,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error updating task:', error)
-      alert('An error occurred while updating the task. Please try again.')
+      alert(error.message || 'An error occurred while updating the task. Please try again.')
     } finally {
       // Reset isSaving flag
       isSaving.value = false

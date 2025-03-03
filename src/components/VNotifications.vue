@@ -10,7 +10,7 @@ const notificationsStore = useNotificationsStore()
       v-for="notification in notificationsStore.activeNotifications"
       :key="notification.id"
       v-model="notification.show"
-      :timeout="6000"
+      :timeout="10000"
       color="red-darken-2"
       location="bottom right"
     >
