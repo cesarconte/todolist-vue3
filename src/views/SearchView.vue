@@ -20,8 +20,7 @@ const showAlert = ref(false)
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
   // Check if any filter is active
-  const hasFiltersSelected =
-    taskStore.searchTaskTitle
+  const hasFiltersSelected = taskStore.searchTaskTitle
 
   if (userStore.isLoggedIn) {
     // Check if logged in only before fetching data
@@ -103,9 +102,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
     >
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center">
-            Search Tasks
-          </h2>
+          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center">Search Tasks</h2>
         </v-col>
       </v-row>
       <v-row>
@@ -113,7 +110,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           <v-text-field
             v-model="taskStore.searchTaskTitle"
             label="Search by title"
-            placeholder="Enter task title..."
+            :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
             type="text"
             variant="outlined"
             rounded="pill"
@@ -140,7 +137,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
 
       <v-alert
         v-model="showAlert"
-        type="info"
+        type="warning"
         dense
         outlined
         closable
@@ -148,7 +145,13 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         width="32rem"
         class="mt-8 mx-auto rounded-pill"
       >
-        Please log in to perform a search.
+        Please, log in to use filters
+        <v-btn icon class="ml-4" variant="plain" @click="$router.push('/login')">
+          <v-icon>mdi-account-arrow-right-outline</v-icon>
+          <v-tooltip activator="parent" location="bottom">
+            <span>Log in to unlock filter options</span>
+          </v-tooltip>
+        </v-btn>
       </v-alert>
 
       <v-row

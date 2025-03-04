@@ -149,7 +149,7 @@ when you pass JavaScript Date objects to the where clause. */
           <v-autocomplete
             v-model="taskStore.selectedProjects"
             :items="userStore.isLoggedIn ? dataStore.projectItems : []"
-            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects'"
+            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
             item-value="value"
             item-title="title"
             label="Filter by project"
