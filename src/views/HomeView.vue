@@ -69,7 +69,7 @@ onBeforeRouteLeave((to, from, next) => {
   next()
 })
 
-const { xs, sm, md, lg, mobile } = useDisplay()
+const { xs, sm, md, lg, xl, mobile } = useDisplay()
 </script>
 
 <template>

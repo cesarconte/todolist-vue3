@@ -130,10 +130,11 @@ const notificationTimeOptions = [
   { title: '30 minutes before', value: 0.5 },
   { title: '15 minutes before', value: 0.25 }
 ]
+
 </script>
 
 <template>
-  <v-card class="notification-settings-card pa-4">
+  <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
     <v-card-title class="d-flex align-center">
       <span>Notification Settings</span>
       <v-tooltip v-if="!hasFullSupport" location="right">
@@ -180,18 +181,6 @@ const notificationTimeOptions = [
           hide-details
           class="mb-4"
         >
-          <template v-slot:append>
-            <v-icon
-              :color="notificationsStore.notificationSettings.enabled ? 'success' : 'error'"
-              size="24"
-            >
-              {{
-                notificationsStore.notificationSettings.enabled
-                  ? 'mdi-check-circle'
-                  : 'mdi-close-circle'
-              }}
-            </v-icon>
-          </template>
         </v-switch>
 
         <v-select
@@ -222,20 +211,20 @@ const notificationTimeOptions = [
         <div v-if="notificationsStore.notificationSettings.enabled" class="mt-6">
           <v-divider class="mb-4" />
 
-          <div class="d-flex align-center justify-space-between">
+          <div class="d-flex flex-column align-center ga-4">
             <div class="text-caption text-medium-emphasis">
-              <v-icon icon="mdi-clock-outline" size="16" class="mr-1" />
+              <v-icon icon="mdi-clock-outline" />
               Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
             </div>
 
             <v-btn
+              class="text-none rounded-pill w-100"
               color="secondary"
               variant="tonal"
-              size="small"
               :disabled="isDisabled"
               @click="notificationsStore.sendTestNotification()"
             >
-              <v-icon left icon="mdi-bell-ring-outline" size="18" />
+              <v-icon left icon="mdi-bell-ring-outline" class="mr-2" />
               Test Notification
             </v-btn>
           </div>
@@ -245,14 +234,15 @@ const notificationTimeOptions = [
 
     <v-card-actions class="px-4 pb-4">
       <v-btn
+        class="text-none rounded-pill"
         color="red-darken-2"
-        variant="flat"
-        rounded="lg"
+        variant="tonal"
+        size="large"
         @click="$emit('close')"
         :disabled="isLoading"
         block
       >
-        <v-icon left icon="mdi-close" />
+        <v-icon left icon="mdi-close" class="mr-2" />
         Close Settings
       </v-btn>
     </v-card-actions>
@@ -260,13 +250,6 @@ const notificationTimeOptions = [
 </template>
 
 <style scoped>
-.notification-settings-card {
-  max-width: 500px;
-  margin: 0 auto;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
 :deep(.v-chip--selected) {
   border: 1px solid currentColor;
 }

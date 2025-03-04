@@ -4,6 +4,7 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useRouter } from 'vue-router'
+import VActionButtons from './VActionButtons.vue'
 import { useDisplay } from 'vuetify'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VNotificationSettings from '@/components/VNotificationSettings.vue'
@@ -355,7 +356,13 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
   >
     <VNotificationSettings @close="showNotificationsSettings = false" />
   </v-dialog>
-  <v-navigation-drawer v-model="drawer" :location="mobile ? 'bottom' : undefined" temporary class="navigation-drawer drawer" width="300">
+  <v-navigation-drawer
+    v-model="drawer"
+    :location="mobile ? 'bottom' : undefined"
+    temporary
+    class="navigation-drawer drawer"
+    width="300"
+  >
     <v-list nav class="navigation-drawer-list">
       <v-list-subheader class="subheader">MENU</v-list-subheader>
       <v-divider></v-divider>
@@ -560,25 +567,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
           smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
         "
       >
-        <v-btn
-          v-for="(btn, i) in btnsForm"
-          :key="i"
-          :type="btn.type"
-          :text="btn.text"
-          :class="smAndDown ? 'mb-3' : 'mb-3 mr-3'"
-          :style="{ marginInlineStart: '0' }"
-          :width="sm ? '66%' : '10rem'"
-          :height="btn.height"
-          :block="xs"
-          :prepend-icon="btn.icon"
-          variant="tonal"
-          size="large"
-          rounded
-          class="text-none"
-          color="red-darken-2"
-          @click="btn.function"
-        >
-        </v-btn>
+        <VActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -662,7 +651,12 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
       </v-card-actions>
     </v-card>
   </v-dialog>
-   <v-navigation-drawer v-model="drawerDots" temporary location="right" class="navigation-drawer drawer-dots">
+  <v-navigation-drawer
+    v-model="drawerDots"
+    temporary
+    location="right"
+    class="navigation-drawer drawer-dots"
+  >
     <v-list>
       <v-list-item v-for="item in dotsItems" :key="item.title" @click="item.action">
         <template v-slot:prepend>
