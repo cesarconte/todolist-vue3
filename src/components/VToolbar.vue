@@ -168,7 +168,7 @@ const btnsForm = [
   {
     type: 'button',
     height: '3rem',
-    text: 'Reset',
+    text: 'Reset Form',
     icon: 'mdi-refresh',
     function: reset
   },
@@ -241,6 +241,10 @@ const handleNotificationsClick = () => {
   showNotificationsSettings.value = !showNotificationsSettings.value
 }
 
+const handleSettingsClick = () => {
+  router.push({ name: 'settings' })
+}
+
 const rules = useMaxLengthRule()
 const loginParagraph = ref(null)
 
@@ -250,14 +254,6 @@ const handleDotsClick = () => {
 
 const dotsItems = computed(() => [
   {
-    title: 'Settings',
-    value: 'settings',
-    icon: 'mdi-cog-outline',
-    color: 'blue-accent-4',
-    permission: 'settings',
-    function: () => router.push({ name: 'settings' })
-  },
-  {
     title: 'Notifications',
     icon: 'mdi-bell-outline',
     action: handleNotificationsClick
@@ -265,7 +261,7 @@ const dotsItems = computed(() => [
   {
     title: 'Settings',
     icon: 'mdi-cog-outline',
-    action: () => router.push({ name: 'settings' })
+    action: handleSettingsClick
   },
   {
     title: loginLogoutText.value,
@@ -458,10 +454,10 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
     class="dialog dialog-create-task"
   >
     <v-card class="card card-create-task pa-4">
-      <v-card-title class="card-title card-title-create-task">
+      <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
         <span class="text-h6">Add new task</span>
       </v-card-title>
-      <v-card-text>
+      <v-card-text :class="mobile ? 'px-1' : ''">
         <v-form class="form form-create-task" ref="form" @submit.prevent>
           <v-text-field
             v-model="dataStore.newTask.title"

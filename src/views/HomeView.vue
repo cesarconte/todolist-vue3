@@ -69,7 +69,7 @@ onBeforeRouteLeave((to, from, next) => {
   next()
 })
 
-const { xs, sm, md, lg, xl } = useDisplay()
+const { xs, sm, md, lg, mobile } = useDisplay()
 </script>
 
 <template>
@@ -110,7 +110,7 @@ const { xs, sm, md, lg, xl } = useDisplay()
             'col-xl-7': xl
           }"
         >
-          <h1 class="text-center text-h2 font-weight-bold mb-4 text-red-darken-2">
+          <h1 class="text-center font-weight-bold mb-4 text-red-darken-2" :class="xs ? 'text-h4' : (mobile ? 'text-h3' : 'text-h2')">
             Vuetify Todolist
           </h1>
           <div class="d-flex" :class="xs ? 'flex-column' : ''">

@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/useLabelIcons.js'
 
 const router = useRouter()
@@ -186,6 +187,8 @@ const hover = ref(false)
 const navigateToTaskDetail = () => {
   router.push({ name: 'task-detail', params: { taskId: props.id } })
 }
+
+const { mobile } = useDisplay()
 </script>
 
 <template>
@@ -203,9 +206,11 @@ const navigateToTaskDetail = () => {
   -->
   <v-card
     variant="elevated"
-    :class="{ 'rounded-xl': !hover }"
+    :class="[
+      { 'rounded-xl': !hover },
+      mobile ? 'card card-task-view my-4' : 'card card-task-view ma-4 pa-4'
+    ]"
     hover
-    class="card card-task-view ma-4 pa-4"
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
@@ -271,7 +276,9 @@ const navigateToTaskDetail = () => {
                   <span
                     v-if="endDate"
                     :class="
-                      props.completed ? 'text-decoration-line-through text-grey-lighten-1' : 'font-weight-light'
+                      props.completed
+                        ? 'text-decoration-line-through text-grey-lighten-1'
+                        : 'font-weight-light'
                     "
                   >
                     {{ formatDate(endDate, 'date') }}
@@ -286,7 +293,9 @@ const navigateToTaskDetail = () => {
                   <span class="font-weight-medium">Due Time:</span>
                 </v-col>
                 <v-col>
-                  <span v-if="endDate" class="font-weight-light">{{ formatDate(endDate, 'time24h') }} h.</span>
+                  <span v-if="endDate" class="font-weight-light"
+                    >{{ formatDate(endDate, 'time24h') }} h.</span
+                  >
                   <span v-else class="font-weight-light">No due time</span>
                 </v-col>
               </v-row>

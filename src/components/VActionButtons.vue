@@ -8,17 +8,20 @@ defineProps({
   }
 })
 
-const { xs, smAndDown, sm } = useDisplay()
+const { xs, mobile, sm } = useDisplay()
 </script>
 
 <template>
-  <div class="action-buttons">
+  <div
+    class="action-buttons"
+    :class="mobile ? 'd-flex flex-column align-center w-100' : 'd-flex flex-wrap justify-space-around'"
+  >
     <v-btn
       v-for="(button, index) in buttons"
       :key="index"
       :type="button.type"
       :text="button.text"
-      :class="[button.class, smAndDown ? 'mb-3' : 'mb-3 mr-3']"
+      :class="[button.class, mobile ? 'mb-3' : 'mb-3 mr-3']"
       :style="{ marginInlineStart: '0' }"
       :width="sm ? '66%' : '10rem'"
       :height="button.height"

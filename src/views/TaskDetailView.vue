@@ -80,11 +80,11 @@ const goBack = () => {
 
 const rules = useMaxLengthRule()
 
-const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
+const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
 </script>
 
 <template>
-  <v-container fluid class="my-6">
+  <v-container fluid class="mt-6">
     <v-responsive
       class="task-detail-container mx-auto"
       :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
@@ -102,7 +102,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="12" sm="11" md="10" lg="9" xl="8" class="mx-auto">
+        <v-col cols="12" sm="11" md="10" lg="9" xl="8" class="mx-auto px-4">
           <Suspense>
             <template #default>
               <VCardTask
@@ -131,7 +131,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="12" class="mb-2">
+        <v-col cols="12">
           <div class="d-flex justify-space-between">
             <v-spacer></v-spacer>
             <v-btn
@@ -147,7 +147,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
   </v-container>
   <v-dialog
     v-model="taskStore.dialogEditTask"
-    :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+    :max-width="xs ? '100%' : smAndUp ? '600px' : ''"
     class="dialog dialog-create-task"
   >
     <v-card class="card card-create-task pa-4">
@@ -252,9 +252,6 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         </v-form>
       </v-card-text>
       <v-card-actions
-        :class="
-          smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
-        "
       >
         <VActionButtons :buttons="btnsForm" />
       </v-card-actions>
