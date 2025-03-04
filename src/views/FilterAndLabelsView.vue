@@ -19,15 +19,6 @@ const showAlert = ref(false)
 
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
-  // Check if user is not logged in
-  if (!userStore.isLoggedIn) {
-    dataStore.reset() // Reset data store
-    taskStore.resetAll() // Reset task store
-    taskStore.filteredTasks.value = [] // Clear filtered tasks
-    showCards.value = false // Hide cards
-    return
-  }
-
   // Check if any filter is active
   const hasFiltersSelected =
     taskStore.selectedProjects.length > 0 ||
@@ -55,10 +46,6 @@ watchEffect(async () => {
 const handleFilterClick = () => {
   if (!userStore.isLoggedIn) {
     showAlert.value = true // Show the alert
-    taskStore.selectedProjects = [] // Clear the selected projects
-    taskStore.selectedPriorities = [] // Clear the selected priorities
-    taskStore.selectedLabels = [] // Clear the selected labels
-    taskStore.selectedStatuses = [] // Clear the selected statuses
   }
 }
 
@@ -108,7 +95,7 @@ const btnsForm = [
 
 onBeforeRouteLeave((to, from, next) => {
   // Only reset filters, pagination and UI elements if NOT navigating to 'task-detail'
-  if (to.name !== 'task-detail') { 
+  if (to.name !== 'task-detail') {
     taskStore.resetFilters()
   }
 
@@ -190,7 +177,9 @@ when you pass JavaScript Date objects to the where clause. */
             item-value="value"
             item-title="title"
             label="Filter by priority"
-            :placeholder="userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'"
+            :placeholder="
+              userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
+            "
             variant="outlined"
             rounded
             clearable
@@ -292,7 +281,7 @@ when you pass JavaScript Date objects to the where clause. */
 
       <v-alert
         v-model="showAlert"
-        type="info"
+        type="warning"
         dense
         outlined
         closable
@@ -300,7 +289,18 @@ when you pass JavaScript Date objects to the where clause. */
         width="32rem"
         class="mt-8 mx-auto rounded-pill"
       >
-        Please log in to use filters.
+        Please, log in to use filters
+        <v-btn
+          icon
+          class="ml-4"
+          variant="plain"
+          @click="$router.push('/login')"
+        >
+        <v-icon>mdi-account-arrow-right-outline</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+            <span>Log in to unlock filter options</span>
+          </v-tooltip>
+        </v-btn>
       </v-alert>
 
       <v-row

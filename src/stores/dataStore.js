@@ -2,7 +2,7 @@
 
 import { defineStore } from 'pinia'
 import { db } from '../firebase.js'
-import { ref, onMounted, computed, onUnmounted, reactive } from 'vue'
+import { ref, onMounted, computed, onUnmounted, reactive, watch } from 'vue'
 import {
   collection,
   onSnapshot,
@@ -682,6 +682,57 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  const clearUserData = () => {
+    tasksData.value = []
+    projectsData.value = []
+    projectTemplatesData.value = []
+    labelsData.value = []
+    prioritiesData.value = []
+    statusesData.value = []
+    colorsData.value = []
+    iconsData.value = []
+    newTask.value = {
+      title: '',
+      description: '',
+      project: '',
+      label: '',
+      priority: '',
+      status: '',
+      startDate: null,
+      endDate: null,
+      completed: false,
+      createdAt: null,
+      createdBy: '',
+      projectId: ''
+    }
+    editedTask.title = ''
+    editedTask.description = ''
+    editedTask.project = ''
+    editedTask.label = ''
+    editedTask.priority = ''
+    editedTask.status = ''
+    editedTask.startDate = null
+    editedTask.endDate = null
+    newProject.color = ''
+    newProject.createdAt = ''
+    newProject.icon = ''
+    newProject.projectId = ''
+    newProject.title = ''
+    newProject.userId = ''
+    editedProject.title = ''
+    editedProject.icon = ''
+    editedProject.color = ''
+  }
+
+  watch(
+    () => userStore.user,
+    (newUserValue) => {
+      if (newUserValue === null) {
+        clearUserData()
+      }
+    }
+  )
+
   // Helper function to unsubscribe from a specific collection
   const unsubscribeFromCollection = (collectionName) => {
     if (listeners.value[collectionName]) {
@@ -774,6 +825,7 @@ export const useDataStore = defineStore('data', () => {
     createProject,
     saveEditedProject,
     deleteProject,
+    clearUserData,
     // Helper functions
     unsubscribeFromCollection,
     unsubscribeAll

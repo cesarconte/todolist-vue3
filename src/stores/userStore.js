@@ -19,6 +19,7 @@ export const useUserStore = defineStore('user', () => {
   const auth = getAuth()
   const user = ref(null)
   const userId = ref(null)
+  const token = ref(null)
 
   // Getters
   const isLoggedIn = computed(() => !!user.value)
@@ -103,6 +104,9 @@ export const useUserStore = defineStore('user', () => {
   const logOut = async () => {
     try {
       await signOut(auth)
+      user.value = null
+      userId.value = null
+      token.value = null
       console.log('User logged out')
     } catch (error) {
       console.error('Error logging out:', error)
@@ -115,10 +119,15 @@ export const useUserStore = defineStore('user', () => {
     if (currentUser) {
       user.value = currentUser
       userId.value = currentUser.uid
+      currentUser.getIdToken().then((idToken) => {
+        token.value = idToken
+      })
       console.log('UserId: ', userId.value)
     } else {
       user.value = null
       userId.value = null
+      token.value = null
+      console.log('No user logged in')
       return
     }
   })
@@ -126,8 +135,9 @@ export const useUserStore = defineStore('user', () => {
   return {
     // State
     user,
-    isLoggedIn,
     userId,
+    isLoggedIn,
+    token,
     // Getters
     userName,
     userProfilePicture,
