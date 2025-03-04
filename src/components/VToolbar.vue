@@ -13,6 +13,7 @@ const taskStore = useTaskStore()
 const userStore = useUserStore()
 const router = useRouter()
 const drawer = ref(false)
+const drawerDots = ref(false)
 const group = ref(null)
 const dialogAddTask = ref(false)
 const dialogAddProject = ref(false)
@@ -243,8 +244,38 @@ const handleNotificationsClick = () => {
 const rules = useMaxLengthRule()
 const loginParagraph = ref(null)
 
+const handleDotsClick = () => {
+  drawerDots.value = !drawerDots.value
+}
+
+const dotsItems = computed(() => [
+  {
+    title: 'Settings',
+    value: 'settings',
+    icon: 'mdi-cog-outline',
+    color: 'blue-accent-4',
+    permission: 'settings',
+    function: () => router.push({ name: 'settings' })
+  },
+  {
+    title: 'Notifications',
+    icon: 'mdi-bell-outline',
+    action: handleNotificationsClick
+  },
+  {
+    title: 'Settings',
+    icon: 'mdi-cog-outline',
+    action: () => router.push({ name: 'settings' })
+  },
+  {
+    title: loginLogoutText.value,
+    icon: loginLogoutIcon.value,
+    action: handleLoginLogout
+  }
+])
+
 // Define the breakpoints array
-const { xs, sm, smAndDown, smAndUp } = useDisplay()
+const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
 </script>
 
 <template>
@@ -277,44 +308,50 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
           color="white"
         />
       </v-avatar>
-      <span class="text-white mr-2">{{ userStore.userName }}</span>
+      <span v-if="mdAndUp" class="text-white mr-2">{{ userStore.userName }}</span>
     </template>
-    <v-btn icon aria-label="Login/Logout" @click="handleLoginLogout" class="login-btn">
-      <v-icon :icon="loginLogoutIcon" class="login-btn icon"></v-icon>
-      <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
-        {{ loginLogoutText }}
+    <template v-if="mdAndUp">
+      <v-btn icon aria-label="Login/Logout" @click="handleLoginLogout" class="login-btn">
+        <v-icon :icon="loginLogoutIcon" class="login-btn icon"></v-icon>
+        <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
+          {{ loginLogoutText }}
+        </v-tooltip>
+      </v-btn>
+      <v-tooltip location="bottom">
+        <template v-slot:activator="{ props }">
+          <div v-bind="props">
+            <v-btn
+              icon
+              aria-label="Notifications"
+              @click="handleNotificationsClick"
+              :disabled="!userStore.isLoggedIn"
+              class="notifications-btn"
+            >
+              <v-icon>mdi-bell-outline</v-icon>
+              <v-badge
+                v-if="unreadNotificationsCount > 0"
+                :content="unreadNotificationsCount"
+                color="blue-accent-4"
+                class="badge"
+              />
+            </v-btn>
+          </div>
+        </template>
+        <span v-if="!userStore.isLoggedIn">Sign in to view notifications</span>
+        <span v-else>Notifications</span>
       </v-tooltip>
-    </v-btn>
-    <v-tooltip location="bottom">
-      <template v-slot:activator="{ props }">
-        <div v-bind="props">
-          <v-btn
-            icon
-            aria-label="Notifications"
-            @click="handleNotificationsClick"
-            :disabled="!userStore.isLoggedIn"
-            class="notifications-btn"
-          >
-            <v-icon>mdi-bell-outline</v-icon>
-            <v-badge
-              v-if="unreadNotificationsCount > 0"
-              :content="unreadNotificationsCount"
-              color="blue-accent-4"
-              class="badge"
-            />
-          </v-btn>
-        </div>
-      </template>
-      <span v-if="!userStore.isLoggedIn">Sign in to view notifications</span>
-      <span v-else>Notifications</span>
-    </v-tooltip>
-    <v-btn icon aria-label="Settings">
-      <v-icon>mdi-cog-outline</v-icon>
-      <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"
-        >Settings</v-tooltip
-      >
-    </v-btn>
+      <v-btn icon aria-label="Settings">
+        <v-icon>mdi-cog-outline</v-icon>
+        <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"
+          >Settings</v-tooltip
+        >
+      </v-btn>
+    </template>
+    <template v-else>
+      <v-btn icon="mdi-dots-vertical" variant="text" @click="handleDotsClick"></v-btn>
+    </template>
   </v-app-bar>
+
   <v-dialog
     v-model="showNotificationsSettings"
     max-width="600px"
@@ -322,7 +359,7 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
   >
     <VNotificationSettings @close="showNotificationsSettings = false" />
   </v-dialog>
-  <v-navigation-drawer v-model="drawer" temporary class="navigation-drawer drawer" width="300">
+  <v-navigation-drawer v-model="drawer" :location="mobile ? 'bottom' : undefined" temporary class="navigation-drawer drawer" width="300">
     <v-list nav class="navigation-drawer-list">
       <v-list-subheader class="subheader">MENU</v-list-subheader>
       <v-divider></v-divider>
@@ -629,4 +666,14 @@ const { xs, sm, smAndDown, smAndUp } = useDisplay()
       </v-card-actions>
     </v-card>
   </v-dialog>
+   <v-navigation-drawer v-model="drawerDots" temporary location="right" class="navigation-drawer drawer-dots">
+    <v-list>
+      <v-list-item v-for="item in dotsItems" :key="item.title" @click="item.action">
+        <template v-slot:prepend>
+          <v-icon :icon="item.icon"></v-icon>
+        </template>
+        {{ item.title }}
+      </v-list-item>
+    </v-list>
+  </v-navigation-drawer>
 </template>
