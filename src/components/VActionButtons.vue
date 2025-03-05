@@ -14,14 +14,16 @@ const { xs, mobile, sm } = useDisplay()
 <template>
   <div
     class="action-buttons"
-    :class="mobile ? 'd-flex flex-column align-center w-100' : 'd-flex flex-wrap justify-space-around'"
+    :class="
+      mobile ? 'd-flex flex-column align-center w-100 ga-4' : 'd-flex flex-wrap justify-space-between ga-4'
+    "
   >
     <v-btn
       v-for="(button, index) in buttons"
       :key="index"
       :type="button.type"
       :text="button.text"
-      :class="[button.class, mobile ? 'mb-3' : 'mb-3 mr-3']"
+      
       :style="{ marginInlineStart: '0' }"
       :width="sm ? '66%' : '10rem'"
       :height="button.height"
@@ -39,3 +41,5 @@ const { xs, mobile, sm } = useDisplay()
     </v-btn>
   </div>
 </template>
+
+<!-- :class="[button.class, mobile ? 'mb-3' : 'mb-3', { 'mr-3': index < buttons.length - 1 }]" -->

@@ -560,13 +560,33 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
           >
           </v-text-field>
           <v-divider class="mb-4"></v-divider>
+          <v-time-picker
+            v-model="dataStore.newTask.startDateHour"
+            label="End Time"
+            variant="plain"
+            color="red-darken-2"
+            required
+            format="24hr"
+            scrollable
+            class="time-create-task justify-center w-100"
+          >
+          </v-time-picker>
+          <v-divider class="mb-4"></v-divider>
+          <v-time-picker
+            v-model="dataStore.newTask.endDateHour"
+            label="End Time"
+            variant="plain"
+            color="red-darken-2"
+            required
+            format="24hr"
+            scrollable
+            class="time-create-task justify-center w-100"
+          >
+          </v-time-picker>
+          <v-divider class="mb-4"></v-divider>
         </v-form>
       </v-card-text>
-      <v-card-actions
-        :class="
-          smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
-        "
-      >
+      <v-card-actions class="justify-center">
         <VActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>

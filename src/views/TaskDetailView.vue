@@ -21,7 +21,6 @@ const props = defineProps({
 })
 
 const form = ref(null)
-//const dialogEditTask = ref(false)
 // Get the task from Firestore
 /* ==> El computed en TaskDetailView.vue asegura que la vista se actualice en tiempo real
 cuando se producen cambios en la base de datos de Firebase.
@@ -249,10 +248,22 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
             class="date-create-task"
           >
           </v-text-field>
+          <v-divider class="mb-4"></v-divider>
+          <v-time-picker
+            v-model="dataStore.editedTask.endDateHour"
+            label="End Time"
+            variant="plain"
+            color="red-darken-2"
+            required
+            format="24hr"
+            scrollable
+            class="time-create-task justify-center w-100"
+          >
+          </v-time-picker>
+          <v-divider class="mb-4"></v-divider>
         </v-form>
       </v-card-text>
-      <v-card-actions
-      >
+      <v-card-actions class="justify-center">
         <VActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>

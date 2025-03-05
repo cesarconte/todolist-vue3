@@ -144,7 +144,7 @@ const formatDate = (date, formatType) => {
       return date.toLocaleDateString('es-ES', {
         month: 'long',
         day: 'numeric',
-        weekday: 'short'
+        weekday: 'long'
       })
     } else if (formatType === 'shortDate') {
       return date.toLocaleDateString('es-ES', {
@@ -188,7 +188,7 @@ const navigateToTaskDetail = () => {
   router.push({ name: 'task-detail', params: { taskId: props.id } })
 }
 
-const { mobile } = useDisplay()
+const { mobile, xs } = useDisplay()
 </script>
 
 <template>
@@ -266,7 +266,50 @@ const { mobile } = useDisplay()
         </v-list-item>
 
         <v-list-item>
-          <v-row class="justify-space-between align-center my-2">
+          <v-row class="d-flex justify-space-between" :class="xs ? 'mt-4 mb-1' : 'mt-4'">
+            <v-col cols="auto">
+              <v-row>
+                <v-col cols="auto">
+                  <span class="font-weight-medium">Start Date:</span>
+                </v-col>
+                <v-col>
+                  <span
+                    v-if="createdAt"
+                    :class="
+                      props.completed
+                        ? 'text-decoration-line-through text-grey-lighten-1'
+                        : 'font-weight-light'
+                    "
+                    >{{ formatDate(startDate, 'date') }}</span
+                  >
+                  <span v-else class="font-weight-light">No start date</span>
+                </v-col>
+              </v-row>
+            </v-col>
+            <v-col cols="auto">
+              <v-row>
+                <v-col cols="auto">
+                  <span class="font-weight-medium">Start Time:</span>
+                </v-col>
+                <v-col>
+                  <span
+                    v-if="createdAt"
+                    :class="
+                      props.completed
+                        ? 'text-decoration-line-through text-grey-lighten-1'
+                        : 'font-weight-light'
+                    "
+                    >{{ formatDate(startDate, 'time24h') }} h.</span
+                  >
+                  <span v-else class="font-weight-light">No start time</span>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-list-item>
+
+        <v-list-item>
+          <v-row class="d-flex justify-space-between">
             <v-col cols="auto">
               <v-row>
                 <v-col cols="auto">
@@ -293,7 +336,13 @@ const { mobile } = useDisplay()
                   <span class="font-weight-medium">Due Time:</span>
                 </v-col>
                 <v-col>
-                  <span v-if="endDate" class="font-weight-light"
+                  <span
+                    v-if="endDate"
+                    :class="
+                      props.completed
+                        ? 'text-decoration-line-through text-grey-lighten-1'
+                        : 'font-weight-light'
+                    "
                     >{{ formatDate(endDate, 'time24h') }} h.</span
                   >
                   <span v-else class="font-weight-light">No due time</span>

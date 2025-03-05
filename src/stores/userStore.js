@@ -47,6 +47,12 @@ export const useUserStore = defineStore('user', () => {
   const logInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider()
+      /* Firebase Authentication's default persistence behavior:
+       Firebase Authentication uses 'browserLocalPersistence' by default in web applications.
+       This means the user's session is stored in the browser's local storage,
+       allowing the user to remain logged in even after closing and reopening the browser.
+       If you wish to change this behavior (e.g., to 'browserSessionPersistence' or 'inMemoryPersistence'),
+       you must use the 'setPersistence' function before 'signInWithPopup'. */
       const result = await signInWithPopup(auth, provider)
       const user = result.user
       const currentUser = auth.currentUser
@@ -82,7 +88,7 @@ export const useUserStore = defineStore('user', () => {
             createdTasks: arrayUnion(dataStore.newTask.taskId)
           })
           // console.log('User document updated')
-          alert("User document updated")
+          alert('User document updated')
         }
       } else {
         // User document doesn't exist, create it
@@ -94,7 +100,7 @@ export const useUserStore = defineStore('user', () => {
           createdTasks: [] // Initialize createdTasks as an empty array
         })
         // console.log('User document created')
-        alert("User document created")
+        alert('User document created')
       }
     } catch (error) {
       console.error('Error creating/updating user document:', error)

@@ -49,7 +49,9 @@ export const useDataStore = defineStore('data', () => {
     priority: '',
     status: '',
     startDate: null,
+    startDateHour: null,
     endDate: null,
+    endDateHour: null,
     completed: false,
     createdAt: null,
     createdBy: '',
@@ -64,6 +66,7 @@ export const useDataStore = defineStore('data', () => {
     status: '',
     startDate: null,
     endDate: null,
+    endDateHour: null,
     updatedAt: serverTimestamp()
   })
   const newProject = reactive({
@@ -231,8 +234,8 @@ export const useDataStore = defineStore('data', () => {
               break
             case 'removed':
               //if (index !== -1) {
-                // Remove the document from the array
-                targetRef.value.splice(index, 1) // No need to check for index here
+              // Remove the document from the array
+              targetRef.value.splice(index, 1) // No need to check for index here
               //}
               break
           }
@@ -251,9 +254,10 @@ export const useDataStore = defineStore('data', () => {
       const taskDoc = await getDoc(taskRef)
 
       if (taskDoc.exists()) {
+        const taskData = taskDoc.data()
         return {
           id: taskDoc.id,
-          ...taskDoc.data()
+          ...taskData
         }
       } else {
         // Handle the case where the task doesn't exist
@@ -291,11 +295,19 @@ export const useDataStore = defineStore('data', () => {
         // Get the project color
         const projectColor = await taskStore.getProjectColor(newTask.project)
         const projectId = newTaskProjectId.value
+        // Combine the date and time for the end date
+        const endDate = new Date(newTask.endDate)
+        const [hours, minutes] = newTask.endDateHour.split(':').map(Number)
+        endDate.setHours(hours, minutes, 0, 0)
+        // Combine the date and time for the start date
+        const startDate = new Date(newTask.startDate)
+        const [startHours, startMinutes] = newTask.startDateHour.split(':').map(Number)
+        startDate.setHours(startHours, startMinutes, 0, 0)
         // Add the task to Firestore
         const taskDocRef = await addDoc(collection(db, 'tasks'), {
           ...newTask,
-          startDate: new Date(newTask.startDate),
-          endDate: new Date(newTask.endDate),
+          startDate: startDate,
+          endDate: endDate,
           createdAt: new Date(),
           updatedAt: new Date(),
           completed: false,
@@ -359,12 +371,17 @@ export const useDataStore = defineStore('data', () => {
         if (taskData.createdBy === userStore.userId) {
           const isCompleted = editedTask.status === 'Done'
 
+        // Combine the date and time
+        const endDate = new Date(editedTask.endDate)
+        const [hours, minutes] = editedTask.endDateHour.split(':').map(Number)
+        endDate.setHours(hours, minutes, 0, 0)
+
           // Update the task in Firestore
           await updateDoc(taskRef, {
             ...editedTask,
             completed: isCompleted,
             startDate: new Date(editedTask.startDate),
-            endDate: new Date(editedTask.endDate),
+            endDate: endDate,
             updatedAt: new Date(),
             color: projectColor
           })
