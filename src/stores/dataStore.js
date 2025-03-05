@@ -65,6 +65,7 @@ export const useDataStore = defineStore('data', () => {
     priority: '',
     status: '',
     startDate: null,
+    startDateHour: null,
     endDate: null,
     endDateHour: null,
     updatedAt: serverTimestamp()
@@ -366,6 +367,7 @@ export const useDataStore = defineStore('data', () => {
         // Fetch the task from Firestore to check ownership
         const taskDoc = await getDoc(taskRef)
         const taskData = taskDoc.data()
+        const startDate = taskData.startDate
 
         // Check if the user owns the task
         if (taskData.createdBy === userStore.userId) {
@@ -375,12 +377,14 @@ export const useDataStore = defineStore('data', () => {
         const endDate = new Date(editedTask.endDate)
         const [hours, minutes] = editedTask.endDateHour.split(':').map(Number)
         endDate.setHours(hours, minutes, 0, 0)
+        
+        // Combine the date and time for the start date
 
           // Update the task in Firestore
           await updateDoc(taskRef, {
             ...editedTask,
             completed: isCompleted,
-            startDate: new Date(editedTask.startDate),
+            startDate: startDate,
             endDate: endDate,
             updatedAt: new Date(),
             color: projectColor
