@@ -8,7 +8,6 @@ import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VPagination from '@/components/VPagination.vue'
 import { ref, watchEffect } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
 
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
@@ -93,15 +92,6 @@ const btnsForm = [
   }
 ]
 
-onBeforeRouteLeave((to, from, next) => {
-  // Only reset filters, pagination and UI elements if NOT navigating to 'task-detail'
-  if (to.name !== 'task-detail') {
-    taskStore.resetFilters()
-  }
-
-  next()
-})
-
 const rules = useMaxLengthRule()
 
 const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
@@ -152,7 +142,7 @@ when you pass JavaScript Date objects to the where clause. */
             :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
             item-value="value"
             item-title="title"
-            label="Filter by project"
+            label="Filter by project..."
             variant="outlined"
             rounded
             clearable

@@ -8,7 +8,6 @@ import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VPagination from '@/components/VPagination.vue'
 import { ref, watchEffect } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
 
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
@@ -20,29 +19,27 @@ const showAlert = ref(false)
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
   // Check if any filter is active
-  const hasFiltersSelected = taskStore.searchTaskTitle
+  const hasFiltersSelected = taskStore.searchTaskTitle  // Search by title
 
   if (userStore.isLoggedIn) {
     // Check if logged in only before fetching data
     if (hasFiltersSelected) {
-      await taskStore.getFilteredTasksPaginated()
-      showCards.value = true
+      await taskStore.getFilteredTasksPaginated() // Fetch filtered tasks
+      showCards.value = true // Show the cards
     } else {
-      taskStore.filteredTasks.value = []
-      showCards.value = false
+      taskStore.filteredTasks.value = [] // Reset the filtered tasks
+      showCards.value = false // Hide the cards
     }
   } else if (hasFiltersSelected) {
     // User is not logged in and tried to use filters
-    showAlert.value = true
+    showAlert.value = true // Show the alert
   }
 })
 
+// Define the handleSearchClick function to handle the search click event
 const handleSearchClick = () => {
-  if (userStore.isLoggedIn) {
-    taskStore.getFilteredTasksPaginated()
-    showCards.value = true
-  } else {
-    showAlert.value = true
+  if (!userStore.isLoggedIn) {
+    showAlert.value = true // Show the alert
   }
 }
 
@@ -90,13 +87,6 @@ const btnsForm = [
   }
 ]
 
-onBeforeRouteLeave((to, from, next) => {
-  // Reset filters, pagination and UI elements in one go
-  taskStore.resetFilters()
-
-  next()
-})
-
 const rules = useMaxLengthRule()
 
 const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
@@ -128,12 +118,16 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             rounded
             color="red-accent-1"
             hide-details
+            dense
             variant="outlined"
             chips
             prepend-inner-icon="mdi-magnify"
             auto-select-first
             @click="handleSearchClick"
           >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.title" />
+            </template>
           </v-autocomplete>
         </v-col>
       </v-row>

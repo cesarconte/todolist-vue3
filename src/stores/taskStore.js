@@ -505,23 +505,15 @@ export const useTaskStore = defineStore('tasks', () => {
 
   // Helper function to clean filters
   const resetFilters = () => {
-    // Clear filters in the taskStore
-    searchTaskTitle.value = ''
+    // Clear filters in the taskStore state (reactive variables) to reset the UI
+    searchTaskTitle.value = null
     selectedProjects.value = []
     selectedPriorities.value = []
     selectedStatuses.value = []
     selectedLabels.value = []
     selectedEndDate.value = null
 
-    // Reset UI elements
-    selectedProjects.value = [] // Reset v-autocomplete for projects
-    selectedPriorities.value = [] // Reset v-autocomplete for priorities
-    selectedLabels.value = [] // Reset v-autocomplete for labels
-    selectedStatuses.value = [] // Reset v-autocomplete for statuses
-    searchTaskTitle.value = '' // Reset v-text-field for search
-    selectedEndDate.value = null // Reset v-text-field for end date
-
-    // Clear pagination state
+    // Clear pagination state to reset the UI
     firstVisibleTask.value = null
     lastVisibleTaskDoc.value = null
     hasNextPage.value = true
