@@ -107,18 +107,36 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
       </v-row>
       <v-row>
         <v-col cols="12" sm="6" class="mx-auto">
-          <v-text-field
+          <!-- <v-text-field
             v-model="taskStore.searchTaskTitle"
-            label="Search by title"
+            label="Search by title..."
             :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
             type="text"
             variant="outlined"
+            append-inner-icon="mdi-magnify"
             rounded="pill"
             clearable
             hide-details
             dense
             color="red-accent-1"
-          />
+          /> -->
+          <v-autocomplete
+            v-model="taskStore.searchTaskTitle"
+            :items="userStore.isLoggedIn ? taskStore.tasks : []"
+            :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
+            item-value="value"
+            item-text="title"
+            label="Search by title..."
+            clearable
+            density="default"
+            rounded
+            color="red-accent-1"
+            hide-details
+            variant="outlined"
+            prepend-inner-icon="mdi-magnify"
+            auto-select-first
+          >
+          </v-autocomplete>
         </v-col>
       </v-row>
 

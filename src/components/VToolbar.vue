@@ -481,7 +481,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
       <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
         <span class="text-h6">Add new task</span>
       </v-card-title>
-      <v-card-text :class="mobile ? 'px-1' : ''">
+      <v-card-text :class="mobile ? 'px-0' : ''">
         <v-form class="form form-create-task" ref="form" @submit.prevent>
           <v-text-field
             v-model="dataStore.newTask.title"
@@ -592,6 +592,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
             format="24hr"
             scrollable
             class="time-create-task justify-center w-100"
+            :class="xs ? 'px-0' : ''"
           >
           </v-time-picker>
           <v-divider class="mb-4"></v-divider>
@@ -604,6 +605,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
             format="24hr"
             scrollable
             class="time-create-task justify-center w-100"
+            :class="xs ? 'px-0' : ''"
           >
           </v-time-picker>
           <v-divider class="mb-4"></v-divider>

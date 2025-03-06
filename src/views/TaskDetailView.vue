@@ -79,7 +79,7 @@ const goBack = () => {
 
 const rules = useMaxLengthRule()
 
-const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
+const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
 </script>
 
 <template>
@@ -150,10 +150,10 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
     class="dialog dialog-create-task"
   >
     <v-card class="card card-create-task pa-4">
-      <v-card-title class="card-title card-title-create-task">
+      <v-card-title class="card-title card-title-edit-task" :class="mobile ? 'px-1' : ''">
         <span class="text-h6">Edit task {{ task.taskId }}</span>
       </v-card-title>
-      <v-card-text>
+      <v-card-text :class="mobile ? 'px-0' : ''">
         <v-form class="form form-create-task" ref="form" @submit.prevent>
           <v-text-field
             v-model="dataStore.editedTask.title"
@@ -258,6 +258,7 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
             format="24hr"
             scrollable
             class="time-create-task justify-center w-100"
+            :class="xs ? 'px-0' : ''"
           >
           </v-time-picker>
           <v-divider class="mb-4"></v-divider>

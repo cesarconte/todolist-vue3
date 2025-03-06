@@ -8,7 +8,7 @@ defineProps({
   }
 })
 
-const { xs, mobile, sm } = useDisplay()
+const { mobile, xs, sm, md } = useDisplay()
 </script>
 
 <template>
@@ -23,11 +23,9 @@ const { xs, mobile, sm } = useDisplay()
       :key="index"
       :type="button.type"
       :text="button.text"
-      
       :style="{ marginInlineStart: '0' }"
-      :width="sm ? '66%' : '10rem'"
+      :width="xs ? '100%' : sm ? '66%' : md ? '49%' : '10rem'"
       :height="button.height"
-      :block="xs"
       :prepend-icon="button.icon"
       :variant="button.variant || 'tonal'"
       :rounded="button.rounded || true"
