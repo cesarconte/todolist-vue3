@@ -140,9 +140,26 @@ const openDialog = (value) => {
   }
 }
 
+// const formatDate = (date) => {
+//   if (!date) return null
+//   const newDate = new Date(date)
+//   return newDate.toLocaleDateString('es-ES')
+// }
+
 // Define the createNewTask function
 const createNewTask = async () => {
-  await dataStore.createTask(dataStore.newTask)
+  // Format the start and end dates
+  // dataStore.newTask.startDate = formatDate(dataStore.newTask.startDate)
+  // dataStore.newTask.endDate = formatDate(dataStore.newTask.endDate)
+
+  // const newTaskData = {
+  //   ...dataStore.newTask,
+  //   startDate: dataStore.newTask.startDate,
+  //   endDate: dataStore.newTask.endDate
+  // }
+  // Save the new task to Firestore
+  await dataStore.createTask(dataStore.newTaskData)
+  // await dataStore.createTask(newTaskData)
   // Reset the form
   form.value.reset()
   // Close the dialog
@@ -560,6 +577,12 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
           >
           </v-text-field>
           <v-divider class="mb-4"></v-divider>
+          <!-- <v-date-input v-model="dataStore.newTask.startDate" label="Start Date" required clearable variant="solo" color="red-darken-2" class="date-create-task">
+          </v-date-input>
+          <v-divider class="mb-4"></v-divider>
+          <v-date-input v-model="dataStore.newTask.endDate" label="End Date" required clearable variant="solo" color="red-darken-2" class="date-create-task">
+          </v-date-input>
+          <v-divider class="mb-4"></v-divider> -->
           <v-time-picker
             v-model="dataStore.newTask.startDateHour"
             label="End Time"
