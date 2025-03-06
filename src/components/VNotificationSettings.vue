@@ -139,14 +139,15 @@ const notificationTimeOptions = [
       <span>Notification Settings</span>
       <v-tooltip v-if="!hasFullSupport" location="right">
         <template v-slot:activator="{ props }">
-          <v-icon v-bind="props" color="warning" class="ml-2">mdi-alert</v-icon>
+          <v-icon v-bind="props" color="warning" class="ml-4">mdi-alert</v-icon>
         </template>
-        <span class="text-caption">
+        <span class="text-caption pr-4">
           Browser notification features:
           <span
             v-for="(value, key) in browserSupport"
             :key="key"
             :class="value ? 'text-success' : 'text-error'"
+            class="d-flex align-center justify-end"
           >
             {{ key }}: {{ value ? '✓' : '✗' }}
           </span>

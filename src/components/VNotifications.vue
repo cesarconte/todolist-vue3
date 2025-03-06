@@ -15,7 +15,7 @@ const notificationsStore = useNotificationsStore()
       variant="flat"
       opacity="1"
       elevation="6"
-      location="top left"
+      location="top"
       z-index="1000"
       position="sticky"
     >
