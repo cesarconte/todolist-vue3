@@ -37,6 +37,15 @@ watchEffect(async () => {
   }
 })
 
+const handleSearchClick = () => {
+  if (userStore.isLoggedIn) {
+    taskStore.getFilteredTasksPaginated()
+    showCards.value = true
+  } else {
+    showAlert.value = true
+  }
+}
+
 // Define the submitEditedTask function to save the edited task to Firestore
 const submitEditedTask = async () => {
   try {
@@ -106,20 +115,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="12" sm="6" class="mx-auto">
-          <!-- <v-text-field
-            v-model="taskStore.searchTaskTitle"
-            label="Search by title..."
-            :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
-            type="text"
-            variant="outlined"
-            append-inner-icon="mdi-magnify"
-            rounded="pill"
-            clearable
-            hide-details
-            dense
-            color="red-accent-1"
-          /> -->
+        <v-col cols="12" md="9" lg="6" class="mx-auto">
           <v-autocomplete
             v-model="taskStore.searchTaskTitle"
             :items="userStore.isLoggedIn ? taskStore.tasks : []"
@@ -133,8 +129,10 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             color="red-accent-1"
             hide-details
             variant="outlined"
+            chips
             prepend-inner-icon="mdi-magnify"
             auto-select-first
+            @click="handleSearchClick"
           >
           </v-autocomplete>
         </v-col>
@@ -148,7 +146,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         closable
         height="4rem"
         width="32rem"
-        class="mt-8 mx-auto rounded-pill"
+        class="mt-8 mx-auto rounded-pill d-flex flex-wrap justify-center"
       >
         {{ error }}
       </v-alert>
@@ -160,14 +158,16 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
         outlined
         closable
         height="4rem"
-        width="32rem"
-        class="mt-8 mx-auto rounded-pill"
+        :width="xs ? '90%' : '32rem'"
+        class="alert mt-8 rounded-pill"
       >
-        Please, log in to use filters
-        <v-btn icon class="ml-4" variant="plain" @click="$router.push('/login')">
+        <span>
+          {{ xs ? 'Please, log in...' : 'Please, log in to use the search feature' }}
+        </span>
+        <v-btn icon class="ml-2" variant="plain" @click="$router.push('/login')">
           <v-icon>mdi-account-arrow-right-outline</v-icon>
           <v-tooltip activator="parent" location="bottom">
-            <span>Log in to unlock filter options</span>
+            <span>Log in to unlock search option</span>
           </v-tooltip>
         </v-btn>
       </v-alert>
@@ -370,3 +370,13 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
     </v-responsive>
   </v-container>
 </template>
+
+<style scoped>
+.alert {
+  position: fixed;
+  top: 37%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+}
+</style>

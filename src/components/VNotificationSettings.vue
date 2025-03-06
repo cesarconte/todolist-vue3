@@ -224,7 +224,7 @@ const notificationTimeOptions = [
               :disabled="isDisabled"
               @click="notificationsStore.sendTestNotification()"
             >
-              <v-icon left icon="mdi-bell-ring-outline" class="mr-2" />
+              <v-icon left icon="mdi-bell-outline" class="mr-2" />
               Test Notification
             </v-btn>
           </div>

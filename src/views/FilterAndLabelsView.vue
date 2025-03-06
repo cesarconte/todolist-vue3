@@ -286,18 +286,15 @@ when you pass JavaScript Date objects to the where clause. */
         outlined
         closable
         height="4rem"
-        width="32rem"
-        class="mt-8 mx-auto rounded-pill"
+        :width="xs ? '90%' : '32rem'"
+        class="alert mt-8 rounded-pill"
       >
-        Please, log in to use filters
-        <v-btn
-          icon
-          class="ml-4"
-          variant="plain"
-          @click="$router.push('/login')"
-        >
-        <v-icon>mdi-account-arrow-right-outline</v-icon>
-        <v-tooltip activator="parent" location="bottom">
+        <span>
+          {{ xs ? 'Please, log in...' : 'Please, log in to use the filters' }}
+        </span>
+        <v-btn icon class="ml-2" variant="plain" @click="$router.push('/login')">
+          <v-icon>mdi-account-arrow-right-outline</v-icon>
+          <v-tooltip activator="parent" location="bottom">
             <span>Log in to unlock filter options</span>
           </v-tooltip>
         </v-btn>
@@ -502,3 +499,13 @@ when you pass JavaScript Date objects to the where clause. */
     </v-responsive>
   </v-container>
 </template>
+
+<style scoped>
+.alert {
+  position: fixed;
+  top: 42%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+}
+</style>

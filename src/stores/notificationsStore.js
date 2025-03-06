@@ -169,7 +169,7 @@ export const useNotificationsStore = defineStore('notifications', {
         // Show confirmation in UI
         this.showSnackbar = {
           show: true,
-          message: 'Test notification sent successfully ✅'
+          message: 'Test notification sent successfully'
         }
       } catch (error) {
         this.handleError(error.message, error)

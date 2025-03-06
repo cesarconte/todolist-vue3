@@ -7,31 +7,30 @@ const notificationsStore = useNotificationsStore()
 <template>
   <div class="notifications-container">
     <v-snackbar
-      v-for="notification in notificationsStore.activeNotifications"
-      :key="notification.id"
-      v-model="notification.show"
-      :timeout="10000"
-      color="red-darken-2"
-      location="bottom right"
+      v-model="notificationsStore.showSnackbar.show"
+      :message="notificationsStore.showSnackbar.message"
+      :timeout="6000"
+      color="warning"
+      rounded="pill"
+      variant="flat"
+      opacity="1"
+      elevation="6"
+      location="top left"
+      z-index="1000"
+      position="sticky"
     >
-      {{ notification.message }}
+      <v-icon start icon="mdi-bell-ring"></v-icon>
+      {{ notificationsStore.showSnackbar.message }}
       <template v-slot:actions>
         <v-btn
           color="white"
           variant="text"
+          class="text-none"
           icon="mdi-close"
-          @click="notification.show = false"
-        />
+          @click="notificationsStore.showSnackbar.show = false"
+        >
+        </v-btn>
       </template>
     </v-snackbar>
   </div>
 </template>
-
-<style scoped>
-.notifications-container {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 1000;
-}
-</style>

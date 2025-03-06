@@ -78,27 +78,6 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
       class="mx-auto"
       :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
     >
-      <v-row>
-        <v-col cols="12">
-          <v-snackbar
-            v-model="notificationsStore.showSnackbar.show"
-            :message="notificationsStore.showSnackbar.message"
-            :timeout="6000"
-            color="red-darken-2"
-          >
-            {{ notificationsStore.showSnackbar.message}}
-            <template v-slot:actions>
-              <v-btn
-                color="white"
-                variant="text"
-                icon="mdi-close"
-                @click="notificationsStore.showSnackbar.show = false"
-              >
-              </v-btn>
-            </template>
-          </v-snackbar>
-        </v-col>
-      </v-row>
       <v-row justify="center">
         <v-col
           cols="12"
@@ -110,7 +89,10 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
             'col-xl-7': xl
           }"
         >
-          <h1 class="text-center font-weight-bold mb-4 text-red-darken-2" :class="xs ? 'text-h4' : (mobile ? 'text-h3' : 'text-h2')">
+          <h1
+            class="text-center font-weight-bold mb-4 text-red-darken-2"
+            :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'"
+          >
             Vuetify Todolist
           </h1>
           <div class="d-flex" :class="xs ? 'flex-column' : ''">
