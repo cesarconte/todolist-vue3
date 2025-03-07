@@ -477,7 +477,9 @@ export const useTaskStore = defineStore('tasks', () => {
           priority: '',
           status: '',
           startDate: '',
+          startDateHour: '',
           endDate: '',
+          endDateHour: '',
           createdAt: '',
           completed: false,
           color: ''

@@ -248,7 +248,40 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             class="date-create-task"
           >
           </v-text-field>
+          <!-- <v-date-input
+            v-model="dataStore.editedTask.startDate"
+            label="Start Date"
+            required
+            clearable
+            variant="solo"
+            color="red-darken-2"
+            class="date-create-task"
+          >
+          </v-date-input>
           <v-divider class="mb-4"></v-divider>
+          <v-date-input
+            v-model="dataStore.editedTask.endDate"
+            label="End Date"
+            required
+            clearable
+            variant="solo"
+            color="red-darken-2"
+            class="date-create-task"
+          >
+          </v-date-input> -->
+          <v-divider class="mb-4"></v-divider>
+          <v-time-picker
+            v-model="dataStore.editedTask.startDateHour"
+            label="End Time"
+            variant="plain"
+            color="red-darken-2"
+            required
+            format="24hr"
+            scrollable
+            class="time-create-task justify-center w-100"
+            :class="xs ? 'px-0' : ''"
+          >
+          </v-time-picker>
           <v-time-picker
             v-model="dataStore.editedTask.endDateHour"
             label="End Time"

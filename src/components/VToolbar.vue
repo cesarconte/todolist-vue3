@@ -140,26 +140,49 @@ const openDialog = (value) => {
   }
 }
 
+// Function to format the date as yyyyy-mm-dd
 // const formatDate = (date) => {
 //   if (!date) return null
-//   const newDate = new Date(date)
-//   return newDate.toLocaleDateString('es-ES')
+//   const d = new Date(date)
+//   const year = d.getFullYear()
+//   const month = String(d.getMonth() + 1).padStart(2, '0')
+//   const day = String(d.getDate()).padStart(2, '0')
+//   return `${year}-${month}-${day}`
 // }
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  let month = '' + (d.getMonth() + 1)
+  let day = '' + d.getDate()
+  const year = d.getFullYear()
+
+  if (month.length < 2) month = '0' + month
+  if (day.length < 2) day = '0' + day
+
+  return [year, month, day].join('-')
+}
 
 // Define the createNewTask function
 const createNewTask = async () => {
   // Format the start and end dates
-  // dataStore.newTask.startDate = formatDate(dataStore.newTask.startDate)
-  // dataStore.newTask.endDate = formatDate(dataStore.newTask.endDate)
+  const formattedStartDate = formatDate(dataStore.newTask.startDate)
+  const formattedEndDate = formatDate(dataStore.newTask.endDate)
 
-  // const newTaskData = {
-  //   ...dataStore.newTask,
-  //   startDate: dataStore.newTask.startDate,
-  //   endDate: dataStore.newTask.endDate
-  // }
+  // Log the formatted start and end dates
+  console.log('Start Date:', formattedStartDate)
+  console.log('End Date:', formattedEndDate)
+
+  // Create a new object with the formatted dates
+  const newTaskData = {
+    ...dataStore.newTask,
+    startDate: formattedStartDate,
+    endDate: formattedEndDate
+  }
   // Save the new task to Firestore
-  await dataStore.createTask(dataStore.newTaskData)
-  // await dataStore.createTask(newTaskData)
+  // await dataStore.createTask(dataStore.newTaskData)
+  await dataStore.createTask(newTaskData)
+  console.log('Start Date:', dataStore.newTaskData.startDate)
+  console.log('End Date:', dataStore.newTaskData.endDate)
   // Reset the form
   form.value.reset()
   // Close the dialog
@@ -552,7 +575,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
             required
             :items="dataStore.statuses"
           ></v-select>
-          <v-divider class="mb-4"></v-divider>
+          <!-- <v-divider class="mb-4"></v-divider>
           <v-text-field
             v-model="dataStore.newTask.startDate"
             label="Start Date"
@@ -575,14 +598,30 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
             required
             class="date-create-task"
           >
-          </v-text-field>
+          </v-text-field> -->
           <v-divider class="mb-4"></v-divider>
-          <!-- <v-date-input v-model="dataStore.newTask.startDate" label="Start Date" required clearable variant="solo" color="red-darken-2" class="date-create-task">
+          <v-date-input
+            v-model="dataStore.newTask.startDate"
+            label="Start Date"
+            required
+            clearable
+            variant="solo"
+            color="red-darken-2"
+            class="date-create-task"
+          >
           </v-date-input>
           <v-divider class="mb-4"></v-divider>
-          <v-date-input v-model="dataStore.newTask.endDate" label="End Date" required clearable variant="solo" color="red-darken-2" class="date-create-task">
+          <v-date-input
+            v-model="dataStore.newTask.endDate"
+            label="End Date"
+            required
+            clearable
+            variant="solo"
+            color="red-darken-2"
+            class="date-create-task"
+          >
           </v-date-input>
-          <v-divider class="mb-4"></v-divider> -->
+          <v-divider class="mb-4"></v-divider>
           <v-time-picker
             v-model="dataStore.newTask.startDateHour"
             label="End Time"
