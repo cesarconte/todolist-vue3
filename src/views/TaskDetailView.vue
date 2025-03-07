@@ -31,11 +31,45 @@ const task = computed(() => {
   return dataStore.tasks.find((task) => task.id === props.taskId)
 })
 
+// Function to format the date as YYYY-MM-DD
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  let month = '' + (d.getMonth() + 1)
+  let day = '' + d.getDate()
+  const year = d.getFullYear()
+
+  if (month.length < 2) month = '0' + month
+  if (day.length < 2) day = '0' + day
+
+  return [year, month, day].join('-')
+}
+
 // Define the submitEditedTask function
+// const submitEditedTask = async () => {
+//   try {
+//     // Save the edited task to Firestore
+//     await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+//     // Close the dialog
+//     taskStore.dialogEditTask = false
+//   } catch (error) {
+//     console.error(error)
+//   }
+// }
 const submitEditedTask = async () => {
   try {
+    // Format the start and end dates
+    const formattedStartDate = formatDate(dataStore.editedTask.startDate)
+    const formattedEndDate = formatDate(dataStore.editedTask.endDate)
+
+    // Create a new object with the formatted dates
+    const editedTaskData = {
+      ...dataStore.editedTask,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate
+    }
     // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+    await dataStore.updateTask(dataStore.editedTask.id, editedTaskData)
     // Close the dialog
     taskStore.dialogEditTask = false
   } catch (error) {
@@ -225,7 +259,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             :items="dataStore.statuses"
           ></v-select>
           <v-divider class="mb-4"></v-divider>
-          <v-text-field
+          <!-- <v-text-field
             v-model="dataStore.editedTask.startDate"
             label="Start Date"
             type="date"
@@ -247,8 +281,8 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             required
             class="date-create-task"
           >
-          </v-text-field>
-          <!-- <v-date-input
+          </v-text-field> -->
+          <v-date-input
             v-model="dataStore.editedTask.startDate"
             label="Start Date"
             required
@@ -268,7 +302,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             color="red-darken-2"
             class="date-create-task"
           >
-          </v-date-input> -->
+          </v-date-input>
           <v-divider class="mb-4"></v-divider>
           <v-time-picker
             v-model="dataStore.editedTask.startDateHour"

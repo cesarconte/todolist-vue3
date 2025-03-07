@@ -19,7 +19,8 @@ import {
   arrayUnion,
   arrayRemove,
   runTransaction,
-  writeBatch
+  writeBatch,
+  Timestamp
 } from 'firebase/firestore'
 import { useTaskStore } from './taskStore.js'
 import { useUserStore } from './userStore.js'
@@ -256,6 +257,18 @@ export const useDataStore = defineStore('data', () => {
 
       if (taskDoc.exists()) {
         const taskData = taskDoc.data()
+        // Log the types of startDate and endDate
+        console.log('startDate type:', typeof taskData.startDate, taskData.startDate)
+        console.log('endDate type:', typeof taskData.endDate, taskData.endDate)
+
+        // Convert startDate and endDate to Date objects if they are Timestamps
+        if (taskData.startDate instanceof Timestamp) {
+          taskData.startDate = taskData.startDate.toDate()
+        }
+        if (taskData.endDate instanceof Timestamp) {
+          taskData.endDate = taskData.endDate.toDate()
+        }
+
         return {
           id: taskDoc.id,
           ...taskData
@@ -360,6 +373,9 @@ export const useDataStore = defineStore('data', () => {
     isSaving.value = true
 
     try {
+      // Log the types of startDate and endDate
+      console.log('editedTask.startDate type:', typeof editedTask.startDate, editedTask.startDate)
+      console.log('editedTask.endDate type:', typeof editedTask.endDate, editedTask.endDate)
       // Check if all fields are filled
       if (validTaskForm(editedTask) && editedTask.startDate <= editedTask.endDate) {
         // Get the project color
@@ -376,20 +392,23 @@ export const useDataStore = defineStore('data', () => {
           const isCompleted = editedTask.status === 'Done'
 
           // Combine the date and time for the start date
-          const startDate = new Date(editedTask.startDate)
+          // const startDate = new Date(editedTask.startDate)
+          const startDate = editedTask.startDate
           const [startHours, startMinutes] = editedTask.startDateHour.split(':').map(Number)
-          startDate.setHours(startHours, startMinutes, 0, 0)
+          const startDateFormatted = new Date(startDate)
+          startDateFormatted.setHours(startHours, startMinutes, 0, 0)
           // Combine the date and time for the end date
-          const endDate = new Date(editedTask.endDate)
+          const endDate = editedTask.endDate
           const [hours, minutes] = editedTask.endDateHour.split(':').map(Number)
-          endDate.setHours(hours, minutes, 0, 0)
+          const endDateFormatted = new Date(endDate)
+          endDateFormatted.setHours(hours, minutes, 0, 0)
 
           // Update the task in Firestore
           await updateDoc(taskRef, {
             ...editedTask,
             completed: isCompleted,
-            startDate: startDate,
-            endDate: endDate,
+            startDate: startDateFormatted,
+            endDate: endDateFormatted,
             updatedAt: new Date(),
             color: projectColor
           })

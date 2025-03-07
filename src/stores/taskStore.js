@@ -454,40 +454,56 @@ export const useTaskStore = defineStore('tasks', () => {
   )
 
   // Helper function to edit a task
+  // const editTask = async (taskId) => {
+  //   try {
+  //     dialogEditTask.value = true
+  //     // Get the task data from Firestore and update the UI
+  //     const taskData = await dataStore.tasks.find((task) => task.id === taskId)
+  //     // Update the form values with the task data
+  //     if (taskData) {
+  //       dataStore.editedTask = {
+  //         ...taskData,
+  //         // Convert the startDate and endDate from a Timestamp to a string
+  //         startDate: taskData.startDate.toDate().toISOString().split('T')[0],
+  //         endDate: taskData.endDate.toDate().toISOString().split('T')[0]
+  //       }
+  //     } else {
+  //       dataStore.editedTask = {
+  //         id: '',
+  //         title: '',
+  //         description: '',
+  //         project: '',
+  //         label: '',
+  //         priority: '',
+  //         status: '',
+  //         startDate: '',
+  //         startDateHour: '',
+  //         endDate: '',
+  //         endDateHour: '',
+  //         createdAt: '',
+  //         completed: false,
+  //         color: ''
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error(error)
+  //     alert('Error editing task. Please try again.', error)
+  //   }
+  // }
   const editTask = async (taskId) => {
     try {
       dialogEditTask.value = true
-      // Get the task data from Firestore and update the UI
-      const taskData = await dataStore.tasks.find((task) => task.id === taskId)
-      // Update the form values with the task data
-      if (taskData) {
-        dataStore.editedTask = {
-          ...taskData,
-          // Convert the startDate and endDate from a Timestamp to a string
-          startDate: taskData.startDate.toDate().toISOString().split('T')[0],
-          endDate: taskData.endDate.toDate().toISOString().split('T')[0]
-        }
+      // Get the task data from Firestore
+      const task = await dataStore.getTask(taskId)
+
+      if (task) {
+        // Assign the task data to dataStore.editedTask
+        Object.assign(dataStore.editedTask, task)
       } else {
-        dataStore.editedTask = {
-          id: '',
-          title: '',
-          description: '',
-          project: '',
-          label: '',
-          priority: '',
-          status: '',
-          startDate: '',
-          startDateHour: '',
-          endDate: '',
-          endDateHour: '',
-          createdAt: '',
-          completed: false,
-          color: ''
-        }
+        console.error('Task not found')
       }
     } catch (error) {
       console.error(error)
-      alert('Error editing task. Please try again.', error)
     }
   }
 
