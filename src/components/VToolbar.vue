@@ -13,14 +13,28 @@ const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const router = useRouter()
+
+// Dialog and Drawer states
 const drawer = ref(false)
 const drawerDots = ref(false)
 const group = ref(null)
 const dialogAddTask = ref(false)
 const dialogAddProject = ref(false)
-const form = ref(null)
 const showNotificationsSettings = ref(false)
 const unreadNotificationsCount = ref(0)
+
+// Form References
+const form = ref(null)
+
+// Time Picker states
+const menuStart = ref(false)
+const menuEnd = ref(false)
+
+// Breakpoints
+const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
+
+// Validation Rules
+const rules = useMaxLengthRule()
 
 // Lógica para actualizar el contador de notificaciones no leídas
 
@@ -141,14 +155,6 @@ const openDialog = (value) => {
 }
 
 // Function to format the date as yyyyy-mm-dd
-// const formatDate = (date) => {
-//   if (!date) return null
-//   const d = new Date(date)
-//   const year = d.getFullYear()
-//   const month = String(d.getMonth() + 1).padStart(2, '0')
-//   const day = String(d.getDate()).padStart(2, '0')
-//   return `${year}-${month}-${day}`
-// }
 const formatDate = (date) => {
   if (!date) return null
   const d = new Date(date)
@@ -164,14 +170,10 @@ const formatDate = (date) => {
 
 // Define the createNewTask function
 const createNewTask = async () => {
+  try {
   // Format the start and end dates
   const formattedStartDate = formatDate(dataStore.newTask.startDate)
   const formattedEndDate = formatDate(dataStore.newTask.endDate)
-
-  // Log the formatted start and end dates
-  console.log('Start Date:', formattedStartDate)
-  console.log('End Date:', formattedEndDate)
-
   // Create a new object with the formatted dates
   const newTaskData = {
     ...dataStore.newTask,
@@ -179,16 +181,17 @@ const createNewTask = async () => {
     endDate: formattedEndDate
   }
   // Save the new task to Firestore
-  // await dataStore.createTask(dataStore.newTaskData)
   await dataStore.createTask(newTaskData)
-  console.log('Start Date:', dataStore.newTaskData.startDate)
-  console.log('End Date:', dataStore.newTaskData.endDate)
   // Reset the form
   form.value.reset()
   // Close the dialog
   dialogAddTask.value = false
   // Close the drawer
   drawer.value = false
+} catch (error) {
+  console.error('Error creating task:', console.error)
+  alert('An error ocurred while creating the task.')
+}
 }
 
 // Reset the form
@@ -286,7 +289,6 @@ const handleSettingsClick = () => {
   router.push({ name: 'settings' })
 }
 
-const rules = useMaxLengthRule()
 const loginParagraph = ref(null)
 
 const handleDotsClick = () => {
@@ -310,9 +312,6 @@ const dotsItems = computed(() => [
     action: handleLoginLogout
   }
 ])
-
-// Define the breakpoints array
-const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
 </script>
 
 <template>
@@ -497,8 +496,9 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
   </v-navigation-drawer>
   <v-dialog
     v-model="dialogAddTask"
-    :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+    :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
     class="dialog dialog-create-task"
+    
   >
     <v-card class="card card-create-task pa-4">
       <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
@@ -508,6 +508,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
         <v-form class="form form-create-task" ref="form" @submit.prevent>
           <v-text-field
             v-model="dataStore.newTask.title"
+            label="Title"
             placeholder="Enter title"
             prepend-inner-icon="mdi-format-title"
             type="text"
@@ -521,6 +522,7 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
           <v-divider class="mb-4"></v-divider>
           <v-textarea
             v-model="dataStore.newTask.description"
+            label="Description"
             placeholder="Enter description"
             prepend-inner-icon="mdi-text"
             type="text"
@@ -575,78 +577,103 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
             required
             :items="dataStore.statuses"
           ></v-select>
-          <!-- <v-divider class="mb-4"></v-divider>
-          <v-text-field
+          <v-divider class="mb-4"></v-divider>
+          <v-date-input
             v-model="dataStore.newTask.startDate"
             label="Start Date"
-            type="date"
-            variant="plain"
-            color="red-darken-2"
-            clearable
             required
+            clearable
+            variant="plain"
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
+            color="red-darken-2"
             class="date-create-task"
           >
+          </v-date-input>
+          <v-divider class="mb-4"></v-divider>
+          <v-date-input
+            v-model="dataStore.newTask.endDate"
+            label="Due Date"
+            required
+            clearable
+            variant="plain"
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
+            color="red-darken-2"
+            class="date-create-task"
+          >
+          </v-date-input>
+          <v-divider class="mb-4"></v-divider>
+          <v-text-field
+            v-model="dataStore.newTask.startDateHour"
+            label="Start Hour"
+            placeholder="hh:mm"
+            prepend-inner-icon="mdi-clock-time-four-outline"
+            variant="plain"
+            readonly
+            clearable
+            :active="menuStart"
+            :focused="menuStart"
+            color="red-darken-2"
+            @click="menuStart = true"
+          >
+            <v-menu
+              v-model="menuStart"
+              :close-on-content-click="false"
+              activator="parent"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <v-time-picker
+                v-if="menuStart"
+                v-model="dataStore.newTask.startDateHour"
+                format="24hr"
+                full-width
+                color="red-darken-2"
+                scrollable
+                required
+                class="time-create-task justify-center w-100"
+                :class="xs ? 'px-0' : ''"
+                @click:minute="$nextTick(() => (menuStart = false))"
+              ></v-time-picker>
+            </v-menu>
           </v-text-field>
           <v-divider class="mb-4"></v-divider>
           <v-text-field
-            v-model="dataStore.newTask.endDate"
-            label="End Date"
-            type="date"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            class="date-create-task"
-          >
-          </v-text-field> -->
-          <v-divider class="mb-4"></v-divider>
-          <v-date-input
-            v-model="dataStore.newTask.startDate"
-            label="Start Date"
-            required
-            clearable
-            variant="solo"
-            color="red-darken-2"
-            class="date-create-task"
-          >
-          </v-date-input>
-          <v-divider class="mb-4"></v-divider>
-          <v-date-input
-            v-model="dataStore.newTask.endDate"
-            label="End Date"
-            required
-            clearable
-            variant="solo"
-            color="red-darken-2"
-            class="date-create-task"
-          >
-          </v-date-input>
-          <v-divider class="mb-4"></v-divider>
-          <v-time-picker
-            v-model="dataStore.newTask.startDateHour"
-            label="End Time"
-            variant="plain"
-            color="red-darken-2"
-            required
-            format="24hr"
-            scrollable
-            class="time-create-task justify-center w-100"
-            :class="xs ? 'px-0' : ''"
-          >
-          </v-time-picker>
-          <v-divider class="mb-4"></v-divider>
-          <v-time-picker
             v-model="dataStore.newTask.endDateHour"
-            label="End Time"
+            label="Due Hour"
+            placeholder="hh:mm"
+            prepend-inner-icon="mdi-clock-time-four-outline"
             variant="plain"
-            color="red-darken-2"
-            required
-            format="24hr"
-            scrollable
-            class="time-create-task justify-center w-100"
-            :class="xs ? 'px-0' : ''"
+            readonly
+            clearable
+            :active="menuEnd"
+            :focused="menuEnd"
+            @click="menuEnd = true"
           >
-          </v-time-picker>
+            <v-menu
+              v-model="menuEnd"
+              :close-on-content-click="false"
+              activator="parent"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <v-time-picker
+                v-if="menuEnd"
+                v-model="dataStore.newTask.endDateHour"
+                format="24hr"
+                full-width
+                color="red-darken-2"
+                scrollable
+                required
+                class="time-create-task justify-center w-100"
+                :class="xs ? 'px-0' : ''"
+                @click:minute="$nextTick(() => (menuEnd = false))"
+              ></v-time-picker>
+            </v-menu>
+          </v-text-field>
           <v-divider class="mb-4"></v-divider>
         </v-form>
       </v-card-text>

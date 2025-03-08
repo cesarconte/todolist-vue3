@@ -117,9 +117,10 @@ export const useTaskStore = defineStore('tasks', () => {
     }
     if (selectedEndDate.value) {
       filteredTasks = filteredTasks.filter((task) => {
-        const taskEndDate = new Date(task.endDate.toDate()) // Convert Firestore Timestamp to Date
-        const selectedEndDateObj = new Date(selectedEndDate.value) // Convert selectedEndDate to Date
-        return taskEndDate.toDateString() === selectedEndDateObj.toDateString() // Compare dates
+        // const taskEndDate = new Date(task.endDate.toDate()) // Convert Firestore Timestamp to Date
+        // const selectedEndDateObj = new Date(selectedEndDate.value) // Convert selectedEndDate to Date
+        // return taskEndDate.toDateString() === selectedEndDateObj.toDateString() // Compare dates
+        return task.endDate === selectedEndDate.value
       })
     }
     return filteredTasks
@@ -230,6 +231,7 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   // Get filtered tasks paginated
+  // En taskStore.js
   const getFilteredTasksPaginated = async ({
     next = false,
     prev = false,
@@ -237,66 +239,65 @@ export const useTaskStore = defineStore('tasks', () => {
     first = false
   } = {}) => {
     try {
-      // Define the base query for filtered tasks
-      let tasksRef = query(
-        collection(db, 'tasks'),
-        orderBy('endDate', 'asc'), // Order by endDate first
-        orderBy('title', 'desc'), // Then by title in descending order
-        limit(pageSize) // Limit to pageSize
-      )
-
-      let q = query(tasksRef) // Start with a basic query
-
-      // Only apply filters if any are selected
-      if (
+      // Verify if filters
+      const hasFilters =
         searchTaskTitle.value ||
         selectedProjects.value.length > 0 ||
         selectedPriorities.value.length > 0 ||
         selectedStatuses.value.length > 0 ||
         selectedLabels.value.length > 0 ||
         selectedEndDate.value
-      ) {
-        // Apply filters
-        const filters = {
-          searchTaskTitle: searchTaskTitle.value,
-          selectedProjects: selectedProjects.value,
-          selectedPriorities: selectedPriorities.value,
-          selectedStatuses: selectedStatuses.value,
-          selectedLabels: selectedLabels.value,
-          selectedEndDate: selectedEndDate.value
-        }
-        // Apply filters to the query
-        q = applyFilters(q, filters)
+
+      if (!hasFilters) {
+        filteredTasks.value = []
+        noResultsMessage.value = false
+        return
       }
 
-      // Apply pagination logic based on options
+      // Define the base query for filtered tasks
+      let tasksRef = query(
+        collection(db, 'tasks'),
+        orderBy('endDate', 'asc'),
+        orderBy('title', 'desc'),
+        limit(pageSize)
+      )
+
+      let q = query(tasksRef)
+
+      // Aplicar filtros solo si existen
+      const filters = {
+        searchTaskTitle: searchTaskTitle.value,
+        selectedProjects: selectedProjects.value,
+        selectedPriorities: selectedPriorities.value,
+        selectedStatuses: selectedStatuses.value,
+        selectedLabels: selectedLabels.value,
+        selectedEndDate: selectedEndDate.value
+      }
+
+      q = applyFilters(q, filters)
+
+      // Aplicar paginación
       q = applyPagination(q, next, prev, last, first)
 
-      // Update pagination state based on the fetched data
       if (q) {
-        // Clear the filteredTasks array before fetching new data
         filteredTasks.value = []
-        // Subscribe to the new listener
         onSnapshot(q, (snapshot) => {
-          // Use docChanges() to efficiently handle changes
           snapshot.docChanges().forEach((change) => {
             updateTaskArray(filteredTasks, change)
           })
 
-          // Update pagination state
           lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
           firstVisibleTask.value = snapshot.docs[0]
-          // Update pagination state based on the fetched data
           hasNextPage.value =
             snapshot.docs.length === pageSize && currentPage.value < totalPagesInFilteredTasks.value
 
           hasPrevPage.value = currentPage.value > 1
-          // Set the no results message based on the snapshot
-          noResultsMessage.value = snapshot.empty // Set to true if no results
+          noResultsMessage.value = snapshot.empty
         })
       }
     } catch (error) {
       console.error('Error getting filtered tasks:', error)
+      error.value = 'Error loading tasks'
     }
   }
 
@@ -419,8 +420,19 @@ export const useTaskStore = defineStore('tasks', () => {
       q = query(q, where('label', 'in', filters.selectedLabels))
     }
     if (filters.selectedEndDate) {
-      const endDateTimestamp = new Date(filters.selectedEndDate)
-      q = query(q, where('endDate', '==', endDateTimestamp))
+      const selectedEndDateObj = new Date(filters.selectedEndDate)
+      // Get the year, month, and day components
+      const year = selectedEndDateObj.getFullYear()
+      const month = selectedEndDateObj.getMonth()
+      const day = selectedEndDateObj.getDate()
+
+      // Create a Date object for the beginning of the selected date
+      const startOfDay = new Date(year, month, day, 0, 0, 0)
+
+      // Create a Date object for the end of the selected date
+      const endOfDay = new Date(year, month, day, 23, 59, 59)
+
+      q = query(q, where('endDate', '>=', startOfDay), where('endDate', '<=', endOfDay))
     }
     return q
   }

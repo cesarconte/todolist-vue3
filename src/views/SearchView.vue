@@ -43,16 +43,50 @@ const handleSearchClick = () => {
   }
 }
 
+// Function to format the date as YYYY-MM-DD
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  let month = '' + (d.getMonth() + 1)
+  let day = '' + d.getDate()
+  const year = d.getFullYear()
+
+  if (month.length < 2) month = '0' + month
+  if (day.length < 2) day = '0' + day
+
+  return [year, month, day].join('-')
+}
+
 // Define the submitEditedTask function to save the edited task to Firestore
+// const submitEditedTask = async () => {
+//   try {
+//     // Save the edited task to Firestore
+//     await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+//     // Close the dialog
+//     taskStore.dialogEditTask = false
+//   } catch (error) {
+//     console.error(error)
+//     alert('Error saving task. Please try again.', error)
+//   }
+// }
 const submitEditedTask = async () => {
   try {
+    // Format the start and end dates
+    const formattedStartDate = formatDate(dataStore.editedTask.startDate)
+    const formattedEndDate = formatDate(dataStore.editedTask.endDate)
+
+    // Create a new object with the formatted dates
+    const editedTaskData = {
+      ...dataStore.editedTask,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate
+    }
     // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+    await dataStore.updateTask(dataStore.editedTask.id, editedTaskData)
     // Close the dialog
     taskStore.dialogEditTask = false
   } catch (error) {
     console.error(error)
-    alert('Error saving task. Please try again.', error)
   }
 }
 
@@ -110,8 +144,6 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             v-model="taskStore.searchTaskTitle"
             :items="userStore.isLoggedIn ? taskStore.tasks : []"
             :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
-            item-value="value"
-            item-text="title"
             label="Search by title..."
             clearable
             density="default"

@@ -16,6 +16,10 @@ const showCards = ref(false)
 const form = ref(null)
 const showAlert = ref(false)
 
+// Time Picker states
+const menuStart = ref(false)
+const menuEnd = ref(false)
+
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
   // Check if any filter is active
@@ -48,11 +52,52 @@ const handleFilterClick = () => {
   }
 }
 
+const handleClearDate = () => {
+  taskStore.selectedEndDate = null
+  taskStore.getFilteredTasksPaginated()
+}
+
+// Function to format the date as YYYY-MM-DD
+const formatDate = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  let month = '' + (d.getMonth() + 1)
+  let day = '' + d.getDate()
+  const year = d.getFullYear()
+
+  if (month.length < 2) month = '0' + month
+  if (day.length < 2) day = '0' + day
+
+  return [year, month, day].join('-')
+}
+
 // Define the submitEditedTask function to save the edited task to Firestore
+// const submitEditedTask = async () => {
+//   try {
+//     // Save the edited task to Firestore
+//     await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+//     // Close the dialog
+//     taskStore.dialogEditTask = false
+//   } catch (error) {
+//     console.error(error)
+//     alert('Error saving task. Please try again.', error)
+//   }
+// }
+
 const submitEditedTask = async () => {
   try {
+    // Format the start and end dates
+    const formattedStartDate = formatDate(dataStore.editedTask.startDate)
+    const formattedEndDate = formatDate(dataStore.editedTask.endDate)
+
+    // Create a new object with the formatted dates
+    const editedTaskData = {
+      ...dataStore.editedTask,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate
+    }
     // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
+    await dataStore.updateTask(dataStore.editedTask.id, editedTaskData)
     // Close the dialog
     taskStore.dialogEditTask = false
   } catch (error) {
@@ -244,15 +289,20 @@ when you pass JavaScript Date objects to the where clause. */
 
       <v-row>
         <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
-          <v-text-field
+          <v-date-input
             v-model="taskStore.selectedEndDate"
-            type="date"
+            :items="userStore.isLoggedIn ? dataStore.endDate : []"
             label="Filter by end date"
+            clearable
             variant="outlined"
             rounded
-            clearable
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
             color="red-accent-1"
-          />
+            class="date-create-task"
+            @click:clear="handleClearDate"
+          >
+          </v-date-input>
         </v-col>
       </v-row>
 
@@ -382,19 +432,21 @@ when you pass JavaScript Date objects to the where clause. */
             <v-form class="form form-edit-task" ref="form" @submit.prevent="submitEditedTask">
               <v-text-field
                 v-model="dataStore.editedTask.title"
+                label="Title"
                 placeholder="Enter title"
                 prepend-inner-icon="mdi-format-title"
                 type="text"
                 variant="plain"
                 color="red-darken-2"
-                counter
                 :rules="rules"
+                counter
                 clearable
                 required
               ></v-text-field>
               <v-divider class="mb-4"></v-divider>
               <v-textarea
                 v-model="dataStore.editedTask.description"
+                label="Description"
                 placeholder="Enter description"
                 prepend-inner-icon="mdi-text"
                 type="text"
@@ -450,28 +502,101 @@ when you pass JavaScript Date objects to the where clause. */
                 :items="dataStore.statuses"
               ></v-select>
               <v-divider class="mb-4"></v-divider>
-              <v-text-field
+              <v-date-input
                 v-model="dataStore.editedTask.startDate"
                 label="Start Date"
-                type="date"
-                variant="plain"
-                color="red-darken-2"
-                clearable
                 required
+                clearable
+                variant="plain"
+                prepend-icon=""
+                prepend-inner-icon="mdi-calendar"
+                color="red-darken-2"
                 class="date-create-task"
               >
+              </v-date-input>
+              <v-divider class="mb-4"></v-divider>
+              <v-date-input
+                v-model="dataStore.editedTask.endDate"
+                label="End Date"
+                required
+                clearable
+                variant="plain"
+                prepend-icon=""
+                prepend-inner-icon="mdi-calendar"
+                color="red-darken-2"
+                class="date-create-task"
+              >
+              </v-date-input>
+              <v-divider class="mb-4"></v-divider>
+              <v-text-field
+                v-model="dataStore.editedTask.startDateHour"
+                label="Start Hour"
+                placeholder="hh:mm"
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                variant="plain"
+                readonly
+                clearable
+                :active="menuStart"
+                :focused="menuStart"
+                color="red-darken-2"
+                @click="menuStart = true"
+              >
+                <v-menu
+                  v-model="menuStart"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <v-time-picker
+                    v-if="menuStart"
+                    v-model="dataStore.editedTask.startDateHour"
+                    format="24hr"
+                    full-width
+                    color="red-darken-2"
+                    scrollable
+                    required
+                    class="time-create-task justify-center w-100"
+                    :class="xs ? 'px-0' : ''"
+                    @click:minute="$nextTick(() => (menuStart = false))"
+                  ></v-time-picker>
+                </v-menu>
               </v-text-field>
               <v-divider class="mb-4"></v-divider>
               <v-text-field
-                v-model="dataStore.editedTask.endDate"
-                label="End Date"
-                type="date"
+                v-model="dataStore.editedTask.endDateHour"
+                label="Due Hour"
+                placeholder="hh:mm"
+                prepend-inner-icon="mdi-clock-time-four-outline"
                 variant="plain"
-                color="red-darken-2"
+                readonly
                 clearable
-                required
-                class="date-create-task"
+                :active="menuEnd"
+                :focused="menuEnd"
+                @click="menuEnd = true"
               >
+                <v-menu
+                  v-model="menuEnd"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <v-time-picker
+                    v-if="menuEnd"
+                    v-model="dataStore.editedTask.endDateHour"
+                    format="24hr"
+                    full-width
+                    color="red-darken-2"
+                    scrollable
+                    required
+                    class="time-create-task justify-center w-100"
+                    :class="xs ? 'px-0' : ''"
+                    @click:minute="$nextTick(() => (menuEnd = false))"
+                  ></v-time-picker>
+                </v-menu>
               </v-text-field>
             </v-form>
           </v-card-text>

@@ -12,6 +12,10 @@ const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const router = useRouter()
 
+// Time Picker states
+const menuStart = ref(false)
+const menuEnd = ref(false)
+
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
   taskId: {
@@ -45,17 +49,6 @@ const formatDate = (date) => {
   return [year, month, day].join('-')
 }
 
-// Define the submitEditedTask function
-// const submitEditedTask = async () => {
-//   try {
-//     // Save the edited task to Firestore
-//     await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
-//     // Close the dialog
-//     taskStore.dialogEditTask = false
-//   } catch (error) {
-//     console.error(error)
-//   }
-// }
 const submitEditedTask = async () => {
   try {
     // Format the start and end dates
@@ -287,7 +280,9 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             label="Start Date"
             required
             clearable
-            variant="solo"
+            variant="plain"
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
             color="red-darken-2"
             class="date-create-task"
           >
@@ -298,36 +293,84 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             label="End Date"
             required
             clearable
-            variant="solo"
+            variant="plain"
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
             color="red-darken-2"
             class="date-create-task"
           >
           </v-date-input>
           <v-divider class="mb-4"></v-divider>
-          <v-time-picker
+          <v-text-field
             v-model="dataStore.editedTask.startDateHour"
-            label="End Time"
+            label="Start Hour"
+            placeholder="hh:mm"
+            prepend-inner-icon="mdi-clock-time-four-outline"
             variant="plain"
+            readonly
+            clearable
+            :active="menuStart"
+            :focused="menuStart"
             color="red-darken-2"
-            required
-            format="24hr"
-            scrollable
-            class="time-create-task justify-center w-100"
-            :class="xs ? 'px-0' : ''"
+            @click="menuStart = true"
           >
-          </v-time-picker>
-          <v-time-picker
+            <v-menu
+              v-model="menuStart"
+              :close-on-content-click="false"
+              activator="parent"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <v-time-picker
+                v-if="menuStart"
+                v-model="dataStore.editedTask.startDateHour"
+                format="24hr"
+                full-width
+                color="red-darken-2"
+                scrollable
+                required
+                class="time-create-task justify-center w-100"
+                :class="xs ? 'px-0' : ''"
+                @click:minute="$nextTick(() => (menuStart = false))"
+              ></v-time-picker>
+            </v-menu>
+          </v-text-field>
+          <v-divider class="mb-4"></v-divider>
+          <v-text-field
             v-model="dataStore.editedTask.endDateHour"
-            label="End Time"
+            label="Due Hour"
+            placeholder="hh:mm"
+            prepend-inner-icon="mdi-clock-time-four-outline"
             variant="plain"
-            color="red-darken-2"
-            required
-            format="24hr"
-            scrollable
-            class="time-create-task justify-center w-100"
-            :class="xs ? 'px-0' : ''"
+            readonly
+            clearable
+            :active="menuEnd"
+            :focused="menuEnd"
+            @click="menuEnd = true"
           >
-          </v-time-picker>
+            <v-menu
+              v-model="menuEnd"
+              :close-on-content-click="false"
+              activator="parent"
+              transition="scale-transition"
+              offset-y
+              min-width="auto"
+            >
+              <v-time-picker
+                v-if="menuEnd"
+                v-model="dataStore.editedTask.endDateHour"
+                format="24hr"
+                full-width
+                color="red-darken-2"
+                scrollable
+                required
+                class="time-create-task justify-center w-100"
+                :class="xs ? 'px-0' : ''"
+                @click:minute="$nextTick(() => (menuEnd = false))"
+              ></v-time-picker>
+            </v-menu>
+          </v-text-field>
           <v-divider class="mb-4"></v-divider>
         </v-form>
       </v-card-text>
