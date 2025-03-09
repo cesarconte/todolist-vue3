@@ -1,8 +1,9 @@
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
+import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useRouter } from 'vue-router'
 import VActionButtons from './VActionButtons.vue'
 import { useDisplay } from 'vuetify'
@@ -12,7 +13,37 @@ import VNotificationSettings from '@/components/VNotificationSettings.vue'
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+const notificationsStore = useNotificationsStore()
 const router = useRouter()
+
+onMounted(async () => {
+  if (userStore.isLoggedIn) {
+    await notificationsStore.loadSettings()
+  }
+})
+
+// Watcher para manejar cambios de autenticación
+watch(
+  () => userStore.isLoggedIn,
+  async (isLoggedIn) => {
+    if (isLoggedIn) {
+      try {
+        await notificationsStore.loadSettings() // Ya incluye la suscripción
+      } catch (error) {
+        console.error('Error loading notifications:', error)
+        notificationsStore.showSnackbar = {
+          show: true,
+          message: 'Failed to load notifications'
+        }
+      }
+    } else {
+      notificationsStore.unsubscribe()
+      notificationsStore.clearTimeouts()
+      notificationsStore.clearNotifications()
+    }
+  },
+  { immediate: true, flush: 'post' }
+)
 
 // Dialog and Drawer states
 const drawer = ref(false)
@@ -21,7 +52,6 @@ const group = ref(null)
 const dialogAddTask = ref(false)
 const dialogAddProject = ref(false)
 const showNotificationsSettings = ref(false)
-const unreadNotificationsCount = ref(0)
 
 // Form References
 const form = ref(null)
@@ -36,11 +66,16 @@ const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
 // Validation Rules
 const rules = useMaxLengthRule()
 
-// Lógica para actualizar el contador de notificaciones no leídas
+// Computed properties
+const unreadNotificationsCount = computed(() => notificationsStore.unreadCount)
 
-// Watch for changes in the group variable
-watch(group, () => {
-  drawer.value = false
+const notificationTooltipText = computed(() => {
+  if (!userStore.isLoggedIn) return 'Sign in to view notifications'
+  if (!notificationsStore.notificationSettings.enabled)
+    return 'Notifications are disabled in settings'
+  return unreadNotificationsCount.value === 0
+    ? 'No unread notifications'
+    : `${unreadNotificationsCount.value} unread notification${unreadNotificationsCount.value !== 1 ? 's' : ''}`
 })
 
 // Compute the tooltip text based on the drawer state
@@ -64,6 +99,11 @@ const loginLogoutText = computed(() => {
   } else {
     return 'Login with Google'
   }
+})
+
+// Watch for changes in the group variable
+watch(group, () => {
+  drawer.value = false
 })
 
 const handleLoginLogout = () => {
@@ -171,27 +211,27 @@ const formatDate = (date) => {
 // Define the createNewTask function
 const createNewTask = async () => {
   try {
-  // Format the start and end dates
-  const formattedStartDate = formatDate(dataStore.newTask.startDate)
-  const formattedEndDate = formatDate(dataStore.newTask.endDate)
-  // Create a new object with the formatted dates
-  const newTaskData = {
-    ...dataStore.newTask,
-    startDate: formattedStartDate,
-    endDate: formattedEndDate
+    // Format the start and end dates
+    const formattedStartDate = formatDate(dataStore.newTask.startDate)
+    const formattedEndDate = formatDate(dataStore.newTask.endDate)
+    // Create a new object with the formatted dates
+    const newTaskData = {
+      ...dataStore.newTask,
+      startDate: formattedStartDate,
+      endDate: formattedEndDate
+    }
+    // Save the new task to Firestore
+    await dataStore.createTask(newTaskData)
+    // Reset the form
+    form.value.reset()
+    // Close the dialog
+    dialogAddTask.value = false
+    // Close the drawer
+    drawer.value = false
+  } catch (error) {
+    console.error('Error creating task:', console.error)
+    alert('An error ocurred while creating the task.')
   }
-  // Save the new task to Firestore
-  await dataStore.createTask(newTaskData)
-  // Reset the form
-  form.value.reset()
-  // Close the dialog
-  dialogAddTask.value = false
-  // Close the drawer
-  drawer.value = false
-} catch (error) {
-  console.error('Error creating task:', console.error)
-  alert('An error ocurred while creating the task.')
-}
 }
 
 // Reset the form
@@ -282,6 +322,7 @@ const handleNotificationsClick = () => {
     router.push({ path: '/login' })
     return
   }
+  notificationsStore.markAsRead()
   showNotificationsSettings.value = !showNotificationsSettings.value
 }
 
@@ -363,7 +404,7 @@ const dotsItems = computed(() => [
               :disabled="!userStore.isLoggedIn"
               class="notifications-btn"
             >
-              <v-icon>mdi-bell-outline</v-icon>
+              <v-icon icon="mdi-bell-outline"></v-icon>
               <v-badge
                 v-if="unreadNotificationsCount > 0"
                 :content="unreadNotificationsCount"
@@ -373,8 +414,7 @@ const dotsItems = computed(() => [
             </v-btn>
           </div>
         </template>
-        <span v-if="!userStore.isLoggedIn">Sign in to view notifications</span>
-        <span v-else>Notifications</span>
+        <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
       <v-btn icon aria-label="Settings">
         <v-icon>mdi-cog-outline</v-icon>
@@ -498,7 +538,6 @@ const dotsItems = computed(() => [
     v-model="dialogAddTask"
     :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
     class="dialog dialog-create-task"
-    
   >
     <v-card class="card card-create-task pa-4">
       <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
@@ -736,9 +775,8 @@ const dotsItems = computed(() => [
       </v-card-text>
 
       <v-card-actions
-        :class="
-          smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
-        "
+        :class="smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
+          "
       >
         <v-btn
           v-for="(btn, i) in btnsFormAddProject"

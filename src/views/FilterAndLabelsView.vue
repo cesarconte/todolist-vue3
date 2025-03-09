@@ -72,18 +72,6 @@ const formatDate = (date) => {
 }
 
 // Define the submitEditedTask function to save the edited task to Firestore
-// const submitEditedTask = async () => {
-//   try {
-//     // Save the edited task to Firestore
-//     await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
-//     // Close the dialog
-//     taskStore.dialogEditTask = false
-//   } catch (error) {
-//     console.error(error)
-//     alert('Error saving task. Please try again.', error)
-//   }
-// }
-
 const submitEditedTask = async () => {
   try {
     // Format the start and end dates

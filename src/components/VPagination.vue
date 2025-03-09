@@ -1,6 +1,4 @@
 <script setup>
-// import { useTaskStore } from '@/stores/taskStore.js'
-// const taskStore = useTaskStore()
 const props = defineProps({
   currentPage: {
     type: Number,

@@ -39,5 +39,3 @@ const { mobile, xs, sm, md } = useDisplay()
     </v-btn>
   </div>
 </template>
-
-<!-- :class="[button.class, mobile ? 'mb-3' : 'mb-3', { 'mr-3': index < buttons.length - 1 }]" -->

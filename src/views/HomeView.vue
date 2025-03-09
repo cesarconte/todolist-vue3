@@ -45,11 +45,7 @@ const events = computed(() => {
   }
 })
 
-// onMounted(() => {
-//   if (userStore.isLoggedIn) {
-//     taskStore.getTasksByProjectPaginated() // Fetch tasks when HomeView mounts
-//   }
-// })
+
 onMounted(async () => {
   if (userStore.isLoggedIn) {
     await taskStore.getTasksByProjectPaginated()

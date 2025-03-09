@@ -252,29 +252,6 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             :items="dataStore.statuses"
           ></v-select>
           <v-divider class="mb-4"></v-divider>
-          <!-- <v-text-field
-            v-model="dataStore.editedTask.startDate"
-            label="Start Date"
-            type="date"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            class="date-create-task"
-          >
-          </v-text-field>
-          <v-divider class="mb-4"></v-divider>
-          <v-text-field
-            v-model="dataStore.editedTask.endDate"
-            label="End Date"
-            type="date"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            class="date-create-task"
-          >
-          </v-text-field> -->
           <v-date-input
             v-model="dataStore.editedTask.startDate"
             label="Start Date"
