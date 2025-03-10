@@ -10,6 +10,8 @@ const isLoading = ref(false)
 const saveError = ref(null)
 const emit = defineEmits(['close'])
 
+// const selectedItems = ref([])
+
 const browserSupport = ref({
   notifications: 'Notification' in window,
   serviceWorker: 'serviceWorker' in navigator,
@@ -130,16 +132,21 @@ const notificationTimeOptions = [
   { title: '30 minutes before', value: 0.5 },
   { title: '15 minutes before', value: 0.25 }
 ]
-
 </script>
 
 <template>
   <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
     <v-card-title class="d-flex align-center">
-      <span>Notification Settings</span>
+      <span>Notifications</span>
       <v-tooltip v-if="!hasFullSupport" location="right">
         <template v-slot:activator="{ props }">
-          <v-icon v-bind="props" color="warning" class="ml-4">mdi-alert</v-icon>
+          <v-icon
+            v-bind="props"
+            icon="mdi-alert"
+            color="warning"
+            class="ml-4"
+            aria-label="Browser Support Warning"
+          ></v-icon>
         </template>
         <span class="text-caption pr-4">
           Browser notification features:
@@ -149,6 +156,7 @@ const notificationTimeOptions = [
             :class="value ? 'text-success' : 'text-error'"
             class="d-flex align-center justify-end"
           >
+            >
             {{ key }}: {{ value ? '✓' : '✗' }}
           </span>
         </span>
@@ -157,11 +165,11 @@ const notificationTimeOptions = [
 
     <v-divider class="my-4" />
 
-    <v-card-text>
-      <div v-if="isLoading" class="text-center py-4">
+    <v-card-text class="pa-0">
+      <v-container v-if="isLoading" class="text-center py-4">
         <v-progress-circular indeterminate color="primary" size="24" />
-        <div class="text-caption mt-2">Saving settings...</div>
-      </div>
+        <span class="text-caption mt-2">Saving settings...</span>
+      </v-container>
 
       <template v-else>
         <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
@@ -173,69 +181,91 @@ const notificationTimeOptions = [
           Some notification features are not available in your current browser.
         </v-alert>
 
-        <v-switch
-          v-model="notificationsStore.notificationSettings.enabled"
-          :label="switchLabel"
-          :color="switchColor"
-          :disabled="isDisabled"
-          inset
-          hide-details
-          class="mb-4"
-        >
-        </v-switch>
+        <v-card-item class="pt-0">
+          <v-switch
+            v-model="notificationsStore.notificationSettings.enabled"
+            :label="switchLabel"
+            :color="switchColor"
+            :disabled="isDisabled"
+            inset
+            hide-details
+          >
+          </v-switch>
+        </v-card-item>
 
-        <v-select
-          v-model="notificationsStore.notificationSettings.time"
-          :items="notificationTimeOptions"
-          item-value="value"
-          item-title="title"
-          label="Notification Times"
-          variant="outlined"
-          :color="switchColor"
-          :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
-          multiple
-          clearable
-          chips
-          closable-chips
-          hide-details
-        >
-          <template v-slot:selection="{ item, index }">
-            <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
-              {{ item.title }}
-            </v-chip>
-            <span v-if="index === 2" class="text-grey text-caption ml-1">
-              +{{ notificationsStore.notificationSettings.time.length - 2 }} more
-            </span>
-          </template>
-        </v-select>
+        <v-card-item>
+          <v-select
+            v-model="notificationsStore.notificationSettings.time"
+            :items="notificationTimeOptions"
+            item-value="value"
+            item-title="title"
+            label="Notification Times"
+            variant="outlined"
+            :color="switchColor"
+            :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
+            multiple
+            clearable
+            chips
+            closable-chips
+            hide-details
+            class="mt-4"
+          >
+            <template v-slot:selection="{ item, index }">
+              <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
+                {{ item.title }}
+              </v-chip>
+              <span v-if="index === 2" class="text-grey text-caption ml-1">
+                +{{ notificationsStore.notificationSettings.time.length - 2 }} more
+              </span>
+            </template>
+          </v-select>
+        </v-card-item>
 
-        <div v-if="notificationsStore.notificationSettings.enabled" class="mt-6">
-          <v-divider class="mb-4" />
-
-          <div class="d-flex flex-column align-center ga-4">
-            <div class="text-caption text-medium-emphasis">
-              <v-icon icon="mdi-clock-outline" />
+        <v-card-item class="mb-2">
+          <v-row class="text-caption">
+            <v-col cols="auto" class="d-flex align-center">
+              <v-icon icon="mdi-clock-outline" class="mr-2" />
               Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
-            </div>
+            </v-col>
+          </v-row>
+        </v-card-item>
 
-            <v-btn
-              class="text-none rounded-pill w-100"
-              color="secondary"
-              variant="tonal"
-              :disabled="isDisabled"
-              @click="notificationsStore.sendTestNotification()"
-            >
-              <v-icon left icon="mdi-bell-outline" class="mr-2" />
-              Test Notification
-            </v-btn>
-          </div>
-        </div>
+        <!-- <v-divider class="mb-4" /> -->
+
+        <!-- <v-card-item v-if="notificationsStore.notificationSettings.enabled">
+          <v-treeview
+            v-model:selected="selectedItems"
+            :items="userStore.user.notifications"
+            :item-props="itemProps"
+            class="notification-tree mb-4"
+            return-object
+            selectable
+            activatable
+            selected-color="red-accent-1"
+          >
+          </v-treeview> 
+        </v-card-item> -->
       </template>
     </v-card-text>
 
-    <v-card-actions class="px-4 pb-4">
+    <v-divider class="mb-4" />
+
+    <v-card-actions class="d-flex flex-column align-center ga-4">
       <v-btn
         class="text-none rounded-pill"
+        color="secondary"
+        variant="tonal"
+        size="large"
+        :disabled="isDisabled"
+        block
+        @click="notificationsStore.sendTestNotification()"
+      >
+        <v-icon left icon="mdi-bell-outline" class="mr-2" />
+        Test Notification
+      </v-btn>
+
+      <v-btn
+        class="text-none rounded-pill ml-0"
         color="red-darken-2"
         variant="tonal"
         size="large"

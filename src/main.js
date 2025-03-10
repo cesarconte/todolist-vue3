@@ -13,6 +13,7 @@ import * as directives from 'vuetify/directives'
 import { VDateInput } from 'vuetify/labs/VDateInput'
 import { VCalendar } from 'vuetify/labs/VCalendar'
 import { VTimePicker } from 'vuetify/lib/labs/components.mjs'
+import { VTreeview } from 'vuetify/labs/VTreeview'
 
 
 const vuetify = createVuetify({
@@ -20,7 +21,8 @@ const vuetify = createVuetify({
     ...(components),
     VDateInput,
     VCalendar,
-    VTimePicker
+    VTimePicker,
+    VTreeview
   },
   directives
 })

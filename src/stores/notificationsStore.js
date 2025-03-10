@@ -3,8 +3,11 @@ import { db } from '@/firebase'
 import {
   doc,
   updateDoc,
+  deleteDoc,
   getDoc,
+  getDocs,
   addDoc,
+  orderBy,
   query,
   where,
   onSnapshot,
@@ -119,7 +122,8 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         const q = query(
           collection(db, 'users', userStore.user.uid, 'notifications'),
-          where('read', '==', false)
+          where('read', '==', false),
+          orderBy('timestamp', 'desc')
         )
 
         this.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
@@ -300,42 +304,98 @@ export const useNotificationsStore = defineStore('notifications', {
       }
     },
 
-    async markAsRead() {
+    async loadNotifications() {
       const userStore = useUserStore()
       try {
         if (!userStore.user) return
-        // Marcar como leídas en Firestore
+
+        const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
+        const q = query(notificationsRef, orderBy('timestamp', 'desc'))
+
+        const snapshot = await getDocs(q)
+        this.activeNotifications = snapshot.docs.map((doc) => {
+          const data = doc.data()
+          return {
+            id: doc.id,
+            ...data,
+            timestamp: data.timestamp,
+            show: true
+          }
+        })
+      } catch (error) {
+        this.handleError('Error loading notifications', error)
+      }
+    },
+
+    async markAsRead(notificationId = null) {
+      const userStore = useUserStore()
+      try {
+        if (!userStore.user) return
+
         const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
         const batch = []
 
-        this.activeNotifications.forEach((notification) => {
-          if (!notification.read) {
-            // batch.push(updateDoc(doc(notificationsRef, notification.id), { read: true }))
-            const docRef = doc(notificationsRef, notification.id)
-            batch.push(updateDoc(docRef, { read: true }))
-          }
-        })
+        if (notificationId) {
+          // Actualización individual
+          const docRef = doc(notificationsRef, notificationId)
+          batch.push(updateDoc(docRef, { read: true }))
+          batch.push(deleteDoc(docRef))
+        } else {
+          // Actualización masiva (comportamiento original)
+          this.activeNotifications.forEach((notification) => {
+            if (!notification.read) {
+              const docRef = doc(notificationsRef, notification.id)
+              batch.push(updateDoc(docRef, { read: true }))
+            }
+          })
+        }
 
         await Promise.all(batch)
-        this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
+
+        // Actualizar estado local
+        if (notificationId) {
+          const index = this.activeNotifications.findIndex((n) => n.id === notificationId)
+          if (index !== -1) this.activeNotifications[index].read = true
+        } else {
+          this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
+        }
       } catch (error) {
         this.handleError('Error marking notifications as read', error)
       }
     },
 
-    async markSingleAsRead(notificationId) {
+    // En notificationsStore.js dentro de actions
+    async markAllAsRead() {
       const userStore = useUserStore()
       try {
-        await updateDoc(doc(db, 'users', userStore.user.uid, 'notifications', notificationId), {
-          read: true
+        if (!userStore.user) return
+
+        // Referencia a la colección de notificaciones
+        const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
+
+        // Obtener todas las notificaciones no leídas
+        const q = query(notificationsRef, where('read', '==', false))
+        const snapshot = await getDocs(q)
+
+        // Crear batch de actualizaciones
+        const batch = []
+        snapshot.forEach((doc) => {
+          batch.push(updateDoc(doc.ref, { read: true }))
         })
+
+        await Promise.all(batch)
+
         // Actualizar estado local
-        const index = this.activeNotifications.findIndex((n) => n.id === notificationId)
-        if (index !== -1) {
-          this.activeNotifications[index].read = true
+        this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+
+        this.showSnackbar = {
+          show: true,
+          message: 'All notifications marked as read'
         }
       } catch (error) {
-        this.handleError('Error marking notification as read', error)
+        this.handleError('Error marking all as read', error)
       }
     },
 

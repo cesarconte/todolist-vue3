@@ -8,7 +8,8 @@ import { useRouter } from 'vue-router'
 import VActionButtons from './VActionButtons.vue'
 import { useDisplay } from 'vuetify'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
-import VNotificationSettings from '@/components/VNotificationSettings.vue'
+import VNotificationSettings from './VNotificationSettings.vue'
+import VNotificationsList from './VNotificationsList.vue'
 
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
@@ -51,7 +52,9 @@ const drawerDots = ref(false)
 const group = ref(null)
 const dialogAddTask = ref(false)
 const dialogAddProject = ref(false)
+const showNotificationsList = ref(false)
 const showNotificationsSettings = ref(false)
+const settingsMenu = ref(false)
 
 // Form References
 const form = ref(null)
@@ -316,18 +319,36 @@ const handleProjectClick = (project) => {
   drawer.value = false
 }
 
-const handleNotificationsClick = () => {
+const handleNotificationsClick = async () => {
   if (!userStore.isLoggedIn) {
-    alert('Debes iniciar sesión para acceder a las notificaciones')
+    alert('You must log in to view notifications')
     router.push({ path: '/login' })
     return
   }
-  notificationsStore.markAsRead()
-  showNotificationsSettings.value = !showNotificationsSettings.value
+  
+  try {
+    await notificationsStore.loadNotifications()
+    showNotificationsList.value = !showNotificationsList.value
+  } catch (error) {
+    console.error('Error loading notifications:', error)
+    notificationsStore.showSnackbar = {
+      show: true,
+      message: 'Failed to load notifications'
+    }
+  }
 }
 
 const handleSettingsClick = () => {
-  router.push({ name: 'settings' })
+  settingsMenu.value = !settingsMenu.value
+}
+
+const handleNotificationsSettingsClick = () => {
+  showNotificationsSettings.value = true
+}
+
+const handleNotificationSelection = (selectedNotifications) => {
+  // Lógica para manejar selección si es necesaria
+  console.log('Selected notifications:', selectedNotifications)
 }
 
 const loginParagraph = ref(null)
@@ -416,12 +437,42 @@ const dotsItems = computed(() => [
         </template>
         <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
-      <v-btn icon aria-label="Settings">
-        <v-icon>mdi-cog-outline</v-icon>
-        <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"
-          >Settings</v-tooltip
-        >
-      </v-btn>
+      <v-menu v-model="settingsMenu" :close-on-content-click="false" offset-y>
+        <template v-slot:activator="{ props }">
+          <v-btn icon aria-label="Settings" v-bind="props">
+            <v-icon>mdi-cog-outline</v-icon>
+            <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"
+              >Settings</v-tooltip
+            >
+          </v-btn>
+        </template>
+        <v-list density="compact" class="pa-2">
+          <v-list-item
+            @click="handleNotificationsSettingsClick"
+            class="rounded-lg mb-2"
+            variant="tonal"
+            color="red-darken-2"
+            :ripple="true"
+            active-class="red-lighten-5"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-bell-cog-outline" color="red-darken-2" class="mr-3"></v-icon>
+            </template>
+
+            <v-list-item-title class="font-weight-bold text-red-darken-2">
+              Notification Settings
+            </v-list-item-title>
+
+            <v-list-item-subtitle class="text-caption">
+              Manage your notification preferences
+            </v-list-item-subtitle>
+
+            <template v-slot:append>
+              <v-icon icon="mdi-chevron-right" color="grey-darken-1"></v-icon>
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </template>
     <template v-else>
       <v-btn icon="mdi-dots-vertical" variant="text" @click="handleDotsClick"></v-btn>
@@ -434,6 +485,44 @@ const dotsItems = computed(() => [
     class="dialog dialog-notifications-settings"
   >
     <VNotificationSettings @close="showNotificationsSettings = false" />
+  </v-dialog>
+  <v-dialog
+    v-model="showNotificationsList"
+    max-width="600px"
+    class="dialog dialog-notifications-list"
+  >
+    <v-card class="notification-list-card pa-4 rounded-lg elevation-4">
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span class="text-h6">Notifications</span>
+        <v-btn icon @click="showNotificationsList = false" variant="text" color="grey-darken-1">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+
+      <v-divider class="my-4" />
+
+      <v-card-text class="pa-0">
+        <VNotificationsList
+          :items="notificationsStore.activeNotifications"
+          :selected="[]"
+          @update:selected="handleNotificationSelection"
+        />
+      </v-card-text>
+
+      <v-card-actions class="justify-end mt-4">
+        <v-btn
+          color="red-darken-2"
+          variant="tonal"
+          rounded="pill"
+          @click="notificationsStore.markAllAsRead()"
+          :disabled="unreadNotificationsCount === 0"
+          class="text-none px-4"
+          append-icon="mdi-check"
+        >
+          Mark all as read
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-dialog>
   <v-navigation-drawer
     v-model="drawer"
@@ -775,8 +864,9 @@ const dotsItems = computed(() => [
       </v-card-text>
 
       <v-card-actions
-        :class="smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
-          "
+        :class="
+          smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
+        "
       >
         <v-btn
           v-for="(btn, i) in btnsFormAddProject"
@@ -816,3 +906,30 @@ const dotsItems = computed(() => [
     </v-list>
   </v-navigation-drawer>
 </template>
+
+<style scoped>
+.notification-list-card {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.dialog-notifications-list :deep(.v-treeview-node__root) {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.dialog-notifications-list :deep(.v-treeview-node__root:hover) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dialog-notifications-list :deep(.v-treeview-node__content) {
+  align-items: center;
+}
+
+.dialog-notifications-list :deep(.v-treeview-node__label) {
+  flex-grow: 1;
+  margin-left: 12px;
+}
+</style>
