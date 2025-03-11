@@ -11,114 +11,88 @@ import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
 
-const dataStore = useDataStore()
-const taskStore = useTaskStore()
-const userStore = useUserStore()
-const notificationsStore = useNotificationsStore()
-const router = useRouter()
+/************************************
+ * Stores
+ ************************************/
+const dataStore = useDataStore() // Accesses the data store
+const taskStore = useTaskStore() // Accesses the task store
+const userStore = useUserStore() // Accesses the user store
+const notificationsStore = useNotificationsStore() // Accesses the notifications store
 
-onMounted(async () => {
-  if (userStore.isLoggedIn) {
-    await notificationsStore.loadSettings()
-  }
-})
+/************************************
+ * Router
+ ************************************/
+const router = useRouter() // Accesses the Vue Router
 
-// Watcher para manejar cambios de autenticación
-watch(
-  () => userStore.isLoggedIn,
-  async (isLoggedIn) => {
-    if (isLoggedIn) {
-      try {
-        await notificationsStore.loadSettings() // Ya incluye la suscripción
-      } catch (error) {
-        console.error('Error loading notifications:', error)
-        notificationsStore.showSnackbar = {
-          show: true,
-          message: 'Failed to load notifications'
-        }
-      }
-    } else {
-      notificationsStore.unsubscribe()
-      notificationsStore.clearTimeouts()
-      notificationsStore.clearNotifications()
-    }
-  },
-  { immediate: true, flush: 'post' }
-)
+/************************************
+ * Composables
+ ************************************/
+const rules = useMaxLengthRule() // Accesses validation rules
 
-// Dialog and Drawer states
-const drawer = ref(false)
-const drawerDots = ref(false)
-const group = ref(null)
-const dialogAddTask = ref(false)
-const dialogAddProject = ref(false)
-const showNotificationsList = ref(false)
-const showNotificationsSettings = ref(false)
-const settingsMenu = ref(false)
+/************************************
+ * Refs
+ ************************************/
+const drawer = ref(false) // Controls the navigation drawer
+const drawerDots = ref(false) // Controls the dots menu drawer
+const group = ref(null) // Tracks the selected group in the drawer
+const dialogAddTask = ref(false) // Controls the add task dialog
+const dialogAddProject = ref(false) // Controls the add project dialog
+const showNotificationsList = ref(false) // Controls the notifications list dialog
+const showNotificationsSettings = ref(false) // Controls the notifications settings dialog
+const settingsMenu = ref(false) // Controls the settings menu
+const form = ref(null) // Reference to the form
+const menuStart = ref(false) // Controls the start time picker menu
+const menuEnd = ref(false) // Controls the end time picker menu
+const loginParagraph = ref(null) // Reference to the login paragraph
 
-// Form References
-const form = ref(null)
-
-// Time Picker states
-const menuStart = ref(false)
-const menuEnd = ref(false)
-
-// Breakpoints
-const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay()
-
-// Validation Rules
-const rules = useMaxLengthRule()
-
-// Computed properties
-const unreadNotificationsCount = computed(() => notificationsStore.unreadCount)
+/************************************
+ * Computed Properties
+ ************************************/
+const unreadNotificationsCount = computed(() => notificationsStore.unreadCount) // Calculates unread notifications count
 
 const notificationTooltipText = computed(() => {
+  // Generates tooltip text for notifications
   if (!userStore.isLoggedIn) return 'Sign in to view notifications'
+
   if (!notificationsStore.notificationSettings.enabled)
     return 'Notifications are disabled in settings'
+
   return unreadNotificationsCount.value === 0
     ? 'No unread notifications'
     : `${unreadNotificationsCount.value} unread notification${unreadNotificationsCount.value !== 1 ? 's' : ''}`
 })
 
-// Compute the tooltip text based on the drawer state
 const tooltipText = computed(() => {
+  // Generates tooltip text for the menu button
   return drawer.value ? 'Hide Menu' : 'Show Menu'
 })
 
-// Computed property to determine the button's icon based on login status
 const loginLogoutIcon = computed(() => {
-  if (userStore.isLoggedIn) {
-    return 'mdi-account-check-outline' // Use a different icon for logout
-  } else {
-    return 'mdi-account-arrow-right-outline' // Default icon for login
-  }
+  // Determines the login/logout button icon
+  return userStore.isLoggedIn ? 'mdi-account-check-outline' : 'mdi-account-arrow-right-outline'
 })
+// const loginLogoutIcon = computed(() => {
+//   if (userStore.isLoggedIn) {
+//     return 'mdi-account-check-outline' // Use a different icon for logout
+//   } else {
+//     return 'mdi-account-arrow-right-outline' // Default icon for login
+//   }
+// })
 
-// Computed property to determine the button's text and action
 const loginLogoutText = computed(() => {
-  if (userStore.isLoggedIn) {
-    return 'Logout'
-  } else {
-    return 'Login with Google'
-  }
+  // Determines the login/logout button text
+  return userStore.isLoggedIn ? 'Logout' : 'Login with Google'
 })
+// const loginLogoutText = computed(() => {
+//   if (userStore.isLoggedIn) {
+//     return 'Logout'
+//   } else {
+//     return 'Login with Google'
+//   }
+// })
 
-// Watch for changes in the group variable
-watch(group, () => {
-  drawer.value = false
-})
-
-const handleLoginLogout = () => {
-  if (userStore.isLoggedIn) {
-    userStore.logOut() // Log out if user is logged in
-  } else {
-    router.push({ path: '/login' }) // Navigate to login if not logged in
-  }
-}
-
-// Define the navigation items array
 const navItems = computed(() => [
+  // Defines the navigation items
   {
     title: userStore.isLoggedIn ? userStore.userName : 'User', // Set the title based on login status
     value: 'user', // Value for the navigation item
@@ -163,18 +137,72 @@ const navItems = computed(() => [
   }
 ])
 
-// Define the cruds array
-const cruds = [
+const dotsItems = computed(() => [
+  // Defines the dots menu items
   {
-    title: 'Add Project',
-    value: 'add project',
-    icon: 'mdi-plus',
-    function: () => openDialog('add project')
+    title: 'Notifications',
+    icon: 'mdi-bell-outline',
+    action: handleNotificationsClick
+  },
+  {
+    title: 'Settings',
+    icon: 'mdi-cog-outline',
+    action: handleSettingsClick
+  },
+  {
+    title: loginLogoutText.value,
+    icon: loginLogoutIcon.value,
+    action: handleLoginLogout
   }
-]
+])
 
-// Define the openDialog function based on the value parameter
+/************************************
+ * Watchers
+ ************************************/
+watch(group, () => {
+  // Watch for changes in the group variable
+  // Closes the drawer when a group is selected
+  drawer.value = false
+})
+
+watch(
+  // Watcher para manejar cambios de autenticación
+  () => userStore.isLoggedIn,
+  async (isLoggedIn) => {
+    if (isLoggedIn) {
+      // Handles changes in user authentication status
+      try {
+        await notificationsStore.loadSettings() // Ya incluye la suscripción
+      } catch (error) {
+        console.error('Error loading notifications:', error)
+        notificationsStore.showSnackbar = {
+          show: true,
+          message: 'Failed to load notifications'
+        }
+      }
+    } else {
+      notificationsStore.unsubscribe()
+      notificationsStore.clearTimeouts()
+      notificationsStore.clearNotifications()
+    }
+  },
+  { immediate: true, flush: 'post' }
+)
+
+/************************************
+ * Methods / Functions
+ ************************************/
+const handleLoginLogout = () => {
+  // Handles login/logout actions
+  if (userStore.isLoggedIn) {
+    userStore.logOut() // Log out if user is logged in
+  } else {
+    router.push({ path: '/login' }) // Navigate to login if not logged in
+  }
+}
+
 const openDialog = (value) => {
+  // Define the openDialog function based on the value parameter
   // Check if the user is logged in before opening the "add task" dialog
   if (value === 'add task' && !userStore.isLoggedIn) {
     // Show alert
@@ -197,8 +225,8 @@ const openDialog = (value) => {
   }
 }
 
-// Function to format the date as yyyyy-mm-dd
 const formatDate = (date) => {
+  // Formats a date object into yyyy-mm-dd format
   if (!date) return null
   const d = new Date(date)
   let month = '' + (d.getMonth() + 1)
@@ -211,8 +239,8 @@ const formatDate = (date) => {
   return [year, month, day].join('-')
 }
 
-// Define the createNewTask function
 const createNewTask = async () => {
+  // Define the createNewTask function
   try {
     // Format the start and end dates
     const formattedStartDate = formatDate(dataStore.newTask.startDate)
@@ -237,14 +265,91 @@ const createNewTask = async () => {
   }
 }
 
-// Reset the form
 const reset = () => {
+  // Resets the form
   form.value.reset()
   alert('Form has been reset')
 }
 
-// Define the buttons array
+const addNewProject = async () => {
+  // Define the addNewProject function to create a new project
+  try {
+    await dataStore.createProject(dataStore.newProject)
+    // Reset the form
+    form.value.reset()
+    // Close the dialog
+    dialogAddProject.value = false
+    // Close the drawer
+    drawer.value = false
+    // Optionally display a success message
+    alert('Project ' + dataStore.newProject.title + ' added successfully!')
+  } catch (error) {
+    // Handle errors, e.g., display an error message
+    console.error('Error adding project:', error)
+    alert('An error occurred while adding the project.')
+  }
+}
+
+const handleProjectClick = (project) => {
+  // Handles the click on a project item in the navigation drawer.
+  // Sets the selected project in the task store, fetches tasks for that project,
+  // navigates to the project's task list, and closes the drawer.
+  taskStore.setSelectedProject(project.title)
+  taskStore.getTasksByProjectPaginated()
+  router.push({ name: 'task-by-project', params: { projectName: project.title } })
+  drawer.value = false
+}
+
+const handleNotificationsClick = async () => {
+  // Handles the click on the notifications button.
+  // Loads notifications from the store and toggles the notifications list visibility.
+  try {
+    await notificationsStore.loadNotifications()
+    showNotificationsList.value = !showNotificationsList.value
+  } catch (error) {
+    console.error('Error loading notifications:', error)
+    notificationsStore.showSnackbar = {
+      show: true,
+      message: 'Failed to load notifications'
+    }
+  }
+}
+
+const handleSettingsClick = () => {
+  // Handles the click on the settings button
+  settingsMenu.value = !settingsMenu.value
+}
+
+const handleNotificationsSettingsClick = () => {
+  // Handles the click on the notifications settings
+  showNotificationsSettings.value = true
+}
+
+const handleDotsClick = () => {
+  // Handles the click on the dots button
+  drawerDots.value = !drawerDots.value
+}
+
+/************************************
+ * Vuetify Display
+ ************************************/
+const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay() // Accesses display breakpoints from Vuetify
+
+/************************************
+ * Data
+ ************************************/
+const cruds = [
+  // Defines the CRUD actions for projects
+  {
+    title: 'Add Project',
+    value: 'add project',
+    icon: 'mdi-plus',
+    function: () => openDialog('add project')
+  }
+]
+
 const btnsForm = [
+  // Defines the buttons for the add task form
   {
     type: 'submit',
     height: '3rem',
@@ -268,27 +373,8 @@ const btnsForm = [
   }
 ]
 
-// Define the addNewProject function
-const addNewProject = async () => {
-  try {
-    await dataStore.createProject(dataStore.newProject)
-    // Reset the form
-    form.value.reset()
-    // Close the dialog
-    dialogAddProject.value = false
-    // Close the drawer
-    drawer.value = false
-    // Optionally display a success message
-    alert('Project ' + dataStore.newProject.title + ' added successfully!')
-  } catch (error) {
-    // Handle errors, e.g., display an error message
-    console.error('Error adding project:', error)
-    alert('An error occurred while adding the project.')
-  }
-}
-
-// Define the buttons array
 const btnsFormAddProject = [
+  // Defines the buttons for the add project form
   {
     type: 'submit',
     height: '3rem',
@@ -312,68 +398,15 @@ const btnsFormAddProject = [
   }
 ]
 
-const handleProjectClick = (project) => {
-  taskStore.setSelectedProject(project.title)
-  taskStore.getTasksByProjectPaginated()
-  router.push({ name: 'task-by-project', params: { projectName: project.title } })
-  drawer.value = false
-}
-
-const handleNotificationsClick = async () => {
-  if (!userStore.isLoggedIn) {
-    alert('You must log in to view notifications')
-    router.push({ path: '/login' })
-    return
+/************************************
+ * Lifecycle Hooks
+ ************************************/
+onMounted(async () => {
+  // Loads notification settings on mount
+  if (userStore.isLoggedIn) {
+    await notificationsStore.loadSettings()
   }
-  
-  try {
-    await notificationsStore.loadNotifications()
-    showNotificationsList.value = !showNotificationsList.value
-  } catch (error) {
-    console.error('Error loading notifications:', error)
-    notificationsStore.showSnackbar = {
-      show: true,
-      message: 'Failed to load notifications'
-    }
-  }
-}
-
-const handleSettingsClick = () => {
-  settingsMenu.value = !settingsMenu.value
-}
-
-const handleNotificationsSettingsClick = () => {
-  showNotificationsSettings.value = true
-}
-
-const handleNotificationSelection = (selectedNotifications) => {
-  // Lógica para manejar selección si es necesaria
-  console.log('Selected notifications:', selectedNotifications)
-}
-
-const loginParagraph = ref(null)
-
-const handleDotsClick = () => {
-  drawerDots.value = !drawerDots.value
-}
-
-const dotsItems = computed(() => [
-  {
-    title: 'Notifications',
-    icon: 'mdi-bell-outline',
-    action: handleNotificationsClick
-  },
-  {
-    title: 'Settings',
-    icon: 'mdi-cog-outline',
-    action: handleSettingsClick
-  },
-  {
-    title: loginLogoutText.value,
-    icon: loginLogoutIcon.value,
-    action: handleLoginLogout
-  }
-])
+})
 </script>
 
 <template>
@@ -437,7 +470,7 @@ const dotsItems = computed(() => [
         </template>
         <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
-      <v-menu v-model="settingsMenu" :close-on-content-click="false" offset-y>
+      <v-menu v-model="settingsMenu">
         <template v-slot:activator="{ props }">
           <v-btn icon aria-label="Settings" v-bind="props">
             <v-icon>mdi-cog-outline</v-icon>
@@ -450,7 +483,6 @@ const dotsItems = computed(() => [
           <v-list-item
             @click="handleNotificationsSettingsClick"
             class="rounded-lg mb-2"
-            variant="tonal"
             color="red-darken-2"
             :ripple="true"
             active-class="red-lighten-5"
@@ -479,51 +511,9 @@ const dotsItems = computed(() => [
     </template>
   </v-app-bar>
 
-  <v-dialog
-    v-model="showNotificationsSettings"
-    max-width="600px"
-    class="dialog dialog-notifications-settings"
-  >
-    <VNotificationSettings @close="showNotificationsSettings = false" />
-  </v-dialog>
-  <v-dialog
-    v-model="showNotificationsList"
-    max-width="600px"
-    class="dialog dialog-notifications-list"
-  >
-    <v-card class="notification-list-card pa-4 rounded-lg elevation-4">
-      <v-card-title class="d-flex align-center justify-space-between">
-        <span class="text-h6">Notifications</span>
-        <v-btn icon @click="showNotificationsList = false" variant="text" color="grey-darken-1">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
+  <VNotificationSettings v-model="showNotificationsSettings" />
 
-      <v-divider class="my-4" />
-
-      <v-card-text class="pa-0">
-        <VNotificationsList
-          :items="notificationsStore.activeNotifications"
-          :selected="[]"
-          @update:selected="handleNotificationSelection"
-        />
-      </v-card-text>
-
-      <v-card-actions class="justify-end mt-4">
-        <v-btn
-          color="red-darken-2"
-          variant="tonal"
-          rounded="pill"
-          @click="notificationsStore.markAllAsRead()"
-          :disabled="unreadNotificationsCount === 0"
-          class="text-none px-4"
-          append-icon="mdi-check"
-        >
-          Mark all as read
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <VNotificationsList v-model="showNotificationsList" />
   <v-navigation-drawer
     v-model="drawer"
     :location="mobile ? 'bottom' : undefined"

@@ -2,9 +2,9 @@
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/userStore'
 
-const userStore = useUserStore()
-const { xs } = useDisplay()
-
+/************************************
+ * Props
+ ************************************/
 defineProps({
   title: {
     type: String,
@@ -23,6 +23,16 @@ defineProps({
     required: true
   }
 })
+
+/************************************
+ * Stores
+ ************************************/
+const userStore = useUserStore() // Accesses the user store
+
+/************************************
+ * Vuetify Display
+ ************************************/
+const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>

@@ -4,9 +4,14 @@ import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/useLabelIcons.js'
 
-const router = useRouter()
-const { labelIcons } = useLabelIcons()
+/************************************
+ * Composables
+ ************************************/
+const { labelIcons } = useLabelIcons() // Accesses label icons from the composable
 
+/************************************
+ * Props
+ ************************************/
 // Define the props
 const props = defineProps({
   title: {
@@ -60,26 +65,38 @@ const props = defineProps({
   }
 })
 
-// Define the emits
+/************************************
+ * Emits
+ ************************************/
 const emit = defineEmits(['deleteTask', 'editTask', 'completeTask'])
 
-// Define the deleteTask function
-const deleteTask = () => {
-  emit('deleteTask', props.id)
-}
+/************************************
+ * Router
+ ************************************/
+const router = useRouter() // Accesses the Vue Router
 
-// Define the editTask function
-const editTask = () => {
-  emit('editTask', props.id)
-}
+/************************************
+ * Refs
+ ************************************/
+const hover = ref(false) // Tracks the hover state of the card
 
-// Define the completedTask function
-const completeTask = () => {
-  emit('completeTask', props.id)
-}
+/************************************
+ * Computed Properties
+ ************************************/
+const completedButton = computed(() => {
+  // Defines the completed button's icon, label, and function
+  return {
+    icon: props.completed
+      ? `mdi-check-circle text-${props.color}`
+      : `mdi-circle-outline text-${props.color}`,
+    label: props.completed ? 'Task completed' : 'Not completed task',
+    tooltipText: props.completed ? 'Task completed' : 'Not completed task',
+    function: completeTask
+  }
+})
 
-// Define the btnsTasks array
 const btnsTasks = computed(() => {
+  // Defines the array of task buttons
   return [
     {
       icon: 'mdi-pencil',
@@ -99,20 +116,8 @@ const btnsTasks = computed(() => {
   ]
 })
 
-// Define the completedButton object
-const completedButton = computed(() => {
-  return {
-    icon: props.completed
-      ? `mdi-check-circle text-${props.color}`
-      : `mdi-circle-outline text-${props.color}`,
-    label: props.completed ? 'Task completed' : 'Not completed task',
-    tooltipText: props.completed ? 'Task completed' : 'Not completed task',
-    function: completeTask
-  }
-})
-
-// Define the tooltips array
 const tooltips = computed(() => [
+  // Defines the tooltips for the task buttons
   {
     text: 'Edit task',
     location: 'bottom',
@@ -130,8 +135,29 @@ const tooltips = computed(() => [
   }
 ])
 
+/************************************
+ * Methods / Functions
+ ************************************/
+const deleteTask = () => {
+  // Emits the deleteTask event with the task's ID
+  emit('deleteTask', props.id)
+}
+
+// Define the editTask function
+const editTask = () => {
+  // Emits the editTask event with the task's ID
+  emit('editTask', props.id)
+}
+
+// Define the completedTask function
+const completeTask = () => {
+  // Emits the completeTask event with the task's ID
+  emit('completeTask', props.id)
+}
+
 // Define the formatDate function
 const formatDate = (date, formatType) => {
+  // Formats a date object based on the specified format type
   // Check if the date object is valid
   if (typeof date === 'object' && date !== null) {
     // Convert the timestamp to a Date object
@@ -182,13 +208,15 @@ const formatDate = (date, formatType) => {
   return 'Invalid Date'
 }
 
-const hover = ref(false)
-
 const navigateToTaskDetail = () => {
+  // Navigates to the task detail page
   router.push({ name: 'task-detail', params: { taskId: props.id } })
 }
 
-const { mobile, xs } = useDisplay()
+/************************************
+ * Vuetify Display
+ ************************************/
+const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>

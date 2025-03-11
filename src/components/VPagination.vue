@@ -1,4 +1,7 @@
 <script setup>
+/************************************
+ * Props
+ ************************************/
 const props = defineProps({
   currentPage: {
     type: Number,
@@ -18,8 +21,14 @@ const props = defineProps({
   }
 })
 
+/************************************
+ * Emits
+ ************************************/
 const emits = defineEmits(['prev-page', 'next-page', 'first-page', 'last-page'])
 
+/************************************
+ * Methods / Functions
+ ************************************/
 const prevPage = () => {
   emits('prev-page')
 }
@@ -79,9 +88,7 @@ const lastPage = () => {
           Previous page
         </v-tooltip>
       </v-btn>
-      <span
-        class="me-2 font-weight-semibold pa-3"
-      >
+      <span class="me-2 font-weight-semibold pa-3">
         <slot></slot>
       </span>
       <v-btn

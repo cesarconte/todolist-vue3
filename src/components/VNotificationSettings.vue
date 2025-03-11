@@ -2,64 +2,83 @@
 import { computed, ref, watch, onMounted } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
+import { useDisplay } from 'vuetify'
 
-// Variables
-const notificationsStore = useNotificationsStore()
-const userStore = useUserStore()
-const isLoading = ref(false)
-const saveError = ref(null)
-const emit = defineEmits(['close'])
+/************************************
+ * Props & Emits
+ ************************************/
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  }
+})
 
-// const selectedItems = ref([])
+const emit = defineEmits(['update:modelValue'])
 
+/************************************
+ * Reactive Variables (refs)
+ ************************************/
+const isLoading = ref(false) // Controls the loading state of the component
+const saveError = ref(null) // Stores any error messages that occur during saving
 const browserSupport = ref({
   notifications: 'Notification' in window,
   serviceWorker: 'serviceWorker' in navigator,
   pushManager: 'PushManager' in window
-})
+}) // Checks browser support for notification features
 
-// Computed properties
-const hasFullSupport = computed(() => Object.values(browserSupport.value).every(Boolean))
+/************************************
+ * Stores
+ ************************************/
+const notificationsStore = useNotificationsStore() // Accesses the notifications store
+const userStore = useUserStore() // Accesses the user store
 
+/************************************
+ * Computed Properties
+ ************************************/
+const showNotificationsSettings = computed(() => props.modelValue) // Controls the dialog's visibility based on the prop
+const hasFullSupport = computed(() => Object.values(browserSupport.value).every(Boolean)) // Checks if all required browser features are supported
 const switchLabel = computed(() =>
   notificationsStore.notificationSettings.enabled
     ? 'Notifications enabled'
     : 'Notifications disabled'
-)
-
+) // Sets the label for the notification switch
 const switchColor = computed(() =>
   notificationsStore.notificationSettings.enabled ? 'red-darken-2' : 'grey-darken-1'
-)
-
+) // Sets the color of the notification switch
 const isDisabled = computed(
-  () => isLoading.value || !notificationsStore.hasFullSupport || !userStore.isLoggedIn // Añadida verificación de autenticación
-)
+  () => isLoading.value || !notificationsStore.hasFullSupport || !userStore.isLoggedIn
+) // Determines if the notification switch should be disabled
 
-// Verificación inicial de autenticación y carga de configuraciones de notificación
+/************************************
+ * Lifecycle Hooks
+ ************************************/
 onMounted(async () => {
+  // Executes when the component is mounted
   if (!userStore.isLoggedIn) {
-    notificationsStore.showSnackbar = {
-      show: true,
-      message: 'You must be logged in to access notification settings'
-    }
-    emit('close') // Cierra automáticamente el diálogo si no está autenticado
-  } else {
-    try {
-      isLoading.value = true
-      await notificationsStore.loadSettings()
-    } catch (error) {
-      handleError('Error loading settings', error)
-    } finally {
-      isLoading.value = false
-    }
+    emit('update:modelValue', false)
+    return
+  }
+
+  try {
+    isLoading.value = true // Sets loading state to true
+    await notificationsStore.loadSettings() // Loads notification settings from the store
+  } catch (error) {
+    handleError('Error loading settings', error) // Handles any errors that occur during loading
+  } finally {
+    isLoading.value = false // Sets loading state to false
   }
 })
 
-// Watcher para guardar cambios cuando se modifica la configuración
+/************************************
+ * Watchers
+ ************************************/
 watch(
   () => notificationsStore.notificationSettings,
   async (newSettings) => {
+    // Watches for changes in the notification settings
     if (!userStore.isLoggedIn) {
+      // Checks if the user is logged in
       notificationsStore.showSnackbar = {
         show: true,
         message: 'Authentication required to modify settings'
@@ -68,27 +87,32 @@ watch(
     }
 
     try {
-      isLoading.value = true
-      saveError.value = null
-      await notificationsStore.saveSettings()
+      isLoading.value = true // Sets loading state to true
+      saveError.value = null // Resets the save error
+      await notificationsStore.saveSettings() // Saves the notification settings to the store
 
       if (newSettings.enabled) {
-        const verified = await verifyNotifications()
+        // Checks if notifications are enabled
+        const verified = await verifyNotifications() // Verifies notification permissions
         if (!verified) {
+          // Disables notifications if permissions are not granted
           notificationsStore.notificationSettings.enabled = false
         }
       }
     } catch (error) {
-      handleError('Error saving settings', error)
+      handleError('Error saving settings', error) // Handles any errors that occur during saving
     } finally {
-      isLoading.value = false
+      isLoading.value = false // Sets loading state to false
     }
   },
   { deep: true }
 )
 
-// Métodos
+/************************************
+ * Methods / Functions
+ ************************************/
 const verifyNotifications = async () => {
+  // Verifies browser notification permissions
   try {
     if (!('Notification' in window)) {
       throw new Error('Browser does not support notifications')
@@ -113,6 +137,7 @@ const verifyNotifications = async () => {
 }
 
 const handleError = (message, error) => {
+  // Handles errors and displays snackbar messages
   saveError.value = message
   console.error('Notification Settings Error:', error)
   notificationsStore.showSnackbar = {
@@ -121,7 +146,13 @@ const handleError = (message, error) => {
   }
 }
 
+const closeDialog = () => {
+  // Closes the dialog by emitting the update:modelValue event
+  emit('update:modelValue', false)
+}
+
 const notificationTimeOptions = [
+  // Options for notification time selections
   { title: '1 day before', value: 24 },
   { title: '12 hours before', value: 12 },
   { title: '6 hours before', value: 6 },
@@ -132,152 +163,141 @@ const notificationTimeOptions = [
   { title: '30 minutes before', value: 0.5 },
   { title: '15 minutes before', value: 0.25 }
 ]
+
+const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
-  <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
-    <v-card-title class="d-flex align-center">
-      <span>Notifications</span>
-      <v-tooltip v-if="!hasFullSupport" location="right">
-        <template v-slot:activator="{ props }">
-          <v-icon
-            v-bind="props"
-            icon="mdi-alert"
-            color="warning"
-            class="ml-4"
-            aria-label="Browser Support Warning"
-          ></v-icon>
-        </template>
-        <span class="text-caption pr-4">
-          Browser notification features:
-          <span
-            v-for="(value, key) in browserSupport"
-            :key="key"
-            :class="value ? 'text-success' : 'text-error'"
-            class="d-flex align-center justify-end"
-          >
+  <v-dialog
+    v-model="showNotificationsSettings"
+    max-width="600px"
+    class="dialog dialog-notifications-settings"
+  >
+    <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
+      <v-card-title class="d-flex align-center justify-space-between">
+        <span>Notifications Settings</span>
+        <v-tooltip v-if="!hasFullSupport" location="right">
+          <template v-slot:activator="{ props }">
+            <v-icon
+              v-bind="props"
+              icon="mdi-alert"
+              color="warning"
+              class="ml-4"
+              aria-label="Browser Support Warning"
+            ></v-icon>
+          </template>
+          <span class="text-caption pr-4">
+            Browser notification features:
+            <span
+              v-for="(value, key) in browserSupport"
+              :key="key"
+              :class="value ? 'text-success' : 'text-error'"
+              class="d-flex align-center justify-end"
             >
-            {{ key }}: {{ value ? '✓' : '✗' }}
+              >
+              {{ key }}: {{ value ? '✓' : '✗' }}
+            </span>
           </span>
-        </span>
-      </v-tooltip>
-    </v-card-title>
+        </v-tooltip>
+        <v-btn icon @click="closeDialog" variant="text" color="grey-darken-1">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
 
-    <v-divider class="my-4" />
+      <v-divider class="my-4" />
 
-    <v-card-text class="pa-0">
-      <v-container v-if="isLoading" class="text-center py-4">
-        <v-progress-circular indeterminate color="primary" size="24" />
-        <span class="text-caption mt-2">Saving settings...</span>
-      </v-container>
+      <v-card-text class="pa-0">
+        <v-container v-if="isLoading" class="text-center py-4">
+          <v-progress-circular indeterminate color="primary" size="24" />
+          <span class="text-caption mt-2">Saving settings...</span>
+        </v-container>
 
-      <template v-else>
-        <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
-          {{ saveError }}
-        </v-alert>
+        <template v-else>
+          <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
+            {{ saveError }}
+          </v-alert>
 
-        <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
-          <template v-slot:title> Limited Browser Support </template>
-          Some notification features are not available in your current browser.
-        </v-alert>
+          <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
+            <template v-slot:title> Limited Browser Support </template>
+            Some notification features are not available in your current browser.
+          </v-alert>
 
-        <v-card-item class="pt-0">
-          <v-switch
-            v-model="notificationsStore.notificationSettings.enabled"
-            :label="switchLabel"
-            :color="switchColor"
-            :disabled="isDisabled"
-            inset
-            hide-details
-          >
-          </v-switch>
-        </v-card-item>
+          <v-card-item class="pt-0">
+            <v-switch
+              v-model="notificationsStore.notificationSettings.enabled"
+              :label="switchLabel"
+              :color="switchColor"
+              :disabled="isDisabled"
+              inset
+              hide-details
+            >
+            </v-switch>
+          </v-card-item>
 
-        <v-card-item>
-          <v-select
-            v-model="notificationsStore.notificationSettings.time"
-            :items="notificationTimeOptions"
-            item-value="value"
-            item-title="title"
-            label="Notification Times"
-            variant="outlined"
-            :color="switchColor"
-            :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
-            multiple
-            clearable
-            chips
-            closable-chips
-            hide-details
-            class="mt-4"
-          >
-            <template v-slot:selection="{ item, index }">
-              <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
-                {{ item.title }}
-              </v-chip>
-              <span v-if="index === 2" class="text-grey text-caption ml-1">
-                +{{ notificationsStore.notificationSettings.time.length - 2 }} more
-              </span>
-            </template>
-          </v-select>
-        </v-card-item>
+          <v-card-item>
+            <v-select
+              v-model="notificationsStore.notificationSettings.time"
+              :items="notificationTimeOptions"
+              item-value="value"
+              item-title="title"
+              label="Notification Times"
+              variant="outlined"
+              :color="switchColor"
+              :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
+              multiple
+              clearable
+              chips
+              closable-chips
+              hide-details
+              class="mt-4"
+            >
+              <template v-slot:selection="{ item, index }">
+                <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
+                  {{ item.title }}
+                </v-chip>
+                <span v-if="index === 2" class="text-grey text-caption ml-1">
+                  +{{ notificationsStore.notificationSettings.time.length - 2 }} more
+                </span>
+              </template>
+            </v-select>
+          </v-card-item>
 
-        <v-card-item class="mb-2">
-          <v-row class="text-caption">
-            <v-col cols="auto" class="d-flex align-center">
-              <v-icon icon="mdi-clock-outline" class="mr-2" />
-              Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
-            </v-col>
-          </v-row>
-        </v-card-item>
+          <v-card-item class="mb-2">
+            <v-row class="text-caption">
+              <v-col cols="auto" class="d-flex align-center">
+                <v-icon icon="mdi-clock-outline" class="mr-2" />
+                Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
+              </v-col>
+            </v-row>
+          </v-card-item>
+        </template>
+      </v-card-text>
 
-        <!-- <v-divider class="mb-4" /> -->
+      <v-divider class="mb-4" />
 
-        <!-- <v-card-item v-if="notificationsStore.notificationSettings.enabled">
-          <v-treeview
-            v-model:selected="selectedItems"
-            :items="userStore.user.notifications"
-            :item-props="itemProps"
-            class="notification-tree mb-4"
-            return-object
-            selectable
-            activatable
-            selected-color="red-accent-1"
-          >
-          </v-treeview> 
-        </v-card-item> -->
-      </template>
-    </v-card-text>
-
-    <v-divider class="mb-4" />
-
-    <v-card-actions class="d-flex flex-column align-center ga-4">
-      <v-btn
-        class="text-none rounded-pill"
-        color="secondary"
-        variant="tonal"
-        size="large"
-        :disabled="isDisabled"
-        block
-        @click="notificationsStore.sendTestNotification()"
-      >
-        <v-icon left icon="mdi-bell-outline" class="mr-2" />
-        Test Notification
-      </v-btn>
-
-      <v-btn
-        class="text-none rounded-pill ml-0"
-        color="red-darken-2"
-        variant="tonal"
-        size="large"
-        @click="$emit('close')"
-        :disabled="isLoading"
-        block
-      >
-        <v-icon left icon="mdi-close" class="mr-2" />
-        Close Settings
-      </v-btn>
-    </v-card-actions>
-  </v-card>
+      <v-card-actions :class="xs ? '' : 'justify-center'">
+        <v-tooltip text="Send test notification" location="top" v-if="!xs">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              :block="xs"
+              :disabled="isDisabled"
+              :class="xs ? '' : 'px-8'"
+              class="text-none"
+              color="red-darken-2"
+              variant="tonal"
+              rounded="pill"
+              size="large"
+              append-icon="mdi-bell-alert-outline"
+              @click="notificationsStore.sendTestNotification()"
+            >
+              Test Notification
+            </v-btn>
+          </template>
+        </v-tooltip>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <style scoped>

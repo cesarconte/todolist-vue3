@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   where,
+  writeBatch,
   onSnapshot,
   collection
 } from 'firebase/firestore'
@@ -60,13 +61,6 @@ export const useNotificationsStore = defineStore('notifications', {
     nextScheduledCheck: (state) => {
       if (state.timeouts.length === 0) return 'No scheduled notifications'
       const nextTime = Math.min(...state.timeouts.map((t) => t.scheduledTime))
-      // return new Date(nextTime).toLocaleString('en-US', {
-      //   weekday: 'long',
-      //   day: 'numeric',
-      //   month: 'long',
-      //   hour: '2-digit',
-      //   minute: '2-digit'
-      // })
       return new Date(nextTime).toLocaleString()
     },
 
@@ -127,11 +121,22 @@ export const useNotificationsStore = defineStore('notifications', {
         )
 
         this.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
+          // Forzar una actualización reactiva
           this.activeNotifications = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-            show: true // Mostrar como notificación activa
+            show: true
           }))
+
+          // Opcional: Mostrar snackbar para nuevas notificaciones
+          // snapshot.docChanges().forEach((change) => {
+          //   if (change.type === 'added') {
+          //     this.showSnackbar = {
+          //       show: true,
+          //       message: 'New notification received!'
+          //     }
+          //   }
+          // })
         })
       } catch (error) {
         this.handleError('Error subscribing to notifications', error)
@@ -258,12 +263,18 @@ export const useNotificationsStore = defineStore('notifications', {
               // Verificar userId
               const timeoutId = setTimeout(async () => {
                 try {
+                  // 1. Guardar notificación en Firestore
                   await addDoc(collection(db, 'users', userId, 'notifications'), {
                     message: `Task "${task.title}" due soon!`,
                     timestamp: new Date().toISOString(),
                     read: false,
-                    taskId: task.id
+                    taskId: task.id,
+                    icon: 'mdi-bell-alert'
                   })
+                  this.showSnackbar = {
+                    show: true,
+                    message: `New reminder: "${task.title}" is due soon!`
+                  }
                 } catch (error) {
                   this.handleError('Failed to create notification', error)
                 }
@@ -327,44 +338,87 @@ export const useNotificationsStore = defineStore('notifications', {
       }
     },
 
-    async markAsRead(notificationId = null) {
+    // async markAsRead(notificationId) {
+    //   // Eliminar el valor por defecto null
+    //   const userStore = useUserStore()
+    //   try {
+    //     if (!userStore.user || !notificationId) {
+    //       // Validación explícita
+    //       console.error('No notification ID provided')
+    //       return
+    //     }
+
+    //     const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
+    //     const docRef = doc(notificationsRef, notificationId)
+
+    //     // await updateDoc(docRef, { read: true })
+    //     await deleteDoc(docRef)
+
+    //     // Actualizar estado local
+    //     const index = this.activeNotifications.findIndex((n) => n.id === notificationId)
+    //     if (index !== -1) this.activeNotifications[index].read = true
+
+    //     // Show snackbar
+    //     this.showSnackbar = {
+    //       show: true,
+    //       message: 'Notification marked as read'
+    //     }
+    //   } catch (error) {
+    //     this.handleError('Error marking notification as read', error)
+    //   }
+    // },
+    async markAsRead(notificationId) {
       const userStore = useUserStore()
       try {
-        if (!userStore.user) return
+        if (!userStore.user || !notificationId) return
 
-        const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
-        const batch = []
-
-        if (notificationId) {
-          // Actualización individual
-          const docRef = doc(notificationsRef, notificationId)
-          batch.push(updateDoc(docRef, { read: true }))
-          batch.push(deleteDoc(docRef))
-        } else {
-          // Actualización masiva (comportamiento original)
-          this.activeNotifications.forEach((notification) => {
-            if (!notification.read) {
-              const docRef = doc(notificationsRef, notification.id)
-              batch.push(updateDoc(docRef, { read: true }))
-            }
-          })
-        }
-
-        await Promise.all(batch)
+        // Eliminar de Firestore
+        await deleteDoc(doc(db, 'users', userStore.user.uid, 'notifications', notificationId))
 
         // Actualizar estado local
-        if (notificationId) {
-          const index = this.activeNotifications.findIndex((n) => n.id === notificationId)
-          if (index !== -1) this.activeNotifications[index].read = true
-        } else {
-          this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
+        this.activeNotifications = this.activeNotifications.filter((n) => n.id !== notificationId)
+        this.showSnackbar = {
+          show: true,
+          message: 'Notification marked as read successfully'
         }
       } catch (error) {
-        this.handleError('Error marking notifications as read', error)
+        this.handleError('Error marking notification as read', error)
       }
     },
 
-    // En notificationsStore.js dentro de actions
+    // async markAllAsRead() {
+    //   const userStore = useUserStore()
+    //   try {
+    //     if (!userStore.user) return
+
+    //     // Referencia a la colección de notificaciones
+    //     const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
+
+    //     // Obtener todas las notificaciones no leídas
+    //     const q = query(notificationsRef, where('read', '==', false))
+    //     const snapshot = await getDocs(q)
+
+    //     // Crear batch de actualizaciones
+    //     const batch = []
+    //     snapshot.forEach((doc) => {
+    //       batch.push(updateDoc(doc.ref, { read: true }))
+    //     })
+
+    //     await Promise.all(batch)
+
+    //     // Actualizar estado local
+    //     this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
+
+    //     await new Promise((resolve) => setTimeout(resolve, 50))
+
+    //     this.showSnackbar = {
+    //       show: true,
+    //       message: 'All notifications marked as read'
+    //     }
+    //   } catch (error) {
+    //     this.handleError('Error marking all as read', error)
+    //   }
+    // },
     async markAllAsRead() {
       const userStore = useUserStore()
       try {
@@ -377,22 +431,22 @@ export const useNotificationsStore = defineStore('notifications', {
         const q = query(notificationsRef, where('read', '==', false))
         const snapshot = await getDocs(q)
 
-        // Crear batch de actualizaciones
-        const batch = []
+        // Crear batch de eliminaciones
+        const batch = writeBatch(db)
         snapshot.forEach((doc) => {
-          batch.push(updateDoc(doc.ref, { read: true }))
+          batch.delete(doc.ref)
         })
 
-        await Promise.all(batch)
+        await batch.commit()
 
         // Actualizar estado local
-        this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
-
-        await new Promise((resolve) => setTimeout(resolve, 50))
+        this.activeNotifications = this.activeNotifications.filter(
+          (n) => !snapshot.docs.some((d) => d.id === n.id)
+        )
 
         this.showSnackbar = {
           show: true,
-          message: 'All notifications marked as read'
+          message: 'All notifications marked as read successfully'
         }
       } catch (error) {
         this.handleError('Error marking all as read', error)

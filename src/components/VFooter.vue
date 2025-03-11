@@ -1,5 +1,3 @@
-<script setup></script>
-
 <template>
   <v-footer class="d-flex flex-column bg-grey-lighten-4">
     <v-row>

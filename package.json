@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --open 5173",
+    "dev": "BROWSER=\"/usr/lib/firefox-developer-edition/firefox\" vite dev --open 5173",
     "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
@@ -12,7 +12,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "firebase": "^10.14.1",
+    "firebase": "^11.4.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
@@ -28,8 +28,8 @@
     "eslint-plugin-vue": "^9.23.0",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
-    "vite": "^5.2.8",
+    "vite": "^6.2.1",
     "vite-plugin-vue-devtools": "^7.0.25",
-    "vitest": "^1.6.0"
+    "vitest": "^3.0.8"
   }
 }

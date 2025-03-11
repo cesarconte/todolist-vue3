@@ -1,6 +1,9 @@
 <script setup>
 import { useDisplay } from 'vuetify'
 
+/************************************
+ * Props
+ ************************************/
 defineProps({
   buttons: {
     type: Array,
@@ -8,14 +11,19 @@ defineProps({
   }
 })
 
-const { mobile, xs, sm, md } = useDisplay()
+/************************************
+ * Vuetify Display
+ ************************************/
+const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
   <div
     class="action-buttons"
     :class="
-      mobile ? 'd-flex flex-column align-center w-100 ga-4' : 'd-flex flex-wrap justify-space-between ga-4'
+      mobile
+        ? 'd-flex flex-column align-center w-100 ga-4'
+        : 'd-flex flex-wrap justify-space-between ga-4'
     "
   >
     <v-btn

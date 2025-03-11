@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore'
 import { useTaskStore } from './taskStore.js'
 import { useUserStore } from './userStore.js'
+import { useNotificationsStore } from './notificationsStore.js'
 import { useRouter } from 'vue-router'
 import { validTaskForm } from '@/composables/validationFormRules.js'
 import { validProjectForm } from '@/composables/validationFormRules.js'
@@ -467,11 +468,25 @@ export const useDataStore = defineStore('data', () => {
         // 3. Delete the task from Firestore
         await deleteDoc(taskRef)
 
-        // 4. Display a success message
+        // 4. Delete notifications
+        const notificationsRef = collection(db, 'users', userStore.userId, 'notifications')
+        const q = query(notificationsRef, where('taskId', '==', taskId))
+        const querySnapshot = await getDocs(q)
+
+        if (!querySnapshot.empty) {
+          const batch = writeBatch(db)
+          querySnapshot.forEach((notificationDoc) => {
+            batch.delete(notificationDoc.ref)
+          })
+          await batch.commit()
+          console.log(`Deleted ${querySnapshot.size} notifications for task ${taskId}`)
+        }
+
+        // 5. Display a success message
         alert('Task deleted successfully')
         console.log('Task deleted successfully')
 
-        // 5. Redirect to '/' after deleting the task
+        // 6. Redirect to '/' after deleting the task
         router.push('/')
       } else {
         // Handle unauthorized access (e.g., show an error message)
@@ -485,108 +500,230 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  // const deleteAllTasks = async () => {
+  //   try {
+  //     // Check if a user is logged in
+  //     if (!userStore.isLoggedIn) {
+  //       console.error('User must be logged in to delete tasks.')
+  //       alert('Please log in to delete tasks.')
+  //       return // Stop execution if not logged in
+  //     }
+
+  //     // Get the current user's ID
+  //     const currentUserId = userStore.userId
+
+  //     // Start a transaction
+  //     await runTransaction(db, async (transaction) => {
+  //       // 1. Get all tasks created by the user
+  //       const tasksRef = collection(db, 'tasks')
+  //       const querySnapshot = await getDocs(
+  //         query(tasksRef, where('createdBy', '==', currentUserId))
+  //       )
+
+  //       // 2. Delete each task within the transaction
+  //       querySnapshot.docs.forEach((doc) => {
+  //         transaction.delete(doc.ref)
+  //       })
+
+  //       // 3. Clear the user's createdTasks array within the transaction
+  //       const userRef = doc(db, 'users', currentUserId)
+  //       transaction.update(userRef, { createdTasks: [] })
+  //     })
+
+  //     // 4. Display a success message if the transaction completes successfully
+  //     console.log('All tasks deleted successfully')
+  //     alert('All tasks deleted successfully')
+  //   } catch (error) {
+  //     // Display an error message if the transaction fails
+  //     console.error('Error deleting tasks:', error)
+  //     alert('Error deleting tasks: ' + error + 'Please try again!')
+  //   }
+  // }
   const deleteAllTasks = async () => {
     try {
       // Check if a user is logged in
       if (!userStore.isLoggedIn) {
         console.error('User must be logged in to delete tasks.')
         alert('Please log in to delete tasks.')
-        return // Stop execution if not logged in
+        return
       }
 
-      // Get the current user's ID
       const currentUserId = userStore.userId
 
-      // Start a transaction
+      // Start transaction
       await runTransaction(db, async (transaction) => {
         // 1. Get all tasks created by the user
         const tasksRef = collection(db, 'tasks')
-        const querySnapshot = await getDocs(
-          query(tasksRef, where('createdBy', '==', currentUserId))
-        )
+        const tasksQuery = query(tasksRef, where('createdBy', '==', currentUserId))
+        const tasksSnapshot = await getDocs(tasksQuery)
 
-        // 2. Delete each task within the transaction
-        querySnapshot.docs.forEach((doc) => {
-          transaction.delete(doc.ref)
-        })
+        // 2. Delete all tasks
+        tasksSnapshot.docs.forEach((doc) => transaction.delete(doc.ref))
 
-        // 3. Clear the user's createdTasks array within the transaction
+        // 3. Get all notifications
+        const notificationsRef = collection(db, 'users', currentUserId, 'notifications')
+        const notificationsQuery = query(notificationsRef)
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+
+        // 4. Delete all notifications
+        notificationsSnapshot.docs.forEach((doc) => transaction.delete(doc.ref))
+
+        // 5. Clear createdTasks array
         const userRef = doc(db, 'users', currentUserId)
-        transaction.update(userRef, { createdTasks: [] })
+        transaction.update(userRef, {
+          createdTasks: [],
+          notificationSettings: {
+            // Reset settings opcional
+            enabled: false,
+            time: []
+          }
+        })
       })
 
-      // 4. Display a success message if the transaction completes successfully
-      console.log('All tasks deleted successfully')
-      alert('All tasks deleted successfully')
+      // 6. Feedback y limpieza adicional
+      console.log('All tasks and notifications deleted successfully')
+      alert('All tasks and related notifications deleted successfully')
+
+      // 7. Resetear store de notificaciones si es necesario
+      const notificationsStore = useNotificationsStore()
+      notificationsStore.clearTimeouts()
+      notificationsStore.clearNotifications()
     } catch (error) {
-      // Display an error message if the transaction fails
       console.error('Error deleting tasks:', error)
-      alert('Error deleting tasks: ' + error + 'Please try again!')
+      alert(`Error deleting tasks: ${error.message}. Please try again!`)
     }
   }
 
   // Delete all tasks in a project from Firestore
+  // const deleteAllTasksInProject = async () => {
+  //   try {
+  //     // Check if a user is logged in
+  //     if (!userStore.isLoggedIn) {
+  //       console.error('User must be logged in to delete tasks.')
+  //       alert('Please log in to delete tasks.')
+  //       return // Stop execution if not logged in
+  //     }
+
+  //     // Get the current user's ID
+  //     const currentUserId = userStore.userId
+
+  //     // Fetch the project from Firestore to check ownership
+  //     const projectRef = doc(db, 'projects', selectedProjectId.value)
+  //     const projectDoc = await getDoc(projectRef)
+
+  //     if (projectDoc.exists()) {
+  //       const projectData = projectDoc.data()
+
+  //       // Check if the user owns the project
+  //       if (projectData.userId === userStore.userId) {
+  //         // 1. Create a query to get all tasks of the project
+  //         const tasksRef = collection(db, 'tasks')
+  //         const querySnapshot = await getDocs(
+  //           query(tasksRef, where('projectId', '==', selectedProjectId.value))
+  //         )
+
+  //         // 2. Delete each task and update user's createdTasks
+  //         const batch = writeBatch(db)
+  //         querySnapshot.docs.forEach((taskDoc) => {
+  //           const taskId = taskDoc.id
+  //           batch.delete(taskDoc.ref)
+
+  //           // 3. Remove taskId from user's createdTasks
+  //           const userRef = doc(db, 'users', currentUserId)
+  //           batch.update(userRef, {
+  //             createdTasks: arrayRemove(taskId)
+  //           })
+  //         })
+
+  //         await batch.commit()
+
+  //         // 4. Display a success message
+  //         console.log('All tasks in the project deleted successfully')
+  //         alert('All tasks in the project deleted successfully')
+
+  //         // 5. Redirect to '/' after deleting the task
+  //         router.push('/')
+  //       } else {
+  //         // Handle unauthorized access
+  //         console.error('Unauthorized access to project:', selectedProjectId)
+  //         alert('You are not authorized to delete tasks from this project.')
+  //       }
+  //     } else {
+  //       // Handle the case where the project is not found
+  //       console.error('Project not found:', selectedProjectId)
+  //       alert('The selected project was not found.')
+  //     }
+  //   } catch (error) {
+  //     console.error('Error deleting tasks in project:', error)
+  //     alert('Error deleting tasks in project: ' + error + ' Please try again')
+  //   }
+  // }
   const deleteAllTasksInProject = async () => {
     try {
-      // Check if a user is logged in
+      // Verificar autenticación
       if (!userStore.isLoggedIn) {
-        console.error('User must be logged in to delete tasks.')
         alert('Please log in to delete tasks.')
-        return // Stop execution if not logged in
+        return
       }
 
-      // Get the current user's ID
       const currentUserId = userStore.userId
+      const projectId = selectedProjectId.value
 
-      // Fetch the project from Firestore to check ownership
-      const projectRef = doc(db, 'projects', selectedProjectId.value)
+      // Obtener referencia del proyecto
+      const projectRef = doc(db, 'projects', projectId)
       const projectDoc = await getDoc(projectRef)
 
-      if (projectDoc.exists()) {
-        const projectData = projectDoc.data()
-
-        // Check if the user owns the project
-        if (projectData.userId === userStore.userId) {
-          // 1. Create a query to get all tasks of the project
-          const tasksRef = collection(db, 'tasks')
-          const querySnapshot = await getDocs(
-            query(tasksRef, where('projectId', '==', selectedProjectId.value))
-          )
-
-          // 2. Delete each task and update user's createdTasks
-          const batch = writeBatch(db)
-          querySnapshot.docs.forEach((taskDoc) => {
-            const taskId = taskDoc.id
-            batch.delete(taskDoc.ref)
-
-            // 3. Remove taskId from user's createdTasks
-            const userRef = doc(db, 'users', currentUserId)
-            batch.update(userRef, {
-              createdTasks: arrayRemove(taskId)
-            })
-          })
-
-          await batch.commit()
-
-          // 4. Display a success message
-          console.log('All tasks in the project deleted successfully')
-          alert('All tasks in the project deleted successfully')
-
-          // 5. Redirect to '/' after deleting the task
-          router.push('/')
-        } else {
-          // Handle unauthorized access
-          console.error('Unauthorized access to project:', selectedProjectId)
-          alert('You are not authorized to delete tasks from this project.')
-        }
-      } else {
-        // Handle the case where the project is not found
-        console.error('Project not found:', selectedProjectId)
-        alert('The selected project was not found.')
+      if (!projectDoc.exists() || projectDoc.data().userId !== currentUserId) {
+        alert('Project not found or unauthorized')
+        return
       }
+
+      // Crear batch para operaciones atómicas
+      const batch = writeBatch(db)
+
+      // 1. Obtener todas las tareas del proyecto
+      const tasksQuery = query(collection(db, 'tasks'), where('projectId', '==', projectId))
+      const tasksSnapshot = await getDocs(tasksQuery)
+
+      // 2. Colectar IDs de tareas y notificaciones
+      const taskIds = []
+      const notificationsToDelete = []
+
+      // Procesar cada tarea
+      for (const taskDoc of tasksSnapshot.docs) {
+        const taskId = taskDoc.id
+        taskIds.push(taskId)
+
+        // 3. Buscar notificaciones relacionadas
+        const notificationsQuery = query(
+          collection(db, 'users', currentUserId, 'notifications'),
+          where('taskId', '==', taskId)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        notificationsSnapshot.forEach((doc) => notificationsToDelete.push(doc.ref))
+
+        // 4. Eliminar tarea y actualizar usuario
+        batch.delete(taskDoc.ref)
+        batch.update(doc(db, 'users', currentUserId), {
+          createdTasks: arrayRemove(taskId)
+        })
+      }
+
+      // 5. Eliminar todas las notificaciones encontradas
+      notificationsToDelete.forEach((ref) => batch.delete(ref))
+
+      // Ejecutar batch atómico
+      await batch.commit()
+
+      // 6. Limpiar estado y notificar
+      console.log(
+        `Deleted ${taskIds.length} tasks and ${notificationsToDelete.length} notifications`
+      )
+      alert('All tasks and related notifications deleted successfully')
+      router.push('/')
     } catch (error) {
-      console.error('Error deleting tasks in project:', error)
-      alert('Error deleting tasks in project: ' + error + ' Please try again')
+      console.error('Error deleting project tasks:', error)
+      alert(`Error: ${error.message}`)
     }
   }
 
