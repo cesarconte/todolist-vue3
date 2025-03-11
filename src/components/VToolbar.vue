@@ -831,14 +831,23 @@ onMounted(async () => {
             clearable
             required
             :items="dataStore.icons"
+            item-title="displayName"
+            item-value="title"
           >
-            <template v-slot:item="{ item }">
-              <div class="d-flex align-center pa-3">
-                <v-icon left class="mr-4 d-block">{{ item.value }}</v-icon>
-                <span class="d-block">{{ item.value }}</span>
-              </div>
+            <template v-slot:selection="{ item }">
+              <v-icon class="mr-2">{{ item.value }}</v-icon>
+              {{ item.title }}
+            </template>
+
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props">
+                <template v-slot:prepend>
+                  <v-icon>{{ item.value }}</v-icon>
+                </template>
+              </v-list-item>
             </template>
           </v-select>
+
           <v-divider class="mb-4"></v-divider>
           <v-select
             v-model="dataStore.newProject.color"

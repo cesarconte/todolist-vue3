@@ -185,10 +185,9 @@ export const useDataStore = defineStore('data', () => {
     }))
   })
   const iconItems = computed(() => {
-    // Add iconItems computed property
     return iconsData.value.map((icon) => ({
-      value: icon.title, // Assuming your icon documents have a 'title' field
-      title: icon.title
+      value: icon.title,
+      title: icon.displayName
     }))
   })
 
