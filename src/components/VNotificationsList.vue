@@ -57,57 +57,91 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     class="dialog-notifications-list"
   >
     <v-card class="notification-list-card pa-4 rounded-lg elevation-4">
-      <v-card-title class="d-flex align-center justify-space-between">
-        <span class="text-h6">Notification List</span>
+      <v-card-title class="d-flex align-center justify-space-between text-h5">
+        <span class="text-red-darken-2 font-weight-medium">Notification List</span>
         <v-btn icon @click="closeDialog" variant="text" color="grey-darken-1">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
+      <v-card-subtitle>
+        <v-icon icon="mdi-bell-badge"></v-icon>
+        Unread notifications: mark as read to clear
+      </v-card-subtitle>
 
       <v-divider class="my-4" />
 
       <v-card-text class="pa-0">
-        <v-list density="compact" class="notification-list">
-          <v-list-item v-for="item in notificationsStore.activeNotifications" :key="item.id">
-            <template v-slot:prepend>
-              <v-checkbox
-                :model-value="item.read"
-                @click.stop="handleCheckboxChange(item)"
-                color="red-darken-2"
-                hide-details
-              />
-            </template>
+        <v-list density="comfortable" class="notification-list">
+          <template v-if="notificationsStore.activeNotifications.length > 0">
+            <v-list-item
+              v-for="item in notificationsStore.activeNotifications"
+              :key="item.id"
+              rounded="pill"
+              class="mb-2 bg-grey-lighten-4"
+            >
+              <template v-slot:prepend>
+                <v-checkbox
+                  :model-value="item.read"
+                  @click.stop="handleCheckboxChange(item)"
+                  color="red-accent-2"
+                  hide-details
+                  density="compact"
+                  class="mt-0 pt-0"
+                />
+              </template>
 
-            <template v-slot:default>
-              <v-row align="center">
-                <v-icon :icon="item.icon" color="red-darken-2" class="ml-3" />
-                <v-col>
-                  <v-list-item-title>
-                    {{ item.message }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle>{{ formatDate(item.timestamp) }}</v-list-item-subtitle>
-                </v-col>
-              </v-row>
-            </template>
-          </v-list-item>
+              <template v-slot:default>
+                <v-row align="center">
+                  <v-icon :icon="item.icon" color="red-accent-2" class="ml-3" size="large" />
+                  <v-col>
+                    <v-list-item-title lines="one" class="text-body-1 font-weight-medium">
+                      {{ item.message }}
+                    </v-list-item-title>
+                    <v-list-item-subtitle lines="one">{{
+                      formatDate(item.timestamp)
+                    }}</v-list-item-subtitle>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-list-item>
+          </template>
+          <template v-else>
+            <v-list-item class="d-flex justify-center">
+              <v-col class="d-flex flex-column align-center">
+                <v-icon
+                  icon="mdi-checkbox-marked-circle-auto-outline"
+                  size="96"
+                  color="grey-lighten-1"
+                  class="mb-4 d-flex flex-center"
+                />
+                <v-list-item-title class="text-center text-grey-lighten-1"
+                  >All caught up!</v-list-item-title
+                >
+              </v-col>
+            </v-list-item>
+          </template>
         </v-list>
       </v-card-text>
 
-      <v-card-actions :class="xs ? '' : 'justify-center'">
-        <v-tooltip text="Mark all notifications as read" location="top" v-if="!xs">
+      <v-card-actions :class="xs ? 'w-100' : 'justify-center'">
+        <v-tooltip text="Mark all notifications as read" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
               :disabled="notificationsStore.unreadCount === 0"
               :class="xs ? '' : 'px-8'"
-              class="text-none"
-              color="red-darken-2"
+              :block="xs"
+              class="text-none text-button"
+              color="red-accent-2"
               variant="tonal"
               rounded="pill"
               size="large"
-              append-icon="mdi-check-all"
+              prepend-icon="mdi-check-all"
               @click="notificationsStore.markAllAsRead()"
             >
+              <template v-slot:loader>
+                <v-progress-circular indeterminate size="20" width="2" />
+              </template>
               Mark all as read
             </v-btn>
           </template>

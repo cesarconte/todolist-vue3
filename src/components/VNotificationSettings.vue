@@ -44,7 +44,7 @@ const switchLabel = computed(() =>
     : 'Notifications disabled'
 ) // Sets the label for the notification switch
 const switchColor = computed(() =>
-  notificationsStore.notificationSettings.enabled ? 'red-darken-2' : 'grey-darken-1'
+  notificationsStore.notificationSettings.enabled ? 'red-accent-2' : 'grey-darken-1'
 ) // Sets the color of the notification switch
 const isDisabled = computed(
   () => isLoading.value || !notificationsStore.hasFullSupport || !userStore.isLoggedIn
@@ -174,8 +174,8 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     class="dialog dialog-notifications-settings"
   >
     <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
-      <v-card-title class="d-flex align-center justify-space-between">
-        <span>Notifications Settings</span>
+      <v-card-title class="d-flex align-center justify-space-between text-h5">
+        <span class="text-red-darken-2 font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
           <template v-slot:activator="{ props }">
             <v-icon
@@ -203,13 +203,17 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
+      <v-card-subtitle class="text-grey-darken-3">
+        <v-icon icon="mdi-bell-cog"></v-icon>
+        Configure when you want to receive notifications</v-card-subtitle
+      >
 
       <v-divider class="my-4" />
 
       <v-card-text class="pa-0">
         <v-container v-if="isLoading" class="text-center py-4">
-          <v-progress-circular indeterminate color="primary" size="24" />
-          <span class="text-caption mt-2">Saving settings...</span>
+          <v-progress-circular indeterminate color="red-darken-2" size="24" />
+          <span class="text-caption mt-2 text-grey-darken-3">Saving settings...</span>
         </v-container>
 
         <template v-else>
@@ -249,6 +253,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               chips
               closable-chips
               hide-details
+              rounded="pill"
               class="mt-4"
             >
               <template v-slot:selection="{ item, index }">
@@ -265,8 +270,10 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           <v-card-item class="mb-2">
             <v-row class="text-caption">
               <v-col cols="auto" class="d-flex align-center">
-                <v-icon icon="mdi-clock-outline" class="mr-2" />
-                Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
+                <v-icon icon="mdi-clock-outline" class="mr-2" color="grey" />
+                <span class="text-grey">
+                  Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
+                </span>
               </v-col>
             </v-row>
           </v-card-item>
@@ -276,19 +283,19 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
       <v-divider class="mb-4" />
 
       <v-card-actions :class="xs ? '' : 'justify-center'">
-        <v-tooltip text="Send test notification" location="top" v-if="!xs">
+        <v-tooltip text="Send test notification" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
-              :block="xs"
               :disabled="isDisabled"
               :class="xs ? '' : 'px-8'"
-              class="text-none"
-              color="red-darken-2"
+              :block="xs"
+              class="text-none text-button"
+              color="red-accent-2"
               variant="tonal"
               rounded="pill"
               size="large"
-              append-icon="mdi-bell-alert-outline"
+              prepend-icon="mdi-bell-alert-outline"
               @click="notificationsStore.sendTestNotification()"
             >
               Test Notification

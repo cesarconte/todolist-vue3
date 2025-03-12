@@ -185,7 +185,7 @@ when you pass JavaScript Date objects to the where clause. */
             multiple
             chips
             closable-chips
-            color="red-accent-1"
+            color="red-accent-2"
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -212,7 +212,7 @@ when you pass JavaScript Date objects to the where clause. */
             chips
             closable-chips
             multiple
-            color="red-accent-1"
+            color="red-accent-2"
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -240,7 +240,7 @@ when you pass JavaScript Date objects to the where clause. */
             multiple
             chips
             closable-chips
-            color="red-accent-1"
+            color="red-accent-2"
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -265,7 +265,7 @@ when you pass JavaScript Date objects to the where clause. */
             chips
             closable-chips
             multiple
-            color="red-accent-1"
+            color="red-accent-2"
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -286,7 +286,7 @@ when you pass JavaScript Date objects to the where clause. */
             rounded
             prepend-icon=""
             prepend-inner-icon="mdi-calendar"
-            color="red-accent-1"
+            color="red-accent-2"
             class="date-create-task"
             @click:clear="handleClearDate"
           >

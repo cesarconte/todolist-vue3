@@ -38,9 +38,9 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :variant="button.variant || 'tonal'"
       :rounded="button.rounded || true"
       :size="button.size || 'large'"
-      :color="button.color || 'red-darken-2'"
+      :color="button.color || 'red-accent-2'"
       :disabled="button.disabled"
-      class="text-none"
+      class="text-none text-button"
       @click="button.function"
     >
       {{ button.text }}

@@ -141,7 +141,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             clearable
             density="default"
             rounded
-            color="red-accent-1"
+            color="red-accent-2"
             hide-details
             dense
             variant="outlined"

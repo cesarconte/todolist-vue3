@@ -269,7 +269,7 @@ export const useNotificationsStore = defineStore('notifications', {
                     timestamp: new Date().toISOString(),
                     read: false,
                     taskId: task.id,
-                    icon: 'mdi-bell-alert'
+                    icon: 'mdi-email-mark-as-unread'
                   })
                   this.showSnackbar = {
                     show: true,

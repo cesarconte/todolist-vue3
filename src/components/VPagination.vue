@@ -54,7 +54,7 @@ const lastPage = () => {
         icon
         class="me-2 align-self-center"
         variant="elevated"
-        color="red-darken-2"
+        color="red-accent-2"
         @click="firstPage"
         :disabled="currentPage === 1"
         size="small"
@@ -63,7 +63,7 @@ const lastPage = () => {
         <v-tooltip
           activator="parent"
           location="bottom"
-          color="red-darken-2"
+          color="red-accent-2"
           class="first-page-tooltip"
         >
           First page
@@ -73,7 +73,7 @@ const lastPage = () => {
         icon
         class="me-2 align-self-center"
         variant="elevated"
-        color="red-darken-2"
+        color="red-accent-2"
         @click="prevPage"
         :disabled="!props.hasPrevPage"
         size="small"
@@ -82,7 +82,7 @@ const lastPage = () => {
         <v-tooltip
           activator="parent"
           location="bottom"
-          color="red-darken-2"
+          color="red-accent-2"
           class="previous-page-tooltip"
         >
           Previous page
@@ -95,7 +95,7 @@ const lastPage = () => {
         icon
         class="me-2 align-self-center"
         variant="elevated"
-        color="red-darken-2"
+        color="red-accent-2"
         @click="nextPage"
         :disabled="!props.hasNextPage"
         size="small"
@@ -109,7 +109,7 @@ const lastPage = () => {
         icon
         class="me-2 align-self-center"
         variant="elevated"
-        color="red-darken-2"
+        color="red-accent-2"
         @click="lastPage"
         :disabled="!props.hasNextPage"
         size="small"
@@ -118,7 +118,7 @@ const lastPage = () => {
         <v-tooltip
           activator="parent"
           location="bottom"
-          color="red-darken-2"
+          color="red-accent-2"
           class="last-page-tooltip"
         >
           Last page

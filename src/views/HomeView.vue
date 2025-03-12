@@ -45,7 +45,6 @@ const events = computed(() => {
   }
 })
 
-
 onMounted(async () => {
   if (userStore.isLoggedIn) {
     await taskStore.getTasksByProjectPaginated()
@@ -101,7 +100,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
               dense
               hide-details
               rounded="pill"
-              color="red-accent-1"
+              color="red-accent-2"
             ></v-select>
             <v-select
               v-model="weekday"
@@ -112,7 +111,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
               dense
               hide-details
               rounded="pill"
-              color="red-accent-1"
+              color="red-accent-2"
             ></v-select>
           </div>
         </v-col>

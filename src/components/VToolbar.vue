@@ -138,7 +138,6 @@ const navItems = computed(() => [
 ])
 
 const dotsItems = computed(() => [
-  // Defines the dots menu items
   {
     title: 'Notifications',
     icon: 'mdi-bell-outline',
@@ -147,7 +146,13 @@ const dotsItems = computed(() => [
   {
     title: 'Settings',
     icon: 'mdi-cog-outline',
-    action: handleSettingsClick
+    children: [
+      {
+        title: 'Notification Settings',
+        icon: 'mdi-bell-cog-outline',
+        action: handleNotificationsSettingsClick
+      }
+    ]
   },
   {
     title: loginLogoutText.value,
@@ -315,10 +320,10 @@ const handleNotificationsClick = async () => {
   }
 }
 
-const handleSettingsClick = () => {
-  // Handles the click on the settings button
-  settingsMenu.value = !settingsMenu.value
-}
+// const handleSettingsClick = () => {
+//   // Handles the click on the settings button
+//   settingsMenu.value = !settingsMenu.value
+// }
 
 const handleNotificationsSettingsClick = () => {
   // Handles the click on the notifications settings
@@ -333,7 +338,7 @@ const handleDotsClick = () => {
 /************************************
  * Vuetify Display
  ************************************/
-const { xs, sm, smAndDown, smAndUp, mdAndUp, mobile } = useDisplay() // Accesses display breakpoints from Vuetify
+const { xs, sm, smAndDown, smAndUp, mdAndDown, mdAndUp, mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
 /************************************
  * Data
@@ -482,10 +487,10 @@ onMounted(async () => {
         <v-list density="compact" class="pa-2">
           <v-list-item
             @click="handleNotificationsSettingsClick"
-            class="rounded-lg mb-2"
-            color="red-darken-2"
             :ripple="true"
-            active-class="red-lighten-5"
+            class="rounded-lg mb-2"
+            rounded="pill"
+            color="red-darken-2"
           >
             <template v-slot:prepend>
               <v-icon icon="mdi-bell-cog-outline" color="red-darken-2" class="mr-3"></v-icon>
@@ -514,6 +519,7 @@ onMounted(async () => {
   <VNotificationSettings v-model="showNotificationsSettings" />
 
   <VNotificationsList v-model="showNotificationsList" />
+
   <v-navigation-drawer
     v-model="drawer"
     :location="mobile ? 'bottom' : undefined"
@@ -893,15 +899,39 @@ onMounted(async () => {
     v-model="drawerDots"
     temporary
     location="right"
+    :width="360"
     class="navigation-drawer drawer-dots"
   >
     <v-list>
-      <v-list-item v-for="item in dotsItems" :key="item.title" @click="item.action">
-        <template v-slot:prepend>
-          <v-icon :icon="item.icon"></v-icon>
-        </template>
-        {{ item.title }}
-      </v-list-item>
+      <template v-for="item in dotsItems" :key="item.title">
+        <!-- Items without children (single items) -->
+        <v-list-item v-if="!item.children" @click="item.action">
+          <template v-slot:prepend>
+            <v-icon :icon="item.icon"></v-icon>
+          </template>
+          {{ item.title }}
+        </v-list-item>
+
+        <!-- Items with children (groups) -->
+        <v-list-group v-else>
+          <template v-slot:activator="{ props }">
+            <v-list-item v-bind="props">
+              <template v-slot:prepend>
+                <v-icon :icon="item.icon"></v-icon>
+              </template>
+              {{ item.title }}
+            </v-list-item>
+          </template>
+
+          <!-- Sub-items within the group -->
+          <v-list-item v-for="child in item.children" :key="child.title" @click="child.action">
+            <template v-slot:prepend>
+              <v-icon :icon="child.icon"></v-icon>
+            </template>
+            {{ child.title }}
+          </v-list-item>
+        </v-list-group>
+      </template>
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -910,25 +940,5 @@ onMounted(async () => {
 .notification-list-card {
   max-height: 70vh;
   overflow-y: auto;
-}
-
-.dialog-notifications-list :deep(.v-treeview-node__root) {
-  padding: 8px 12px;
-  margin: 4px 0;
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
-
-.dialog-notifications-list :deep(.v-treeview-node__root:hover) {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.dialog-notifications-list :deep(.v-treeview-node__content) {
-  align-items: center;
-}
-
-.dialog-notifications-list :deep(.v-treeview-node__label) {
-  flex-grow: 1;
-  margin-left: 12px;
 }
 </style>
