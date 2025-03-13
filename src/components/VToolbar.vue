@@ -71,25 +71,11 @@ const loginLogoutIcon = computed(() => {
   // Determines the login/logout button icon
   return userStore.isLoggedIn ? 'mdi-account-check-outline' : 'mdi-account-arrow-right-outline'
 })
-// const loginLogoutIcon = computed(() => {
-//   if (userStore.isLoggedIn) {
-//     return 'mdi-account-check-outline' // Use a different icon for logout
-//   } else {
-//     return 'mdi-account-arrow-right-outline' // Default icon for login
-//   }
-// })
 
 const loginLogoutText = computed(() => {
   // Determines the login/logout button text
   return userStore.isLoggedIn ? 'Logout' : 'Login with Google'
 })
-// const loginLogoutText = computed(() => {
-//   if (userStore.isLoggedIn) {
-//     return 'Logout'
-//   } else {
-//     return 'Login with Google'
-//   }
-// })
 
 const navItems = computed(() => [
   // Defines the navigation items

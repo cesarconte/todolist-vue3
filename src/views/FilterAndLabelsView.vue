@@ -3,6 +3,8 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
+import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
+import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
@@ -12,6 +14,8 @@ import { ref, watchEffect } from 'vue'
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+const { submitEditedTask } = useSubmitEditedTask()
+
 const showCards = ref(false)
 const form = ref(null)
 const showAlert = ref(false)
@@ -57,73 +61,18 @@ const handleClearDate = () => {
   taskStore.getFilteredTasksPaginated()
 }
 
-// Function to format the date as YYYY-MM-DD
-const formatDate = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  let month = '' + (d.getMonth() + 1)
-  let day = '' + d.getDate()
-  const year = d.getFullYear()
-
-  if (month.length < 2) month = '0' + month
-  if (day.length < 2) day = '0' + day
-
-  return [year, month, day].join('-')
-}
-
-// Define the submitEditedTask function to save the edited task to Firestore
-const submitEditedTask = async () => {
-  try {
-    // Format the start and end dates
-    const formattedStartDate = formatDate(dataStore.editedTask.startDate)
-    const formattedEndDate = formatDate(dataStore.editedTask.endDate)
-
-    // Create a new object with the formatted dates
-    const editedTaskData = {
-      ...dataStore.editedTask,
-      startDate: formattedStartDate,
-      endDate: formattedEndDate
-    }
-    // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, editedTaskData)
-    // Close the dialog
-    taskStore.dialogEditTask = false
-  } catch (error) {
-    console.error(error)
-    alert('Error saving task. Please try again.', error)
-  }
-}
-
 // Define the reset function to reset the form values
 const reset = () => {
   form.value.reset()
   alert('Form has been reset.')
 }
 
-// Define the buttons Form array
-const btnsForm = [
-  {
-    type: 'submit',
-    height: '3rem',
-    text: 'Save Edit',
-    icon: 'mdi-check',
-    function: submitEditedTask
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Reset Form',
-    icon: 'mdi-refresh',
-    function: reset
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Close',
-    icon: 'mdi-close',
-    function: () => (taskStore.dialogEditTask = false)
-  }
-]
+// Usa el composable para los botones
+const { btnsForm } = useFormBtnActions(
+  submitEditedTask,
+  reset,
+  () => (taskStore.dialogEditTask = false)
+)
 
 const rules = useMaxLengthRule()
 

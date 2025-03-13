@@ -4,6 +4,8 @@ import { ref, computed } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useRouter } from 'vue-router'
+import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
+import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VActionButtons from '@/components/VActionButtons.vue'
 import { useDisplay } from 'vuetify'
@@ -11,6 +13,7 @@ import { useDisplay } from 'vuetify'
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const router = useRouter()
+const { submitEditedTask } = useSubmitEditedTask()
 
 // Time Picker states
 const menuStart = ref(false)
@@ -35,70 +38,18 @@ const task = computed(() => {
   return dataStore.tasks.find((task) => task.id === props.taskId)
 })
 
-// Function to format the date as YYYY-MM-DD
-const formatDate = (date) => {
-  if (!date) return null
-  const d = new Date(date)
-  let month = '' + (d.getMonth() + 1)
-  let day = '' + d.getDate()
-  const year = d.getFullYear()
-
-  if (month.length < 2) month = '0' + month
-  if (day.length < 2) day = '0' + day
-
-  return [year, month, day].join('-')
-}
-
-const submitEditedTask = async () => {
-  try {
-    // Format the start and end dates
-    const formattedStartDate = formatDate(dataStore.editedTask.startDate)
-    const formattedEndDate = formatDate(dataStore.editedTask.endDate)
-
-    // Create a new object with the formatted dates
-    const editedTaskData = {
-      ...dataStore.editedTask,
-      startDate: formattedStartDate,
-      endDate: formattedEndDate
-    }
-    // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, editedTaskData)
-    // Close the dialog
-    taskStore.dialogEditTask = false
-  } catch (error) {
-    console.error(error)
-  }
-}
 // Reset the form
 const reset = () => {
   form.value.reset()
   alert('Form has been reset')
 }
 
-// Define the buttons array
-const btnsForm = [
-  {
-    type: 'submit',
-    height: '3rem',
-    text: 'Save Edit',
-    icon: 'mdi-check',
-    function: submitEditedTask
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Reset Form',
-    icon: 'mdi-refresh',
-    function: reset
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Close',
-    icon: 'mdi-close',
-    function: () => (taskStore.dialogEditTask = false)
-  }
-]
+// Usa el composable para los botones
+const { btnsForm } = useFormBtnActions(
+  submitEditedTask,
+  reset,
+  () => (taskStore.dialogEditTask = false)
+)
 
 const goBack = () => {
   router.back()

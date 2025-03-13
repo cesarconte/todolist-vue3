@@ -1,6 +1,8 @@
 <script setup>
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
+import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VActionButtons from '@/components/VActionButtons.vue'
 import { ref, onMounted, computed, watch } from 'vue'
@@ -10,6 +12,11 @@ import VPagination from '@/components/VPagination.vue'
 
 const taskStore = useTaskStore()
 const dataStore = useDataStore()
+const { submitEditedTask } = useSubmitEditedTask()
+
+// Time Picker states
+const menuStart = ref(false)
+const menuEnd = ref(false)
 
 const props = defineProps({
   projectName: {
@@ -61,24 +68,18 @@ const submitEditedProject = async () => {
   }
 }
 
-// Define the submitEditedTask function to save the edited task to Firestore
-const submitEditedTask = async () => {
-  try {
-    // Save the edited task to Firestore
-    await dataStore.updateTask(dataStore.editedTask.id, dataStore.editedTask)
-    // Close the dialog
-    taskStore.dialogEditTask = false
-  } catch (error) {
-    console.error(error)
-    alert('Error saving task. Please try again.', error)
-  }
-}
-
 // Define the reset function to reset the form values
 const reset = () => {
   form.value.reset()
   alert('Form has been reset.')
 }
+
+// Usa el composable para los botones
+const { btnsForm } = useFormBtnActions(
+  submitEditedTask,
+  reset,
+  () => (taskStore.dialogEditTask = false)
+)
 
 // Define the buttons Project array
 const btnsProject = [
@@ -138,30 +139,6 @@ const btnsFormProject = [
     text: 'Close',
     icon: 'mdi-close',
     function: () => (dialogEditProject.value = false)
-  }
-]
-// Define the buttons Form array
-const btnsForm = [
-  {
-    type: 'submit',
-    height: '3rem',
-    text: 'Save Edit',
-    icon: 'mdi-check',
-    function: submitEditedTask
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Reset Form',
-    icon: 'mdi-refresh',
-    function: reset
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Close',
-    icon: 'mdi-close',
-    function: () => (taskStore.dialogEditTask = false)
   }
 ]
 
@@ -508,28 +485,101 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
                 :items="dataStore.statuses"
               ></v-select>
               <v-divider class="mb-4"></v-divider>
-              <v-text-field
+              <v-date-input
                 v-model="dataStore.editedTask.startDate"
                 label="Start Date"
-                type="date"
-                variant="plain"
-                color="red-darken-2"
-                clearable
                 required
+                clearable
+                variant="plain"
+                prepend-icon=""
+                prepend-inner-icon="mdi-calendar"
+                color="red-darken-2"
                 class="date-create-task"
               >
+              </v-date-input>
+              <v-divider class="mb-4"></v-divider>
+              <v-date-input
+                v-model="dataStore.editedTask.endDate"
+                label="End Date"
+                required
+                clearable
+                variant="plain"
+                prepend-icon=""
+                prepend-inner-icon="mdi-calendar"
+                color="red-darken-2"
+                class="date-create-task"
+              >
+              </v-date-input>
+              <v-divider class="mb-4"></v-divider>
+              <v-text-field
+                v-model="dataStore.editedTask.startDateHour"
+                label="Start Hour"
+                placeholder="hh:mm"
+                prepend-inner-icon="mdi-clock-time-four-outline"
+                variant="plain"
+                readonly
+                clearable
+                :active="menuStart"
+                :focused="menuStart"
+                color="red-darken-2"
+                @click="menuStart = true"
+              >
+                <v-menu
+                  v-model="menuStart"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <v-time-picker
+                    v-if="menuStart"
+                    v-model="dataStore.editedTask.startDateHour"
+                    format="24hr"
+                    full-width
+                    color="red-darken-2"
+                    scrollable
+                    required
+                    class="time-create-task justify-center w-100"
+                    :class="xs ? 'px-0' : ''"
+                    @click:minute="$nextTick(() => (menuStart = false))"
+                  ></v-time-picker>
+                </v-menu>
               </v-text-field>
               <v-divider class="mb-4"></v-divider>
               <v-text-field
-                v-model="dataStore.editedTask.endDate"
-                label="End Date"
-                type="date"
+                v-model="dataStore.editedTask.endDateHour"
+                label="Due Hour"
+                placeholder="hh:mm"
+                prepend-inner-icon="mdi-clock-time-four-outline"
                 variant="plain"
-                color="red-darken-2"
+                readonly
                 clearable
-                required
-                class="date-create-task"
+                :active="menuEnd"
+                :focused="menuEnd"
+                @click="menuEnd = true"
               >
+                <v-menu
+                  v-model="menuEnd"
+                  :close-on-content-click="false"
+                  activator="parent"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <v-time-picker
+                    v-if="menuEnd"
+                    v-model="dataStore.editedTask.endDateHour"
+                    format="24hr"
+                    full-width
+                    color="red-darken-2"
+                    scrollable
+                    required
+                    class="time-create-task justify-center w-100"
+                    :class="xs ? 'px-0' : ''"
+                    @click:minute="$nextTick(() => (menuEnd = false))"
+                  ></v-time-picker>
+                </v-menu>
               </v-text-field>
             </v-form>
           </v-card-text>
