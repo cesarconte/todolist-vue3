@@ -214,9 +214,7 @@ export const useTaskStore = defineStore('tasks', () => {
           completed: !task.completed, // Toggle the 'completed' status
           status: task.completed ? 'In Progress' : 'Done' // Update 'status' accordingly
         })
-
-        console.log('Task updated successfully.')
-        //alert('Task updated successfully.')
+        alert('Task updated successfully.')
       }
     } catch (error) {
       // Display an error message
@@ -335,7 +333,6 @@ export const useTaskStore = defineStore('tasks', () => {
         // Get the last page
         // Calculate the number of elements to fetch for the last page
         lastPageElements = tasksArray.length % pageSize // Now it's declared outside
-        console.log('lastPageElements', lastPageElements)
         // If the last page has less elements than pageSize, use limitToLast
         if (lastPageElements > 0) {
           tasksRef = query(
@@ -465,43 +462,6 @@ export const useTaskStore = defineStore('tasks', () => {
     { immediate: true } // Fetch filtered tasks initially
   )
 
-  // Helper function to edit a task
-  // const editTask = async (taskId) => {
-  //   try {
-  //     dialogEditTask.value = true
-  //     // Get the task data from Firestore and update the UI
-  //     const taskData = await dataStore.tasks.find((task) => task.id === taskId)
-  //     // Update the form values with the task data
-  //     if (taskData) {
-  //       dataStore.editedTask = {
-  //         ...taskData,
-  //         // Convert the startDate and endDate from a Timestamp to a string
-  //         startDate: taskData.startDate.toDate().toISOString().split('T')[0],
-  //         endDate: taskData.endDate.toDate().toISOString().split('T')[0]
-  //       }
-  //     } else {
-  //       dataStore.editedTask = {
-  //         id: '',
-  //         title: '',
-  //         description: '',
-  //         project: '',
-  //         label: '',
-  //         priority: '',
-  //         status: '',
-  //         startDate: '',
-  //         startDateHour: '',
-  //         endDate: '',
-  //         endDateHour: '',
-  //         createdAt: '',
-  //         completed: false,
-  //         color: ''
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error(error)
-  //     alert('Error editing task. Please try again.', error)
-  //   }
-  // }
   const editTask = async (taskId) => {
     try {
       dialogEditTask.value = true

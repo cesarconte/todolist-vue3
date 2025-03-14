@@ -257,9 +257,6 @@ export const useDataStore = defineStore('data', () => {
 
       if (taskDoc.exists()) {
         const taskData = taskDoc.data()
-        // Log the types of startDate and endDate
-        console.log('startDate type:', typeof taskData.startDate, taskData.startDate)
-        console.log('endDate type:', typeof taskData.endDate, taskData.endDate)
 
         // Convert startDate and endDate to Date objects if they are Timestamps
         if (taskData.startDate instanceof Timestamp) {
@@ -341,7 +338,6 @@ export const useDataStore = defineStore('data', () => {
           createdTasks: arrayUnion(taskId) // Add the taskId to the array
         })
         // Display a success message
-        console.log('Task created successfully')
         alert('Task created successfully')
         // Display a success message
       } else {
@@ -373,9 +369,6 @@ export const useDataStore = defineStore('data', () => {
     isSaving.value = true
 
     try {
-      // Log the types of startDate and endDate
-      console.log('editedTask.startDate type:', typeof editedTask.startDate, editedTask.startDate)
-      console.log('editedTask.endDate type:', typeof editedTask.endDate, editedTask.endDate)
       // Check if all fields are filled
       if (validTaskForm(editedTask) && editedTask.startDate <= editedTask.endDate) {
         // Get the project color
@@ -414,7 +407,6 @@ export const useDataStore = defineStore('data', () => {
           })
 
           // Display a success message
-          console.log('Task updated successfully')
           alert('Task updated successfully')
         } else {
           // Handle unauthorized access (e.g., show an error message)
@@ -478,12 +470,10 @@ export const useDataStore = defineStore('data', () => {
             batch.delete(notificationDoc.ref)
           })
           await batch.commit()
-          console.log(`Deleted ${querySnapshot.size} notifications for task ${taskId}`)
         }
 
         // 5. Display a success message
         alert('Task deleted successfully')
-        console.log('Task deleted successfully')
 
         // 6. Redirect to '/' after deleting the task
         router.push('/')
@@ -499,45 +489,6 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  // const deleteAllTasks = async () => {
-  //   try {
-  //     // Check if a user is logged in
-  //     if (!userStore.isLoggedIn) {
-  //       console.error('User must be logged in to delete tasks.')
-  //       alert('Please log in to delete tasks.')
-  //       return // Stop execution if not logged in
-  //     }
-
-  //     // Get the current user's ID
-  //     const currentUserId = userStore.userId
-
-  //     // Start a transaction
-  //     await runTransaction(db, async (transaction) => {
-  //       // 1. Get all tasks created by the user
-  //       const tasksRef = collection(db, 'tasks')
-  //       const querySnapshot = await getDocs(
-  //         query(tasksRef, where('createdBy', '==', currentUserId))
-  //       )
-
-  //       // 2. Delete each task within the transaction
-  //       querySnapshot.docs.forEach((doc) => {
-  //         transaction.delete(doc.ref)
-  //       })
-
-  //       // 3. Clear the user's createdTasks array within the transaction
-  //       const userRef = doc(db, 'users', currentUserId)
-  //       transaction.update(userRef, { createdTasks: [] })
-  //     })
-
-  //     // 4. Display a success message if the transaction completes successfully
-  //     console.log('All tasks deleted successfully')
-  //     alert('All tasks deleted successfully')
-  //   } catch (error) {
-  //     // Display an error message if the transaction fails
-  //     console.error('Error deleting tasks:', error)
-  //     alert('Error deleting tasks: ' + error + 'Please try again!')
-  //   }
-  // }
   const deleteAllTasks = async () => {
     try {
       // Check if a user is logged in
@@ -580,7 +531,6 @@ export const useDataStore = defineStore('data', () => {
       })
 
       // 6. Feedback y limpieza adicional
-      console.log('All tasks and notifications deleted successfully')
       alert('All tasks and related notifications deleted successfully')
 
       // 7. Resetear store de notificaciones si es necesario
@@ -593,70 +543,6 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  // Delete all tasks in a project from Firestore
-  // const deleteAllTasksInProject = async () => {
-  //   try {
-  //     // Check if a user is logged in
-  //     if (!userStore.isLoggedIn) {
-  //       console.error('User must be logged in to delete tasks.')
-  //       alert('Please log in to delete tasks.')
-  //       return // Stop execution if not logged in
-  //     }
-
-  //     // Get the current user's ID
-  //     const currentUserId = userStore.userId
-
-  //     // Fetch the project from Firestore to check ownership
-  //     const projectRef = doc(db, 'projects', selectedProjectId.value)
-  //     const projectDoc = await getDoc(projectRef)
-
-  //     if (projectDoc.exists()) {
-  //       const projectData = projectDoc.data()
-
-  //       // Check if the user owns the project
-  //       if (projectData.userId === userStore.userId) {
-  //         // 1. Create a query to get all tasks of the project
-  //         const tasksRef = collection(db, 'tasks')
-  //         const querySnapshot = await getDocs(
-  //           query(tasksRef, where('projectId', '==', selectedProjectId.value))
-  //         )
-
-  //         // 2. Delete each task and update user's createdTasks
-  //         const batch = writeBatch(db)
-  //         querySnapshot.docs.forEach((taskDoc) => {
-  //           const taskId = taskDoc.id
-  //           batch.delete(taskDoc.ref)
-
-  //           // 3. Remove taskId from user's createdTasks
-  //           const userRef = doc(db, 'users', currentUserId)
-  //           batch.update(userRef, {
-  //             createdTasks: arrayRemove(taskId)
-  //           })
-  //         })
-
-  //         await batch.commit()
-
-  //         // 4. Display a success message
-  //         console.log('All tasks in the project deleted successfully')
-  //         alert('All tasks in the project deleted successfully')
-
-  //         // 5. Redirect to '/' after deleting the task
-  //         router.push('/')
-  //       } else {
-  //         // Handle unauthorized access
-  //         console.error('Unauthorized access to project:', selectedProjectId)
-  //         alert('You are not authorized to delete tasks from this project.')
-  //       }
-  //     } else {
-  //       // Handle the case where the project is not found
-  //       console.error('Project not found:', selectedProjectId)
-  //       alert('The selected project was not found.')
-  //     }
-  //   } catch (error) {
-  //     console.error('Error deleting tasks in project:', error)
-  //     alert('Error deleting tasks in project: ' + error + ' Please try again')
-  //   }
-  // }
   const deleteAllTasksInProject = async () => {
     try {
       // Verificar autenticación
@@ -715,9 +601,6 @@ export const useDataStore = defineStore('data', () => {
       await batch.commit()
 
       // 6. Limpiar estado y notificar
-      console.log(
-        `Deleted ${taskIds.length} tasks and ${notificationsToDelete.length} notifications`
-      )
       alert('All tasks and related notifications deleted successfully')
       router.push('/')
     } catch (error) {
@@ -751,7 +634,6 @@ export const useDataStore = defineStore('data', () => {
           createdBy: userStore.userId // Add the user ID to the project data
         })
         // Display a success message
-        console.log('Project with ID: ' + docRef.id + ' created successfully!')
         alert('Project with ID: ' + docRef.id + ' created successfully!')
       } else {
         // Display an error message
@@ -795,7 +677,6 @@ export const useDataStore = defineStore('data', () => {
             projectId: editedProject.title.toLowerCase().replace(/\s/g, '-')
           })
           // Display a success message
-          console.log('Project with ID: ' + projectId + ' edited successfully')
           alert('Project with ID: ' + projectId + ' edited successfully')
         } else {
           // Handle unauthorized access (e.g., show an error message)
@@ -840,7 +721,6 @@ export const useDataStore = defineStore('data', () => {
         await deleteDoc(projectRef)
 
         // Display a success message
-        console.log('Project deleted successfully')
         alert('Project deleted successfully')
 
         // Update taskStore.selectedProject if it matches the deleted project
@@ -919,7 +799,6 @@ export const useDataStore = defineStore('data', () => {
       try {
         listeners.value[collectionName]()
         delete listeners.value[collectionName]
-        console.log('Unsubscribed from listener:', collectionName)
       } catch (error) {
         console.error('Error unsubscribing from listener:', error)
       }
@@ -931,7 +810,6 @@ export const useDataStore = defineStore('data', () => {
     for (const collectionName in listeners.value) {
       unsubscribeFromCollection(collectionName)
     }
-    console.log('Unsubscribed from all listeners')
     listeners.value = {} // Reset listeners object
   }
 

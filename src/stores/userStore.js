@@ -56,14 +56,12 @@ export const useUserStore = defineStore('user', () => {
       const result = await signInWithPopup(auth, provider)
       const user = result.user
       const currentUser = auth.currentUser
-      // console.log("User logged in with Google:", user.displayName)
 
       // Create or update the user document in Firestore
       await createUserDocument(user)
 
       // Set userId inmediately after succesful login
       userId.value = currentUser.uid
-      // console.log('UserId: ', userId.value)
 
       // Redirect to '/' after successful login
       router.push('/')
@@ -87,7 +85,6 @@ export const useUserStore = defineStore('user', () => {
             photoURL: user.photoURL,
             createdTasks: arrayUnion(dataStore.newTask.taskId)
           })
-          // console.log('User document updated')
           alert('User document updated')
         }
       } else {
@@ -99,7 +96,6 @@ export const useUserStore = defineStore('user', () => {
           photoURL: user.photoURL,
           createdTasks: [] // Initialize createdTasks as an empty array
         })
-        // console.log('User document created')
         alert('User document created')
       }
     } catch (error) {
@@ -113,7 +109,6 @@ export const useUserStore = defineStore('user', () => {
       user.value = null
       userId.value = null
       token.value = null
-      console.log('User logged out')
     } catch (error) {
       console.error('Error logging out:', error)
       alert('Error logging out. Please try again.')
@@ -128,12 +123,10 @@ export const useUserStore = defineStore('user', () => {
       currentUser.getIdToken().then((idToken) => {
         token.value = idToken
       })
-      console.log('UserId: ', userId.value)
     } else {
       user.value = null
       userId.value = null
       token.value = null
-      console.log('No user logged in')
       return
     }
   })
