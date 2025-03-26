@@ -1,4 +1,5 @@
 <script setup>
+import { ref, watchEffect } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
@@ -9,7 +10,6 @@ import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VPagination from '@/components/VPagination.vue'
-import { ref, watchEffect } from 'vue'
 
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
@@ -63,6 +63,10 @@ const { btnsForm } = useFormBtnActions(
   reset,
   () => (taskStore.dialogEditTask = false)
 )
+
+// Configure the submit button for editing a task
+btnsForm[0].text = 'Edit Task' // Set the text for the submit button
+btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
 const rules = useMaxLengthRule()
 

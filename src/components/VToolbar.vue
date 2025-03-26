@@ -5,9 +5,11 @@ import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useRouter } from 'vue-router'
-import VActionButtons from './VActionButtons.vue'
 import { useDisplay } from 'vuetify'
+import { useSubmitNewTask } from '@/composables/useSubmitNewTask'
+import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import VActionButtons from './VActionButtons.vue'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
 
@@ -18,6 +20,7 @@ const dataStore = useDataStore() // Accesses the data store
 const taskStore = useTaskStore() // Accesses the task store
 const userStore = useUserStore() // Accesses the user store
 const notificationsStore = useNotificationsStore() // Accesses the notifications store
+const { submitNewTask } = useSubmitNewTask() // Accesses the submitNewTask function
 
 /************************************
  * Router
@@ -216,46 +219,6 @@ const openDialog = (value) => {
   }
 }
 
-const formatDate = (date) => {
-  // Formats a date object into yyyy-mm-dd format
-  if (!date) return null
-  const d = new Date(date)
-  let month = '' + (d.getMonth() + 1)
-  let day = '' + d.getDate()
-  const year = d.getFullYear()
-
-  if (month.length < 2) month = '0' + month
-  if (day.length < 2) day = '0' + day
-
-  return [year, month, day].join('-')
-}
-
-const createNewTask = async () => {
-  // Define the createNewTask function
-  try {
-    // Format the start and end dates
-    const formattedStartDate = formatDate(dataStore.newTask.startDate)
-    const formattedEndDate = formatDate(dataStore.newTask.endDate)
-    // Create a new object with the formatted dates
-    const newTaskData = {
-      ...dataStore.newTask,
-      startDate: formattedStartDate,
-      endDate: formattedEndDate
-    }
-    // Save the new task to Firestore
-    await dataStore.createTask(newTaskData)
-    // Reset the form
-    form.value.reset()
-    // Close the dialog
-    dialogAddTask.value = false
-    // Close the drawer
-    drawer.value = false
-  } catch (error) {
-    console.error('Error creating task:', console.error)
-    alert('An error ocurred while creating the task.')
-  }
-}
-
 const reset = () => {
   // Resets the form
   form.value.reset()
@@ -306,11 +269,6 @@ const handleNotificationsClick = async () => {
   }
 }
 
-// const handleSettingsClick = () => {
-//   // Handles the click on the settings button
-//   settingsMenu.value = !settingsMenu.value
-// }
-
 const handleNotificationsSettingsClick = () => {
   // Handles the click on the notifications settings
   showNotificationsSettings.value = true
@@ -339,30 +297,11 @@ const cruds = [
   }
 ]
 
-const btnsForm = [
-  // Defines the buttons for the add task form
-  {
-    type: 'submit',
-    height: '3rem',
-    text: 'Add Task',
-    icon: 'mdi-plus',
-    function: createNewTask
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Reset Form',
-    icon: 'mdi-refresh',
-    function: reset
-  },
-  {
-    type: 'button',
-    height: '3rem',
-    text: 'Close',
-    icon: 'mdi-close',
-    function: () => (dialogAddTask.value = false)
-  }
-]
+const { btnsForm } = useFormBtnActions(submitNewTask, reset, () => (dialogAddTask.value = false))
+
+// Configure the submit button for creating a new task
+btnsForm[0].text = 'Add Task' // Set the text for the submit button
+btnsForm[0].icon = 'mdi-plus' // Set the icon for the submit button
 
 const btnsFormAddProject = [
   // Defines the buttons for the add project form
@@ -615,7 +554,7 @@ onMounted(async () => {
         <span class="text-h6">Add new task</span>
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
-        <v-form class="form form-create-task" ref="form" @submit.prevent>
+        <v-form class="form form-create-task" ref="form" @submit.prevent="submitNewTask">
           <v-text-field
             v-model="dataStore.newTask.title"
             label="Title"

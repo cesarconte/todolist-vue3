@@ -81,6 +81,10 @@ const { btnsForm } = useFormBtnActions(
   () => (taskStore.dialogEditTask = false)
 )
 
+// Configure the submit button for editing a task
+btnsForm[0].text = 'Edit Task' // Set the text for the submit button
+btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
+
 // Define the buttons Project array
 const btnsProject = [
   {
