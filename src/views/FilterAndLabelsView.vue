@@ -77,7 +77,7 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for editing a task
-btnsForm[0].text = 'Edit Task' // Set the text for the submit button
+btnsForm[0].text = 'Update Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
 const rules = useMaxLengthRule()

@@ -300,7 +300,7 @@ const cruds = [
 const { btnsForm } = useFormBtnActions(submitNewTask, reset, () => (dialogAddTask.value = false))
 
 // Configure the submit button for creating a new task
-btnsForm[0].text = 'Add Task' // Set the text for the submit button
+btnsForm[0].text = 'Create Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-plus' // Set the icon for the submit button
 
 const btnsFormAddProject = [
