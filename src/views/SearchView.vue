@@ -10,6 +10,7 @@ import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VPagination from '@/components/VPagination.vue'
+import VTaskForm from '@/components/VTaskForm.vue'
 
 const dataStore = useDataStore()
 const taskStore = useTaskStore()
@@ -19,10 +20,6 @@ const { submitEditedTask } = useSubmitEditedTask()
 const showCards = ref(false)
 const form = ref(null)
 const showAlert = ref(false)
-
-// Time Picker states
-const menuStart = ref(false)
-const menuEnd = ref(false)
 
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
@@ -65,7 +62,7 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for editing a task
-btnsForm[0].text = 'Edit Task' // Set the text for the submit button
+btnsForm[0].text = 'Update Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
 const rules = useMaxLengthRule()
@@ -233,174 +230,16 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             <span class="text-h6">Edit task {{ dataStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
-            <v-form class="form form-edit-task" ref="form" @submit.prevent="submitEditedTask">
-              <v-text-field
-                v-model="dataStore.editedTask.title"
-                placeholder="Enter title"
-                prepend-inner-icon="mdi-format-title"
-                type="text"
-                variant="plain"
-                color="red-darken-2"
-                counter
-                :rules="rules"
-                clearable
-                required
-              ></v-text-field>
-              <v-divider class="mb-4"></v-divider>
-              <v-textarea
-                v-model="dataStore.editedTask.description"
-                placeholder="Enter description"
-                prepend-inner-icon="mdi-text"
-                type="text"
-                variant="plain"
-                color="red-darken-2"
-                required
-                counter
-                :rules="rules"
-                clearable
-              ></v-textarea>
-              <v-divider class="mb-4"></v-divider>
-              <v-select
-                v-model="dataStore.editedTask.project"
-                label="Project"
-                prepend-inner-icon="mdi-folder-outline"
-                variant="plain"
-                color="red-darken-2"
-                clearable
-                required
-                :items="dataStore.projects"
-              ></v-select>
-              <v-divider class="mb-4"></v-divider>
-              <v-select
-                v-model="dataStore.editedTask.label"
-                label="Label"
-                prepend-inner-icon="mdi-label-outline"
-                variant="plain"
-                color="red-darken-2"
-                clearable
-                required
-                :items="dataStore.labels"
-              ></v-select>
-              <v-divider class="mb-4"></v-divider>
-              <v-select
-                v-model="dataStore.editedTask.priority"
-                label="Priority"
-                prepend-inner-icon="mdi-star-outline"
-                variant="plain"
-                color="red-darken-2"
-                clearable
-                required
-                :items="dataStore.priorities"
-              ></v-select>
-              <v-divider class="mb-4"></v-divider>
-              <v-select
-                v-model="dataStore.editedTask.status"
-                label="Status"
-                prepend-inner-icon="mdi-checkbox-marked-outline"
-                variant="plain"
-                color="red-darken-2"
-                clearable
-                required
-                :items="dataStore.statuses"
-              ></v-select>
-              <v-divider class="mb-4"></v-divider>
-              <v-date-input
-                v-model="dataStore.editedTask.startDate"
-                label="Start Date"
-                required
-                clearable
-                variant="plain"
-                prepend-icon=""
-                prepend-inner-icon="mdi-calendar"
-                color="red-darken-2"
-                class="date-create-task"
-              >
-              </v-date-input>
-              <v-divider class="mb-4"></v-divider>
-              <v-date-input
-                v-model="dataStore.editedTask.endDate"
-                label="End Date"
-                required
-                clearable
-                variant="plain"
-                prepend-icon=""
-                prepend-inner-icon="mdi-calendar"
-                color="red-darken-2"
-                class="date-create-task"
-              >
-              </v-date-input>
-              <v-divider class="mb-4"></v-divider>
-              <v-text-field
-                v-model="dataStore.editedTask.startDateHour"
-                label="Start Hour"
-                placeholder="hh:mm"
-                prepend-inner-icon="mdi-clock-time-four-outline"
-                variant="plain"
-                readonly
-                clearable
-                :active="menuStart"
-                :focused="menuStart"
-                color="red-darken-2"
-                @click="menuStart = true"
-              >
-                <v-menu
-                  v-model="menuStart"
-                  :close-on-content-click="false"
-                  activator="parent"
-                  transition="scale-transition"
-                  offset-y
-                  min-width="auto"
-                >
-                  <v-time-picker
-                    v-if="menuStart"
-                    v-model="dataStore.editedTask.startDateHour"
-                    format="24hr"
-                    full-width
-                    color="red-darken-2"
-                    scrollable
-                    required
-                    class="time-create-task justify-center w-100"
-                    :class="xs ? 'px-0' : ''"
-                    @click:minute="$nextTick(() => (menuStart = false))"
-                  ></v-time-picker>
-                </v-menu>
-              </v-text-field>
-              <v-divider class="mb-4"></v-divider>
-              <v-text-field
-                v-model="dataStore.editedTask.endDateHour"
-                label="Due Hour"
-                placeholder="hh:mm"
-                prepend-inner-icon="mdi-clock-time-four-outline"
-                variant="plain"
-                readonly
-                clearable
-                :active="menuEnd"
-                :focused="menuEnd"
-                @click="menuEnd = true"
-              >
-                <v-menu
-                  v-model="menuEnd"
-                  :close-on-content-click="false"
-                  activator="parent"
-                  transition="scale-transition"
-                  offset-y
-                  min-width="auto"
-                >
-                  <v-time-picker
-                    v-if="menuEnd"
-                    v-model="dataStore.editedTask.endDateHour"
-                    format="24hr"
-                    full-width
-                    color="red-darken-2"
-                    scrollable
-                    required
-                    class="time-create-task justify-center w-100"
-                    :class="xs ? 'px-0' : ''"
-                    @click:minute="$nextTick(() => (menuEnd = false))"
-                  ></v-time-picker>
-                </v-menu>
-              </v-text-field>
-            </v-form>
+            <VTaskForm
+              v-model="dataStore.editedTask"
+              :projects="dataStore.projects"
+              :labels="dataStore.labels"
+              :priorities="dataStore.priorities"
+              :statuses="dataStore.statuses"
+              :rules="rules"
+              ref="form"
+              @submit="submitEditedTask"
+            ></VTaskForm>
           </v-card-text>
           <v-card-actions
             :class="

@@ -8,6 +8,7 @@ import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VActionButtons from '@/components/VActionButtons.vue'
+import VTaskForm from '@/components/VTaskForm.vue'
 import { useDisplay } from 'vuetify'
 
 const dataStore = useDataStore()
@@ -16,8 +17,8 @@ const router = useRouter()
 const { submitEditedTask } = useSubmitEditedTask()
 
 // Time Picker states
-const menuStart = ref(false)
-const menuEnd = ref(false)
+// const menuStart = ref(false)
+// const menuEnd = ref(false)
 
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -136,7 +137,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
         <span class="text-h6">Edit task {{ task.taskId }}</span>
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
-        <v-form class="form form-create-task" ref="form" @submit.prevent>
+        <!-- <v-form class="form form-create-task" ref="form" @submit.prevent>
           <v-text-field
             v-model="dataStore.editedTask.title"
             placeholder="Enter title"
@@ -304,7 +305,17 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             </v-menu>
           </v-text-field>
           <v-divider class="mb-4"></v-divider>
-        </v-form>
+        </v-form> -->
+        <VTaskForm
+          v-model="dataStore.editedTask"
+          :projects="dataStore.projects"
+          :labels="dataStore.labels"
+          :priorities="dataStore.priorities"
+          :statuses="dataStore.statuses"
+          :rules="rules"
+          ref="form"
+          @submit="submitEditedTask"
+        ></VTaskForm>
       </v-card-text>
       <v-card-actions class="justify-center">
         <VActionButtons :buttons="btnsForm" />

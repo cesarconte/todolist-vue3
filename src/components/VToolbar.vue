@@ -12,6 +12,8 @@ import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import VActionButtons from './VActionButtons.vue'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
+import VTaskForm from './VTaskForm.vue'
+import VProjectForm from './VProjectForm.vue'
 
 /************************************
  * Stores
@@ -43,9 +45,8 @@ const dialogAddProject = ref(false) // Controls the add project dialog
 const showNotificationsList = ref(false) // Controls the notifications list dialog
 const showNotificationsSettings = ref(false) // Controls the notifications settings dialog
 const settingsMenu = ref(false) // Controls the settings menu
-const form = ref(null) // Reference to the form
-const menuStart = ref(false) // Controls the start time picker menu
-const menuEnd = ref(false) // Controls the end time picker menu
+const taskFormRef = ref(null) // Reference to the form
+const formAddProject = ref(null) // Reference to the add project form
 const loginParagraph = ref(null) // Reference to the login paragraph
 
 /************************************
@@ -219,10 +220,14 @@ const openDialog = (value) => {
   }
 }
 
-const reset = () => {
-  // Resets the form
-  form.value.reset()
-  alert('Form has been reset')
+const resetAddTaskForm = () => {
+  taskFormRef.value?.reset()
+  alert('Add Task Form has been reset')
+}
+
+const resetAddProjectForm = () => {
+  formAddProject.value?.reset()
+  alert('Add Project Form has been reset')
 }
 
 const addNewProject = async () => {
@@ -230,7 +235,7 @@ const addNewProject = async () => {
   try {
     await dataStore.createProject(dataStore.newProject)
     // Reset the form
-    form.value.reset()
+    taskFormRef.value.reset()
     // Close the dialog
     dialogAddProject.value = false
     // Close the drawer
@@ -297,7 +302,11 @@ const cruds = [
   }
 ]
 
-const { btnsForm } = useFormBtnActions(submitNewTask, reset, () => (dialogAddTask.value = false))
+const { btnsForm } = useFormBtnActions(
+  submitNewTask,
+  resetAddTaskForm,
+  () => (dialogAddTask.value = false)
+)
 
 // Configure the submit button for creating a new task
 btnsForm[0].text = 'Create Task' // Set the text for the submit button
@@ -317,7 +326,7 @@ const btnsFormAddProject = [
     height: '3rem',
     text: 'Reset Form',
     icon: 'mdi-refresh',
-    function: reset
+    function: resetAddProjectForm
   },
   {
     type: 'button',
@@ -554,177 +563,17 @@ onMounted(async () => {
         <span class="text-h6">Add new task</span>
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
-        <v-form class="form form-create-task" ref="form" @submit.prevent="submitNewTask">
-          <v-text-field
-            v-model="dataStore.newTask.title"
-            label="Title"
-            placeholder="Enter title"
-            prepend-inner-icon="mdi-format-title"
-            type="text"
-            variant="plain"
-            color="red-darken-2"
-            :rules="rules"
-            counter
-            clearable
-            required
-          ></v-text-field>
-          <v-divider class="mb-4"></v-divider>
-          <v-textarea
-            v-model="dataStore.newTask.description"
-            label="Description"
-            placeholder="Enter description"
-            prepend-inner-icon="mdi-text"
-            type="text"
-            variant="plain"
-            color="red-darken-2"
-            required
-            counter
-            :rules="rules"
-            clearable
-          ></v-textarea>
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newTask.project"
-            label="Project"
-            prepend-inner-icon="mdi-folder-outline"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.projects"
-          ></v-select>
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newTask.label"
-            label="Label"
-            prepend-inner-icon="mdi-label-outline"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.labels"
-          ></v-select>
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newTask.priority"
-            label="Priority"
-            prepend-inner-icon="mdi-alert-circle-outline"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.priorities"
-          ></v-select>
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newTask.status"
-            label="Status"
-            prepend-inner-icon="mdi-checkbox-marked-outline"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.statuses"
-          ></v-select>
-          <v-divider class="mb-4"></v-divider>
-          <v-date-input
-            v-model="dataStore.newTask.startDate"
-            label="Start Date"
-            required
-            clearable
-            variant="plain"
-            prepend-icon=""
-            prepend-inner-icon="mdi-calendar"
-            color="red-darken-2"
-            class="date-create-task"
-          >
-          </v-date-input>
-          <v-divider class="mb-4"></v-divider>
-          <v-date-input
-            v-model="dataStore.newTask.endDate"
-            label="Due Date"
-            required
-            clearable
-            variant="plain"
-            prepend-icon=""
-            prepend-inner-icon="mdi-calendar"
-            color="red-darken-2"
-            class="date-create-task"
-          >
-          </v-date-input>
-          <v-divider class="mb-4"></v-divider>
-          <v-text-field
-            v-model="dataStore.newTask.startDateHour"
-            label="Start Hour"
-            placeholder="hh:mm"
-            prepend-inner-icon="mdi-clock-time-four-outline"
-            variant="plain"
-            readonly
-            clearable
-            :active="menuStart"
-            :focused="menuStart"
-            color="red-darken-2"
-            @click="menuStart = true"
-          >
-            <v-menu
-              v-model="menuStart"
-              :close-on-content-click="false"
-              activator="parent"
-              transition="scale-transition"
-              offset-y
-              min-width="auto"
-            >
-              <v-time-picker
-                v-if="menuStart"
-                v-model="dataStore.newTask.startDateHour"
-                format="24hr"
-                full-width
-                color="red-darken-2"
-                scrollable
-                required
-                class="time-create-task justify-center w-100"
-                :class="xs ? 'px-0' : ''"
-                @click:minute="$nextTick(() => (menuStart = false))"
-              ></v-time-picker>
-            </v-menu>
-          </v-text-field>
-          <v-divider class="mb-4"></v-divider>
-          <v-text-field
-            v-model="dataStore.newTask.endDateHour"
-            label="Due Hour"
-            placeholder="hh:mm"
-            prepend-inner-icon="mdi-clock-time-four-outline"
-            variant="plain"
-            readonly
-            clearable
-            :active="menuEnd"
-            :focused="menuEnd"
-            @click="menuEnd = true"
-          >
-            <v-menu
-              v-model="menuEnd"
-              :close-on-content-click="false"
-              activator="parent"
-              transition="scale-transition"
-              offset-y
-              min-width="auto"
-            >
-              <v-time-picker
-                v-if="menuEnd"
-                v-model="dataStore.newTask.endDateHour"
-                format="24hr"
-                full-width
-                color="red-darken-2"
-                scrollable
-                required
-                class="time-create-task justify-center w-100"
-                :class="xs ? 'px-0' : ''"
-                @click:minute="$nextTick(() => (menuEnd = false))"
-              ></v-time-picker>
-            </v-menu>
-          </v-text-field>
-          <v-divider class="mb-4"></v-divider>
-        </v-form>
+        <VTaskForm
+          v-model="dataStore.newTask"
+          :projects="dataStore.projects"
+          :labels="dataStore.labels"
+          :priorities="dataStore.priorities"
+          :statuses="dataStore.statuses"
+          :rules="rules"
+          ref="taskFormRef"
+          @submit="submitNewTask"
+        >
+        </VTaskForm>
       </v-card-text>
       <v-card-actions class="justify-center">
         <VActionButtons :buttons="btnsForm" />
@@ -741,56 +590,14 @@ onMounted(async () => {
         <span class="text-h6">Add new project</span>
       </v-card-title>
       <v-card-text>
-        <v-form class="form form-add-project" ref="form" @submit.prevent="addNewProject">
-          <v-select
-            v-model="dataStore.newProject.title"
-            label="Project Title"
-            prepend-inner-icon="mdi-format-title"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.projectTemplates"
-          ></v-select>
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newProject.icon"
-            label="Project Icon"
-            prepend-inner-icon="mdi-symbol"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.icons"
-            item-title="displayName"
-            item-value="title"
-          >
-            <template v-slot:selection="{ item }">
-              <v-icon class="mr-2">{{ item.value }}</v-icon>
-              {{ item.title }}
-            </template>
-
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props">
-                <template v-slot:prepend>
-                  <v-icon>{{ item.value }}</v-icon>
-                </template>
-              </v-list-item>
-            </template>
-          </v-select>
-
-          <v-divider class="mb-4"></v-divider>
-          <v-select
-            v-model="dataStore.newProject.color"
-            label="Project Color"
-            prepend-inner-icon="mdi-palette-outline"
-            variant="plain"
-            color="red-darken-2"
-            clearable
-            required
-            :items="dataStore.colors"
-          ></v-select>
-        </v-form>
+        <VProjectForm
+          v-model="dataStore.newProject"
+          :projectTemplates="dataStore.projectTemplates"
+          :icons="dataStore.icons"
+          :colors="dataStore.colors"
+          ref="formAddProject"
+          @submit="addNewProject"
+        ></VProjectForm>
       </v-card-text>
 
       <v-card-actions
@@ -812,7 +619,7 @@ onMounted(async () => {
           variant="tonal"
           size="large"
           rounded
-          class="text-none"
+          class="text-none text-button"
           color="red-darken-2"
           @click="btn.function"
         >
