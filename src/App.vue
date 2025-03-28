@@ -3,6 +3,7 @@ import { RouterView } from 'vue-router'
 import VToolbar from '@/components/VToolbar.vue'
 import VFooter from '@/components/VFooter.vue'
 import VNotifications from '@/components/VNotifications.vue'
+import VBaseSnackbar from './components/VBaseSnackbar.vue'
 </script>
 
 <template>
@@ -15,6 +16,7 @@ import VNotifications from '@/components/VNotifications.vue'
     </v-main>
     <VFooter />
     <VNotifications />
+    <VBaseSnackbar />
   </v-app>
 </template>
 

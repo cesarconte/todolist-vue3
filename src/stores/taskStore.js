@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useDataStore } from './dataStore.js'
+import { useNotificationsStore } from './notificationsStore.js'
 import { db } from '../firebase.js'
 import { ref, computed, watch } from 'vue'
 import {
@@ -19,6 +20,7 @@ import {
 export const useTaskStore = defineStore('tasks', () => {
   // State
   const dataStore = useDataStore()
+  const notificationsStore = useNotificationsStore()
   const selectedProject = ref(null)
   const pageSize = 6
   const firstVisibleTask = ref(null)
@@ -151,6 +153,9 @@ export const useTaskStore = defineStore('tasks', () => {
     return project?.color || 'default'
   })
   // Actions
+  // const showSnackbar = (message, color = 'success', prependIcon = '', appendIcon = '') => {
+  //   notificationsStore.updateSnackbar(message, true, prependIcon, appendIcon, color)
+  // }
 
   // Get tasks by project paginated
   const getTasksByProjectPaginated = async ({
@@ -208,18 +213,23 @@ export const useTaskStore = defineStore('tasks', () => {
         throw new Error('Task not found.')
       } else {
         // 1. Find the task in the Firestore 'tasks' collection
-        const taskRef = doc(dataStore.db, 'tasks', taskId)
+        const taskRef = doc(db, 'tasks', taskId)
         // 2. Update the 'completed' and 'status' fields of the task
         await updateDoc(taskRef, {
           completed: !task.completed, // Toggle the 'completed' status
           status: task.completed ? 'In Progress' : 'Done' // Update 'status' accordingly
         })
-        alert('Task updated successfully.')
+        // Calls the showSnackbar action of the notificationsStore for success
+        notificationsStore.showSnackbar('Task updated successfully.', 'success', 'mdi-check-circle')
       }
     } catch (error) {
-      // Display an error message
+      // Calls the showSnackbar action for the error as well
       console.error('Error updating task:', error)
-      alert('An error occurred while updating the task. Please try again.')
+      notificationsStore.showSnackbar(
+        error.message || 'An error occurred while updating the task. Please try again.',
+        'error',
+        'mdi-close-circle'
+      )
     }
   }
 

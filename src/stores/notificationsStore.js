@@ -40,7 +40,9 @@ export const useNotificationsStore = defineStore('notifications', {
     showSnackbar: {
       show: false, // Visibility state
       message: '', // Display message
-      prependIcon: '' // Icon to display
+      prependIcon: '', // Icon to display
+      appendIcon: '', // Icon to display
+      color: 'success' // Color theme for notification
     },
 
     // Browser capability detection
@@ -78,6 +80,15 @@ export const useNotificationsStore = defineStore('notifications', {
 
   // Business logic and async operations
   actions: {
+    // updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
+    //   this.showSnackbar = { show, message, prependIcon, appendIcon, color }
+    // },
+    updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
+      this.showSnackbar = { show, message, prependIcon, appendIcon, color }
+    },
+    showSnackbar(message, color = 'success', prependIcon = '', appendIcon = '') {
+      this.updateSnackbar(message, true, prependIcon, appendIcon, color)
+    },
     /**
      * Loads user notification settings from Firestore
      * Automatically schedules notifications if enabled
