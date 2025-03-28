@@ -123,7 +123,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
 
       <v-alert
         v-model="showAlert"
-        type="warning"
+        type="info"
         dense
         outlined
         closable

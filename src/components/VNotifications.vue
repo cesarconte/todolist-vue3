@@ -1,6 +1,7 @@
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import { watch } from 'vue'
+import { watch, computed } from 'vue'
+import VBaseSnackbar from './VBaseSnackbar.vue'
 
 /************************************
  * Stores
@@ -20,37 +21,33 @@ watch(
       setTimeout(() => {
         // Set a timeout to close the snackbar after 6 seconds
         notificationsStore.showSnackbar.show = false // Close the snackbar
-      }, 6000)
+      }, 4000)
     }
   }
 )
+
+/************************************
+ * Computed
+ ************************************/
+const notificationColor = computed(() => {
+  if (notificationsStore.showSnackbar.message.includes('error')) {
+    return 'error'
+  } else if (notificationsStore.showSnackbar.message.includes('success')) {
+    return 'success'
+  } else if (notificationsStore.showSnackbar.message.includes('info')) {
+    return 'info'
+  } else {
+    return 'warning'
+  }
+})
 </script>
 
 <template>
-  <v-snackbar
+  <VBaseSnackbar
     v-model="notificationsStore.showSnackbar.show"
     :message="notificationsStore.showSnackbar.message"
-    :timeout="6000"
-    color="warning"
-    rounded="pill"
-    variant="flat"
-    opacity="1"
-    elevation="6"
-    location="top"
-    z-index="1000"
-    position="sticky"
+    :color="notificationColor"
+    :prepend-icon="notificationsStore.showSnackbar.prependIcon"
   >
-    <v-icon start icon="mdi-bell-ring"></v-icon>
-    {{ notificationsStore.showSnackbar.message }}
-    <template v-slot:actions>
-      <v-btn
-        color="white"
-        variant="text"
-        class="text-none"
-        icon="mdi-close"
-        @click="notificationsStore.showSnackbar.show = false"
-      >
-      </v-btn>
-    </template>
-  </v-snackbar>
+  </VBaseSnackbar>
 </template>

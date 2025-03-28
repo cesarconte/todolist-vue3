@@ -14,6 +14,7 @@ import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
 import VTaskForm from './VTaskForm.vue'
 import VProjectForm from './VProjectForm.vue'
+import VBaseSnackbar from './VBaseSnackbar.vue'
 
 /************************************
  * Stores
@@ -48,6 +49,10 @@ const settingsMenu = ref(false) // Controls the settings menu
 const taskFormRef = ref(null) // Reference to the form
 const formAddProject = ref(null) // Reference to the add project form
 const loginParagraph = ref(null) // Reference to the login paragraph
+const snackbar = ref(false) // Controls the snackbar visibility
+const snackbarMessage = ref('') // Text to display in the snackbar
+const snackbarColor = ref('') // Color of the snackbar
+const snackbarIcon = ref('') // Icon to display in the snackbar
 
 /************************************
  * Computed Properties
@@ -94,8 +99,8 @@ const navItems = computed(() => [
       if (userStore.isLoggedIn) {
         router.push({ name: 'profile', params: { userId: userStore.userId } }) // Navigate to the user's profile if logged in
       } else {
-        // Show alert
-        alert('Please log in to view your profile.')
+        // Show snackbar
+        showSnackbar('Please log in to view your profile.', 'info', 'mdi-account-arrow-right')
         // Redirect the user to the login page or show a message
         router.push({ path: '/login' })
       }
@@ -187,6 +192,14 @@ watch(
 /************************************
  * Methods / Functions
  ************************************/
+const showSnackbar = (message, color, icon) => {
+  snackbarMessage.value = message
+  snackbarColor.value = color
+  snackbarIcon.value = icon
+  snackbar.value = true
+  console.log('Mostrando snackbar con icono:', icon)
+}
+
 const handleLoginLogout = () => {
   // Handles login/logout actions
   if (userStore.isLoggedIn) {
@@ -200,8 +213,8 @@ const openDialog = (value) => {
   // Define the openDialog function based on the value parameter
   // Check if the user is logged in before opening the "add task" dialog
   if (value === 'add task' && !userStore.isLoggedIn) {
-    // Show alert
-    alert('Please log in to add a task.')
+    // Show snackbar
+    showSnackbar('Please log in to add a task.', 'info', 'mdi-account-arrow-right')
     // Redirect to login:
     router.push({ path: '/login' })
     return // Stop further execution of the function
@@ -222,12 +235,12 @@ const openDialog = (value) => {
 
 const resetAddTaskForm = () => {
   taskFormRef.value?.reset()
-  alert('Add Task Form has been reset')
+  showSnackbar('Add Task Form has been reset', 'success')
 }
 
 const resetAddProjectForm = () => {
   formAddProject.value?.reset()
-  alert('Add Project Form has been reset')
+  showSnackbar('Add Project Form has been reset', 'success')
 }
 
 const addNewProject = async () => {
@@ -241,11 +254,11 @@ const addNewProject = async () => {
     // Close the drawer
     drawer.value = false
     // Optionally display a success message
-    alert('Project ' + dataStore.newProject.title + ' added successfully!')
+    showSnackbar(`Project ${dataStore.newProject.title} added successfully!`, 'success')
   } catch (error) {
     // Handle errors, e.g., display an error message
     console.error('Error adding project:', error)
-    alert('An error occurred while adding the project.')
+    showSnackbar('An error occurred while adding the project.', 'error')
   }
 }
 
@@ -346,6 +359,16 @@ onMounted(async () => {
     await notificationsStore.loadSettings()
   }
 })
+
+const getTooltipTextForSnackbarIcon = (iconName) => {
+  switch (iconName) {
+    case 'mdi-account-arrow-right':
+      return 'Log in to proceed'
+    // Add more cases for other icons if needed
+    default:
+      return ''
+  }
+}
 </script>
 
 <template>
@@ -666,6 +689,15 @@ onMounted(async () => {
       </template>
     </v-list>
   </v-navigation-drawer>
+
+  <VBaseSnackbar
+    v-model="snackbar"
+    :message="snackbarMessage"
+    :color="snackbarColor"
+    :append-icon="snackbarIcon"
+    :append-icon-tooltip-text="snackbarIcon ? getTooltipTextForSnackbarIcon(snackbarIcon) : ''"
+  >
+  </VBaseSnackbar>
 </template>
 
 <style scoped>

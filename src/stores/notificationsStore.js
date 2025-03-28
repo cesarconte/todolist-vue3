@@ -39,7 +39,8 @@ export const useNotificationsStore = defineStore('notifications', {
     // Snackbar/toast notification system
     showSnackbar: {
       show: false, // Visibility state
-      message: '' // Display message
+      message: '', // Display message
+      prependIcon: '' // Icon to display
     },
 
     // Browser capability detection
@@ -227,7 +228,8 @@ export const useNotificationsStore = defineStore('notifications', {
         // Show confirmation in UI
         this.showSnackbar = {
           show: true,
-          message: 'Test notification sent successfully'
+          message: 'Test notification sent successfully',
+          prependIcon: 'mdi-bell-ring'
         }
       } catch (error) {
         this.handleError(error.message, error)
@@ -273,7 +275,8 @@ export const useNotificationsStore = defineStore('notifications', {
                   })
                   this.showSnackbar = {
                     show: true,
-                    message: `New reminder: "${task.title}" is due soon!`
+                    message: `New reminder: "${task.title}" is due soon!`,
+                    prependIcon: 'mdi-alarm'
                   }
                 } catch (error) {
                   this.handleError('Failed to create notification', error)
@@ -338,35 +341,6 @@ export const useNotificationsStore = defineStore('notifications', {
       }
     },
 
-    // async markAsRead(notificationId) {
-    //   // Eliminar el valor por defecto null
-    //   const userStore = useUserStore()
-    //   try {
-    //     if (!userStore.user || !notificationId) {
-    //       // Validación explícita
-    //       console.error('No notification ID provided')
-    //       return
-    //     }
-
-    //     const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
-    //     const docRef = doc(notificationsRef, notificationId)
-
-    //     // await updateDoc(docRef, { read: true })
-    //     await deleteDoc(docRef)
-
-    //     // Actualizar estado local
-    //     const index = this.activeNotifications.findIndex((n) => n.id === notificationId)
-    //     if (index !== -1) this.activeNotifications[index].read = true
-
-    //     // Show snackbar
-    //     this.showSnackbar = {
-    //       show: true,
-    //       message: 'Notification marked as read'
-    //     }
-    //   } catch (error) {
-    //     this.handleError('Error marking notification as read', error)
-    //   }
-    // },
     async markAsRead(notificationId) {
       const userStore = useUserStore()
       try {
@@ -379,46 +353,14 @@ export const useNotificationsStore = defineStore('notifications', {
         this.activeNotifications = this.activeNotifications.filter((n) => n.id !== notificationId)
         this.showSnackbar = {
           show: true,
-          message: 'Notification marked as read successfully'
+          message: 'Notification marked as read successfully',
+          prependIcon: 'mdi-bell-check'
         }
       } catch (error) {
         this.handleError('Error marking notification as read', error)
       }
     },
 
-    // async markAllAsRead() {
-    //   const userStore = useUserStore()
-    //   try {
-    //     if (!userStore.user) return
-
-    //     // Referencia a la colección de notificaciones
-    //     const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
-
-    //     // Obtener todas las notificaciones no leídas
-    //     const q = query(notificationsRef, where('read', '==', false))
-    //     const snapshot = await getDocs(q)
-
-    //     // Crear batch de actualizaciones
-    //     const batch = []
-    //     snapshot.forEach((doc) => {
-    //       batch.push(updateDoc(doc.ref, { read: true }))
-    //     })
-
-    //     await Promise.all(batch)
-
-    //     // Actualizar estado local
-    //     this.activeNotifications = this.activeNotifications.map((n) => ({ ...n, read: true }))
-
-    //     await new Promise((resolve) => setTimeout(resolve, 50))
-
-    //     this.showSnackbar = {
-    //       show: true,
-    //       message: 'All notifications marked as read'
-    //     }
-    //   } catch (error) {
-    //     this.handleError('Error marking all as read', error)
-    //   }
-    // },
     async markAllAsRead() {
       const userStore = useUserStore()
       try {
@@ -446,7 +388,8 @@ export const useNotificationsStore = defineStore('notifications', {
 
         this.showSnackbar = {
           show: true,
-          message: 'All notifications marked as read successfully'
+          message: 'All notifications marked as read successfully',
+          prependIcon: 'mdi-check-all'
         }
       } catch (error) {
         this.handleError('Error marking all as read', error)
@@ -488,7 +431,8 @@ export const useNotificationsStore = defineStore('notifications', {
       // Show error in UI
       this.showSnackbar = {
         show: true,
-        message: `${message}: ${error.message || 'Unknown error'}`
+        message: `${message}: ${error.message || 'Unknown error'}`,
+        prependIcon: 'mdi-alert-circle'
       }
 
       // Automatically disable notifications if permission denied
