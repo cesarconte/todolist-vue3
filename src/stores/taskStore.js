@@ -206,30 +206,50 @@ export const useTaskStore = defineStore('tasks', () => {
 
   // Mark a task as completed/uncompleted in Firestore
   const completeTask = async (taskId) => {
+    let statusChange // Tracks the new status for error handling context
     try {
-      // Update the task in Firestore
-      const task = tasks.value.find((task) => task.id === taskId)
+      // 1. Find the task in the local state using the task ID
+      const task = tasks.value.find((t) => t.id === taskId)
+
+      // 2. Validate task existence
       if (!task) {
         throw new Error('Task not found.')
       } else {
-        // 1. Find the task in the Firestore 'tasks' collection
+        // 3. Determine current completion state
+        const wasCompleted = task.completed
+
+        // 4. Set human-readable status change message
+        statusChange = wasCompleted ? 'In Progress' : 'Done'
+
+        // 5. Firebase document reference and update operation
         const taskRef = doc(db, 'tasks', taskId)
-        // 2. Update the 'completed' and 'status' fields of the task
         await updateDoc(taskRef, {
-          completed: !task.completed, // Toggle the 'completed' status
-          status: task.completed ? 'In Progress' : 'Done' // Update 'status' accordingly
+          completed: !wasCompleted, // Toggle boolean value
+          status: statusChange // Apply new status
         })
-        // Calls the showSnackbar action of the notificationsStore for success
-        notificationsStore.showSnackbar('Task updated successfully.', 'success', 'mdi-check-circle')
+
+        // 6. Show success notification with contextual details
+        notificationsStore.displaySnackbar(
+          `Task "${task.title}" set to ${statusChange}!`, // Dynamic title inclusion
+          'success',
+          wasCompleted ? 'mdi-progress-check' : 'mdi-check-circle' // Status-based icon
+        )
       }
     } catch (error) {
-      // Calls the showSnackbar action for the error as well
-      console.error('Error updating task:', error)
-      notificationsStore.showSnackbar(
-        error.message || 'An error occurred while updating the task. Please try again.',
+      // 7. Error handling: construct contextual error message
+      const errorAction = statusChange
+        ? `change to ${statusChange}` // Use known status if available
+        : 'update' // Fallback for unexpected errors
+
+      // 8. Show error notification with operational context
+      notificationsStore.displaySnackbar(
+        `Failed to ${errorAction}: ${error.message}`, // Dynamic error context
         'error',
-        'mdi-close-circle'
+        'mdi-alert-circle' // Universal error icon
       )
+
+      // 9. Log full error details for debugging
+      console.error('Task update error:', error)
     }
   }
 

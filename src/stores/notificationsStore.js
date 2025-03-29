@@ -86,7 +86,7 @@ export const useNotificationsStore = defineStore('notifications', {
     updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
       this.showSnackbar = { show, message, prependIcon, appendIcon, color }
     },
-    showSnackbar(message, color = 'success', prependIcon = '', appendIcon = '') {
+    displaySnackbar(message, color = 'success', prependIcon = '', appendIcon = '') {
       this.updateSnackbar(message, true, prependIcon, appendIcon, color)
     },
     /**

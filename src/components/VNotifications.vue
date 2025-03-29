@@ -1,3 +1,4 @@
+// VNotifications.vue
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import VBaseSnackbar from './VBaseSnackbar.vue'

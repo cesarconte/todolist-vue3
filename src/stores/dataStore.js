@@ -250,7 +250,7 @@ export const useDataStore = defineStore('data', () => {
         })
       } catch (error) {
         console.error('Error fetching data:', error)
-        notificationsStore.showSnackbar('Error fetching data', 'error', 'mdi-close-circle')
+        notificationsStore.displaySnackbar('Error fetching data', 'error', 'mdi-close-circle')
       }
     })
   }
@@ -292,13 +292,17 @@ export const useDataStore = defineStore('data', () => {
     // Check if a user is logged in
     if (!userStore.isLoggedIn) {
       console.error('User must be logged in to edit a task.')
-      notificationsStore.showSnackbar('Please log in to edit a task.', 'error', 'mdi-account-off')
+      notificationsStore.displaySnackbar(
+        'Please log in to edit a task.',
+        'error',
+        'mdi-account-off'
+      )
       return // Stop execution if not logged in
     }
     // Check if the user ID is defined
     if (!userStore.userId) {
       console.error('User ID is undefined. Please log in.')
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'User ID is undefined. Please log in.',
         'error',
         'mdi-account-off'
@@ -348,11 +352,15 @@ export const useDataStore = defineStore('data', () => {
           createdTasks: arrayUnion(taskId) // Add the taskId to the array
         })
         // Display a success message
-        notificationsStore.showSnackbar('Task created successfully', 'success', 'mdi-check-circle')
+        notificationsStore.displaySnackbar(
+          'Task created successfully',
+          'success',
+          'mdi-check-circle'
+        )
         // Display a success message
       } else {
         // Display an error message
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'All fields are required. Please try again.',
           'error',
           'mdi-alert-circle'
@@ -361,7 +369,7 @@ export const useDataStore = defineStore('data', () => {
       }
     } catch (error) {
       console.error('createTask: Error creating task:', error) // Imprime el error en la consola
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'An error occurred while creating the task. Please try again.',
         'error',
         'mdi-close-circle'
@@ -377,7 +385,11 @@ export const useDataStore = defineStore('data', () => {
     // Check if a user is logged in
     if (!userStore.isLoggedIn) {
       console.error('User must be logged in to edit a task.')
-      notificationsStore.showSnackbar('Please log in to edit a task.', 'error', 'mdi-account-off')
+      notificationsStore.displaySnackbar(
+        'Please log in to edit a task.',
+        'error',
+        'mdi-account-off'
+      )
       return // Stop execution if not logged in
     }
 
@@ -426,7 +438,7 @@ export const useDataStore = defineStore('data', () => {
           })
 
           // Display a success message
-          notificationsStore.showSnackbar(
+          notificationsStore.displaySnackbar(
             'Task updated successfully',
             'success',
             'mdi-check-circle'
@@ -434,7 +446,7 @@ export const useDataStore = defineStore('data', () => {
         } else {
           // Handle unauthorized access (e.g., show an error message)
           console.error('Unauthorized access to task:', taskId)
-          notificationsStore.showSnackbar(
+          notificationsStore.displaySnackbar(
             'You are not authorized to edit this task.',
             'warning',
             'mdi-alert-circle'
@@ -447,7 +459,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error updating task:', error)
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         error.message || 'An error occurred while updating the task. Please try again.',
         'error',
         'mdi-close-circle'
@@ -464,7 +476,7 @@ export const useDataStore = defineStore('data', () => {
       // Check if a user is logged in
       if (!userStore.isLoggedIn) {
         console.error('User must be logged in to delete a task.')
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Please log in to delete a task.',
           'error',
           'mdi-account-off'
@@ -508,14 +520,18 @@ export const useDataStore = defineStore('data', () => {
         }
 
         // 5. Display a success message
-        notificationsStore.showSnackbar('Task deleted successfully', 'success', 'mdi-check-circle')
+        notificationsStore.displaySnackbar(
+          'Task deleted successfully',
+          'success',
+          'mdi-check-circle'
+        )
 
         // 6. Redirect to '/' after deleting the task
         router.push('/')
       } else {
         // Handle unauthorized access (e.g., show an error message)
         console.error('Unauthorized access to task:', taskId)
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'You are not authorized to delete this task.',
           'warning',
           'mdi-alert-circle'
@@ -524,7 +540,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error deleting task:', error)
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Error deleting task: ' + error + 'Please try again!',
         'error',
         'mdi-close-circle'
@@ -537,7 +553,7 @@ export const useDataStore = defineStore('data', () => {
       // Check if a user is logged in
       if (!userStore.isLoggedIn) {
         console.error('User must be logged in to delete tasks.')
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Please log in to delete tasks.',
           'error',
           'mdi-account-off'
@@ -578,7 +594,7 @@ export const useDataStore = defineStore('data', () => {
       })
 
       // 6. Feedback y limpieza adicional
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'All tasks and related notifications deleted successfully',
         'success',
         'mdi-check-circle'
@@ -590,7 +606,7 @@ export const useDataStore = defineStore('data', () => {
       notificationsStore.clearNotifications()
     } catch (error) {
       console.error('Error deleting tasks:', error)
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         `Error deleting tasks: ${error.message}. Please try again!`,
         'error',
         'mdi-close-circle'
@@ -602,7 +618,7 @@ export const useDataStore = defineStore('data', () => {
     try {
       // Verificar autenticación
       if (!userStore.isLoggedIn) {
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Please log in to delete tasks.',
           'error',
           'mdi-account-off'
@@ -618,7 +634,7 @@ export const useDataStore = defineStore('data', () => {
       const projectDoc = await getDoc(projectRef)
 
       if (!projectDoc.exists() || projectDoc.data().userId !== currentUserId) {
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Project not found or unauthorized',
           'error',
           'mdi-alert-circle'
@@ -664,7 +680,7 @@ export const useDataStore = defineStore('data', () => {
       await batch.commit()
 
       // 6. Limpiar estado y notificar
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'All tasks and related notifications deleted successfully',
         'success',
         'mdi-check-circle'
@@ -672,7 +688,7 @@ export const useDataStore = defineStore('data', () => {
       router.push('/')
     } catch (error) {
       console.error('Error deleting project tasks:', error)
-      notificationsStore.showSnackbar(`Error: ${error.message}`, 'error', 'mdi-close-circle')
+      notificationsStore.displaySnackbar(`Error: ${error.message}`, 'error', 'mdi-close-circle')
     }
   }
 
@@ -681,7 +697,7 @@ export const useDataStore = defineStore('data', () => {
     // Check if a user is logged in
     if (!userStore.isLoggedIn) {
       console.error('User must be logged in to create a project.')
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Please log in to create a project.',
         'error',
         'mdi-account-off'
@@ -705,7 +721,7 @@ export const useDataStore = defineStore('data', () => {
           createdBy: userStore.userId // Add the user ID to the project data
         })
         // Display a success message
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Project with ID: ' + docRef.id + ' created successfully!',
           'success',
           'mdi-check-circle'
@@ -717,7 +733,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error creating project:', error, error.message, 'Please try again!')
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Error creating project: ' + error.message + ' Please try again!',
         'error',
         'mdi-close-circle'
@@ -733,7 +749,7 @@ export const useDataStore = defineStore('data', () => {
     // Check if a user is logged in
     if (!userStore.isLoggedIn) {
       console.error('User must be logged in to edit a project.')
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Please log in to edit a project.',
         'error',
         'mdi-account-off'
@@ -760,7 +776,7 @@ export const useDataStore = defineStore('data', () => {
             projectId: editedProject.title.toLowerCase().replace(/\s/g, '-')
           })
           // Display a success message
-          notificationsStore.showSnackbar(
+          notificationsStore.displaySnackbar(
             'Project with ID: ' + projectId + ' edited successfully',
             'success',
             'mdi-check-circle'
@@ -768,7 +784,7 @@ export const useDataStore = defineStore('data', () => {
         } else {
           // Handle unauthorized access (e.g., show an error message)
           console.error('Unauthorized access to project:', projectId)
-          notificationsStore.showSnackbar(
+          notificationsStore.displaySnackbar(
             'You are not authorized to edit this project.',
             'warning',
             'mdi-alert-circle'
@@ -781,7 +797,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error updating project:', error)
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Error updating project: ' + error.message + ' Please try again!',
         'error',
         'mdi-close-circle'
@@ -798,7 +814,7 @@ export const useDataStore = defineStore('data', () => {
       // Check if a user is logged in
       if (!userStore.isLoggedIn) {
         console.error('User must be logged in to delete a project.')
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Please log in to delete a project.',
           'error',
           'mdi-account-off'
@@ -820,7 +836,7 @@ export const useDataStore = defineStore('data', () => {
         await deleteDoc(projectRef)
 
         // Display a success message
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'Project deleted successfully',
           'success',
           'mdi-check-circle'
@@ -836,7 +852,7 @@ export const useDataStore = defineStore('data', () => {
       } else {
         // Handle unauthorized access (e.g., show an error message)
         console.error('Unauthorized access to project:', projectId)
-        notificationsStore.showSnackbar(
+        notificationsStore.displaySnackbar(
           'You are not authorized to delete this project.',
           'warning',
           'mdi-alert-circle'
@@ -845,7 +861,7 @@ export const useDataStore = defineStore('data', () => {
     } catch (error) {
       // Display an error message
       console.error('Error deleting project:', error)
-      notificationsStore.showSnackbar(
+      notificationsStore.displaySnackbar(
         'Error deleting project: ' + error.message + ' Please try again!',
         'error',
         'mdi-close-circle'
