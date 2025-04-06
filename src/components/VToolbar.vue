@@ -197,7 +197,6 @@ const showSnackbar = (message, color, icon) => {
   snackbarColor.value = color
   snackbarIcon.value = icon
   snackbar.value = true
-  console.log('Mostrando snackbar con icono:', icon)
 }
 
 const handleLoginLogout = () => {
@@ -241,7 +240,7 @@ const resetAddTaskForm = () => {
 const resetAddProjectForm = () => {
   if (formAddProject.value) {
     formAddProject.value.reset()
-  showSnackbar('Add Project Form has been reset', 'success')
+    showSnackbar('Add Project Form has been reset', 'success')
   }
 }
 
@@ -250,17 +249,20 @@ const addNewProject = async () => {
   try {
     await dataStore.createProject(dataStore.newProject)
     // Reset the form
-    taskFormRef.value.reset()
+    formAddProject.value?.reset()
     // Close the dialog
     dialogAddProject.value = false
     // Close the drawer
     drawer.value = false
     // Optionally display a success message
-    showSnackbar(`Project ${dataStore.newProject.title} added successfully!`, 'success')
+    showSnackbar(
+      `Project ${dataStore.newProject.title} added successfully!`,
+      'success',
+      'mdi-check-circle-outline'
+    )
   } catch (error) {
-    // Handle errors, e.g., display an error message
-    console.error('Error adding project:', error)
-    showSnackbar('An error occurred while adding the project.', 'error')
+    // Handle errors
+    showSnackbar('An error occurred while adding the project.', 'error', 'mdi-alert-circle-outline')
   }
 }
 
@@ -527,8 +529,9 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props" title="My Projects">
               <template v-slot:prepend>
-                <v-icon icon="mdi-folder" color="amber-accent-4" class="icon"></v-icon> </template
-            ></v-list-item>
+                <v-icon icon="mdi-folder" color="amber-accent-4" class="icon"></v-icon>
+              </template>
+            </v-list-item>
           </template>
           <v-list-item
             v-for="(project, i) in dataStore.projects"
@@ -538,22 +541,20 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             :title="project.title"
             @click="handleProjectClick(project)"
           >
-              <template v-slot:prepend>
-                <v-icon :color="project.color">{{ project.icon }}</v-icon>
-              </template>
-            </v-list-item>
-          </template>
-          <template v-else>
-            <v-list-item>
-              <v-list-item-title>No projects yet</v-list-item-title>
+            <template v-slot:prepend>
+              <v-icon :color="project.color">{{ project.icon }}</v-icon>
+            </template>
           </v-list-item>
-          </template>
+          <v-list-item v-if="!dataStore.projects.length">
+            <v-list-item-title>No projects yet</v-list-item-title>
+          </v-list-item>
           <v-list-group value="Actions">
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Actions">
                 <template v-slot:prepend>
-                  <v-icon icon="mdi-cogs" color="amber-accent-3" class="icon"></v-icon> </template
-              ></v-list-item>
+                  <v-icon icon="mdi-cogs" color="amber-accent-3" class="icon"></v-icon>
+                </template>
+              </v-list-item>
             </template>
             <v-list-item
               v-for="(item, i) in cruds"
