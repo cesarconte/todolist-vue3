@@ -1,3 +1,4 @@
+// VLoginCard.vue
 <script setup>
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/userStore'
@@ -83,7 +84,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           color="red-darken-2"
           variant="flat"
           class="rounded-pill text-none text-subtitle-2 px-6"
-          @click="userStore.logInWithGoogle"
+          @click="userStore.logInWithGoogle('signup')"
         >
           Sign in
         </v-btn>

@@ -1,3 +1,5 @@
+<!-- VProjectForm.vue -->
+
 <script setup>
 import { ref, reactive, watch } from 'vue'
 
@@ -111,7 +113,15 @@ defineExpose({
       clearable
       required
       :items="colors"
-    ></v-select>
+    >
+      <template v-slot:item="{ props, item }">
+        <v-list-item v-bind="props">
+          <template v-slot:prepend>
+            <v-icon :color="item.value">mdi-invert-colors</v-icon>
+          </template>
+        </v-list-item>
+      </template>
+    </v-select>
     <v-divider class="mb-4"></v-divider>
     <slot name="actions"></slot>
   </v-form>

@@ -1,329 +1,272 @@
 // userStore.js
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import {
-  signInWithPopup,
-  GoogleAuthProvider,
-  signOut,
-  onAuthStateChanged,
-  getAuth
-} from 'firebase/auth'
-import { db } from '../firebase.js'
-// import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore'
+import { ref, computed, onUnmounted } from 'vue'
+import { signInWithPopup, GoogleAuthProvider, signOut, onIdTokenChanged } from 'firebase/auth'
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase.js'
 import { useRouter } from 'vue-router'
-// import { useDataStore } from './dataStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 
 export const useUserStore = defineStore('user', () => {
   // State
-  // const dataStore = useDataStore()
-  const notificationsStore = useNotificationsStore()
-  const auth = getAuth()
   const user = ref(null)
-  const userId = ref(null)
   const token = ref(null)
+  const router = useRouter()
+  const notificationsStore = useNotificationsStore()
 
   // Getters
   const isLoggedIn = computed(() => !!user.value)
-
-  // Computed properties for user name and profile picture
+  const userId = computed(() => user.value?.uid || null)
   const userName = computed(() => {
-    if (isLoggedIn.value) {
-      return user.value.displayName || user.value.email
-    } else {
-      return ''
-    }
+    return user.value?.displayName || user.value?.email?.split('@')[0] || 'Guest'
   })
+  const userProfilePicture = computed(() => user.value?.photoURL || '')
 
-  const userProfilePicture = computed(() => {
-    if (isLoggedIn.value) {
-      return user.value.photoURL
-    } else {
-      return ''
+  // Helpers
+  const getTimePeriod = () => {
+    const hour = new Date().getHours()
+    return hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+  }
+
+  const timeEmojis = {
+    morning: '☕',
+    afternoon: '🌞',
+    evening: '🌙'
+  }
+
+  const getTimeEmoji = () => timeEmojis[getTimePeriod()]
+
+  // Unified Error Configuration
+  const errorConfigurations = {
+    'auth/popup-closed-by-user': {
+      message: 'Login cancelled - popup closed ❌',
+      icon: 'mdi-window-close',
+      level: 'warning',
+      simpleMessage: 'Login cancelled - popup closed'
+    },
+    'auth/network-request-failed': {
+      message: 'Network error - check connection 🌐',
+      icon: 'mdi-wifi-off',
+      level: 'error',
+      simpleMessage: 'Network error - check connection 🌐'
+    },
+    'auth/too-many-requests': {
+      message: 'Too many attempts - try later 🚦',
+      icon: 'mdi-timer-sand',
+      level: 'warning',
+      simpleMessage: 'Too many attempts - try later 🚦'
+    },
+    'auth/cancelled-popup-request': {
+      message: 'Login process already in progress ⚠️',
+      icon: 'mdi-alert',
+      level: 'info',
+      simpleMessage: 'Login process already in progress'
+    },
+    'auth/invalid-credential': {
+      message: 'Session expired - please login again 🔄',
+      icon: 'mdi-account-sync',
+      level: 'error',
+      simpleMessage: 'Session expired'
+    },
+    default: {
+      message: (error) => `Authentication error: ${error.message}`,
+      icon: 'mdi-alert-circle',
+      level: 'error',
+      simpleMessage: (error) => `Error: ${error.message}`
     }
-  })
+  }
 
-  // Actions
-  const router = useRouter()
+  const getErrorConfiguration = (error, type = 'full') => {
+    const config = errorConfigurations[error.code] || errorConfigurations.default
+    return {
+      full: {
+        message: typeof config.message === 'function' ? config.message(error) : config.message,
+        icon: config.icon,
+        level: config.level
+      },
+      simple:
+        typeof config.simpleMessage === 'function'
+          ? config.simpleMessage(error)
+          : config.simpleMessage
+    }[type]
+  }
 
-  // userStore.js - logInWithGoogle action
+  // Auth Listener
+  const setupAuthListener = () => {
+    return onIdTokenChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        user.value = currentUser
+        token.value = await currentUser.getIdToken()
+
+        try {
+          await createUserDocument(currentUser)
+        } catch (error) {
+          const { message, icon, level } = getErrorConfiguration(error, 'full')
+          notificationsStore.displaySnackbar(message, level, icon)
+          console.error('Sync error:', error)
+        }
+      } else {
+        user.value = null
+        token.value = null
+      }
+    })
+  }
+
+  const unsubscribeAuth = setupAuthListener()
+  onUnmounted(() => unsubscribeAuth?.())
+
+  // Error Handling
+  const handleAuthError = (error) => {
+    const { message, icon, level } = getErrorConfiguration(error, 'full')
+    notificationsStore.displaySnackbar(message, level, icon)
+    console.error('Auth Error:', {
+      code: error.code,
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  // Auth Actions
   // const logInWithGoogle = async () => {
   //   try {
   //     const provider = new GoogleAuthProvider()
-  //     const result = await signInWithPopup(auth, provider)
-  //     const user = result.user
-  //     const currentUser = auth.currentUser
+  //     const { user: firebaseUser } = await signInWithPopup(auth, provider)
 
-  //     // Create/update user document in Firestore
-  //     await createUserDocument(user)
+  //     await createUserDocument(firebaseUser)
 
-  //     // Update local state
-  //     userId.value = currentUser.uid
-  //     user.value = currentUser
+  //     const welcomeMessage = generateWelcomeMessage(firebaseUser)
+  //     notificationsStore.displaySnackbar(welcomeMessage.text, 'success', welcomeMessage.icon)
 
-  //     // Personalized welcome message
-  //     const userName = user.displayName || user.email.split('@')[0]
-  //     const welcomeMessage = userProfilePicture.value
-  //       ? `Welcome back, ${userName}! 🎉`
-  //       : `First time? Welcome ${userName}! 👋`
-
-  //     notificationsStore.displaySnackbar(welcomeMessage, 'success', 'mdi-account-check')
-
-  //     // Redirect to home with slight delay for better UX
-  //     setTimeout(() => {
-  //       router.push('/')
-  //     }, 1500)
+  //     handlePostLoginNavigation()
   //   } catch (error) {
-  //     // Error handling with contextual message
-  //     const errorType =
-  //       error.code === 'auth/popup-closed-by-user'
-  //         ? 'Login cancelled - popup closed'
-  //         : `Login failed: ${error.message}`
-
-  //     notificationsStore.displaySnackbar(errorType, 'error', 'mdi-account-cancel')
-
-  //     // Technical logging (non-user facing)
-  //     console.error('Auth error details:', {
-  //       code: error.code,
-  //       message: error.message,
-  //       email: error.email,
-  //       credential: error.credential
-  //     })
+  //     handleAuthError(error)
+  //     throw error
   //   }
   // }
-  const logInWithGoogle = async () => {
+  // Auth Actions
+  const logInWithGoogle = async (actionType = 'signin') => {
     try {
       const provider = new GoogleAuthProvider()
-      const result = await signInWithPopup(auth, provider)
-      const user = result.user
-      const currentUser = auth.currentUser
+      provider.addScope('profile')
+      provider.addScope('email')
+      provider.setCustomParameters({
+        prompt: actionType === 'signup' ? 'select_account' : 'none'
+      })
 
-      // 1. Create/update user document y detectar si es nuevo
-      const { isNewUser, profileUpdated } = await createUserDocument(user)
+      const { user: firebaseUser } = await signInWithPopup(auth, provider)
+      const { isNewUser } = await createUserDocument(firebaseUser)
 
-      // 2. Actualizar estado local
-      userId.value = currentUser.uid
-      user.value = currentUser
-
-      // 3. Determinar mensaje según contexto
-      const userName = user.displayName || user.email.split('@')[0]
-      const currentHour = new Date().getHours()
-      let welcomeMessage
-
-      if (isNewUser) {
-        welcomeMessage = `Welcome aboard, ${userName}! 🚀`
-      } else if (profileUpdated) {
-        welcomeMessage = `New look, same excellence ${userName}! ✨`
-      } else if (currentHour < 12) {
-        welcomeMessage = `Good morning, ${userName}! ☕`
-      } else {
-        welcomeMessage = `Welcome back, ${userName}! 👋`
-      }
-
-      // 4. Mostrar notificación
       notificationsStore.displaySnackbar(
-        welcomeMessage,
+        generateWelcomeMessage(firebaseUser, actionType, isNewUser),
         'success',
         isNewUser ? 'mdi-account-star' : 'mdi-account-check'
       )
 
-      // 5. Redirección con delay optimizado
-      setTimeout(() => router.push('/'), 1500)
+      handlePostLoginNavigation()
     } catch (error) {
-      // 6. Manejo de errores mejorado
-      const errorMessage =
-        error.code === 'auth/popup-closed-by-user'
-          ? 'Login cancelled - popup closed ❌'
-          : `Login failed: ${error.message} ⚠️`
-
-      notificationsStore.displaySnackbar(errorMessage, 'error', 'mdi-account-remove')
-
-      // 7. Logging detallado
-      console.error('Authentication Error:', {
-        code: error.code,
-        message: error.message,
-        timestamp: new Date().toISOString()
-      })
+      handleAuthError(error)
+      throw error
     }
   }
 
-  // Función modificada createUserDocument
+  // Welcome Message
+  const generateWelcomeMessage = (user, actionType, isNew) => {
+    const name = user.displayName || user.email.split('@')[0]
+    const emoji = getTimeEmoji()
+
+    if (isNew) return `Welcome aboard, ${name}! 🚀`
+    return actionType === 'signup'
+      ? `Welcome back, ${name}! ${emoji}`
+      : `Good ${getTimePeriod()} ${name}! ${emoji}`
+  }
+
+  // Firestore Operations
   const createUserDocument = async (user) => {
-    try {
-      const userRef = doc(db, 'users', user.uid)
-      const userDoc = await getDoc(userRef)
+    const userRef = doc(db, 'users', user.uid)
+    const userDoc = await getDoc(userRef)
 
-      let isNewUser = false
-      let profileUpdated = false
-
-      if (userDoc.exists()) {
-        // Verificar cambios en el perfil
-        const previousData = userDoc.data()
-        profileUpdated =
-          previousData.displayName !== user.displayName || previousData.photoURL !== user.photoURL
-
-        await updateDoc(userRef, {
-          lastLogin: new Date(),
-          loginCount: (previousData.loginCount || 0) + 1,
-          ...(profileUpdated && {
-            displayName: user.displayName,
-            photoURL: user.photoURL
-          })
-        })
-      } else {
-        await setDoc(userRef, {
-          uid: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          createdTasks: [],
-          firstLogin: new Date(),
-          loginCount: 1
-        })
-        isNewUser = true
-      }
-
-      return { isNewUser, profileUpdated }
-    } catch (error) {
-      console.error('Document Error:', error)
-      return { isNewUser: false, profileUpdated: false }
+    const userData = {
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      lastLogin: new Date(),
+      loginCount: (userDoc.data()?.loginCount || 0) + 1
     }
-  }
-  // Create or update user document in Firestore
-  // const createUserDocument = async (user) => {
-  //   try {
-  //     const userRef = doc(db, 'users', user.uid)
-  //     const userDoc = await getDoc(userRef)
 
-  //     if (userDoc.exists()) {
-  //       // User document exists, update it (only if there's a new task to add)
-  //       if (dataStore.newTask.taskId) {
-  //         await updateDoc(userRef, {
-  //           displayName: user.displayName,
-  //           email: user.email,
-  //           photoURL: user.photoURL,
-  //           createdTasks: arrayUnion(dataStore.newTask.taskId)
-  //         })
-  //         notificationsStore.displaySnackbar(
-  //           'User profile updated successfully',
-  //           'success',
-  //           'mdi-account-sync'
-  //         )
-  //       }
-  //     } else {
-  //       // User document doesn't exist, create it
-  //       await setDoc(userRef, {
-  //         uid: user.uid,
-  //         displayName: user.displayName,
-  //         email: user.email,
-  //         photoURL: user.photoURL,
-  //         createdTasks: [] // Initialize createdTasks as an empty array
-  //       })
-  //       notificationsStore.displaySnackbar(
-  //         'New user profile created',
-  //         'success',
-  //         'mdi-account-plus'
-  //       )
-  //     }
-  //   } catch (error) {
-  //     console.error('Error creating/updating user document:', error)
-  //     notificationsStore.displaySnackbar(
-  //       `Profile update failed: ${error.message}`,
-  //       'error',
-  //       'mdi-account-alert'
-  //     )
-  //   }
-  // }
-  // Logout function with personalized message
+    if (userDoc.exists()) {
+      await updateDoc(userRef, userData)
+      return { isNewUser: false }
+    }
+
+    await setDoc(userRef, {
+      ...userData,
+      uid: user.uid,
+      createdTasks: [],
+      firstLogin: new Date()
+    })
+    return { isNewUser: true }
+  }
+
+  // Logout
   const logOut = async () => {
     try {
-      // 1. Capturar datos del usuario antes de cerrar sesión
-      const userNameBeforeLogout = userName.value || 'Guest'
-
-      // 2. Ejecutar logout técnico
+      const userName = user.value?.displayName || 'Guest'
       await signOut(auth)
 
-      // 3. Mensaje contextual con inteligencia temporal
-      const getFarewellMessage = () => {
-        const hour = new Date().getHours()
-        const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
-        const emojiMap = {
-          morning: '🌅',
-          afternoon: '☀️',
-          evening: '🌙'
-        }
+      notificationsStore.displaySnackbar(
+        generateFarewellMessage(userName),
+        'success',
+        'mdi-account-arrow-left'
+      )
 
-        const messages = [
-          `Have a great ${timeOfDay}, ${userNameBeforeLogout}! ${emojiMap[timeOfDay]}`,
-          `System logout: Success - Come back anytime, ${userNameBeforeLogout}!`,
-          `Successfully logged out - Until next time, ${userNameBeforeLogout}! 👋`
-        ]
-
-        return messages[Math.floor(Math.random() * messages.length)]
-      }
-
-      // 4. Mostrar notificación con delay para mejor percepción
-      setTimeout(() => {
-        notificationsStore.displaySnackbar(
-          getFarewellMessage(),
-          'success',
-          'mdi-account-arrow-left'
-        )
-      }, 500)
-
-      // 5. Resetear estado local
-      user.value = null
-      userId.value = null
-      token.value = null
-
-      // 6. Redirección opcional con delay
-      setTimeout(() => {
-        router.push('/login')
-      }, 1500)
+      handlePostLogoutNavigation()
     } catch (error) {
-      // 7. Manejo de errores con detalles contextuales
-      const errorMessage = `Logout failed${userName.value ? ` for ${userName.value}` : ''}: ${error.message}`
-
-      notificationsStore.displaySnackbar(errorMessage, 'error', 'mdi-account-alert')
-
-      // 8. Log técnico completo
-      console.error('Logout error details:', {
-        code: error.code,
-        message: error.message,
-        timestamp: new Date().toISOString()
-      })
+      const simpleMessage = getErrorConfiguration(error, 'simple')
+      notificationsStore.displaySnackbar(
+        `Logout failed: ${simpleMessage}`,
+        'error',
+        'mdi-account-alert'
+      )
+      console.error('Logout error:', error)
     }
   }
 
-  // Initialize user state on component mount
-  onAuthStateChanged(auth, (currentUser) => {
-    if (currentUser) {
-      user.value = currentUser
-      userId.value = currentUser.uid
-      currentUser.getIdToken().then((idToken) => {
-        token.value = idToken
-      })
-    } else {
-      user.value = null
-      userId.value = null
-      token.value = null
-      return
+  const generateFarewellMessage = (name) => {
+    const messages = [
+      `See you soon, ${name}! 👋`,
+      `Until next time, ${name}!`,
+      `Have a great ${getTimePeriod()}, ${name}! ${getTimeEmoji()}`
+    ]
+    return messages[Math.floor(Math.random() * messages.length)]
+  }
+
+  // Navigation Handlers
+  const handlePostLoginNavigation = (isNewUser) => {
+    const redirectPath = isNewUser ? '/' : router.currentRoute.value.query.redirect || '/'
+
+    setTimeout(() => router.push(redirectPath), 1000)
+  }
+
+  const handlePostLogoutNavigation = () => {
+    if (router.currentRoute.value.path !== '/') {
+      setTimeout(() => router.push('/'), 1000)
     }
-  })
+  }
 
   return {
     // State
     user,
-    userId,
-    isLoggedIn,
     token,
+
     // Getters
+    isLoggedIn,
+    userId,
     userName,
     userProfilePicture,
+
     // Actions
     logInWithGoogle,
-    createUserDocument,
     logOut
   }
 })

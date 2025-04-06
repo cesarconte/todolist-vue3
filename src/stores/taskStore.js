@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useDataStore } from './dataStore.js'
+import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { db } from '../firebase.js'
 import { ref, computed, watch } from 'vue'
@@ -20,6 +21,7 @@ import {
 export const useTaskStore = defineStore('tasks', () => {
   // State
   const dataStore = useDataStore()
+  const userStore = useUserStore()
   const notificationsStore = useNotificationsStore()
   const selectedProject = ref(null)
   const pageSize = 6
@@ -168,6 +170,7 @@ export const useTaskStore = defineStore('tasks', () => {
       // Define the base query for tasks in the selected project
       let tasksRef = query(
         collection(dataStore.db, 'tasks'),
+        where('createdBy', '==', userStore.userId), // Filter by user ID
         where('project', '==', selectedProject.value), // Filter by selected project
         orderBy('endDate', 'asc'), // Order by endDate first
         orderBy('title', 'desc'), // Then by title in descending order

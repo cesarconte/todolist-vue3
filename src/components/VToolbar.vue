@@ -239,8 +239,10 @@ const resetAddTaskForm = () => {
 }
 
 const resetAddProjectForm = () => {
-  formAddProject.value?.reset()
+  if (formAddProject.value) {
+    formAddProject.value.reset()
   showSnackbar('Add Project Form has been reset', 'success')
+  }
 }
 
 const addNewProject = async () => {
@@ -536,7 +538,16 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             :title="project.title"
             @click="handleProjectClick(project)"
           >
+              <template v-slot:prepend>
+                <v-icon :color="project.color">{{ project.icon }}</v-icon>
+              </template>
+            </v-list-item>
+          </template>
+          <template v-else>
+            <v-list-item>
+              <v-list-item-title>No projects yet</v-list-item-title>
           </v-list-item>
+          </template>
           <v-list-group value="Actions">
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Actions">
