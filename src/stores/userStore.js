@@ -1,6 +1,6 @@
 // userStore.js
 import { defineStore } from 'pinia'
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { signInWithPopup, GoogleAuthProvider, signOut, onIdTokenChanged } from 'firebase/auth'
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase.js'
@@ -112,7 +112,24 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  const unsubscribeAuth = setupAuthListener()
+  // Initialize Auth Listener
+  // This is called when the component is mounted
+  // to ensure the listener is active
+  // when the component is in use
+  let unsubscribeAuth = setupAuthListener()
+  // Cleanup on component unmount
+  // and re-setup on component mount
+  // to ensure the listener is active
+  // when the component is in use
+  // and cleaned up when not in use
+  // This is important to avoid memory leaks
+  // and ensure the listener is not active
+  // when the component is not in use
+  onMounted(() => {
+    unsubscribeAuth = setupAuthListener()
+  })
+  // Cleanup the listener when the component is unmounted
+  // to avoid memory leaks
   onUnmounted(() => unsubscribeAuth?.())
 
   // Error Handling
@@ -127,23 +144,6 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  // Auth Actions
-  // const logInWithGoogle = async () => {
-  //   try {
-  //     const provider = new GoogleAuthProvider()
-  //     const { user: firebaseUser } = await signInWithPopup(auth, provider)
-
-  //     await createUserDocument(firebaseUser)
-
-  //     const welcomeMessage = generateWelcomeMessage(firebaseUser)
-  //     notificationsStore.displaySnackbar(welcomeMessage.text, 'success', welcomeMessage.icon)
-
-  //     handlePostLoginNavigation()
-  //   } catch (error) {
-  //     handleAuthError(error)
-  //     throw error
-  //   }
-  // }
   // Auth Actions
   const logInWithGoogle = async (actionType = 'signin') => {
     try {

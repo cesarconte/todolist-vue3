@@ -1,5 +1,4 @@
 // taskStore.js
-
 import { defineStore } from 'pinia'
 import { useDataStore } from './dataStore.js'
 import { useProjectStore } from './projectStore.js'
@@ -119,11 +118,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
   const editedTaskData = computed(() => {
     return editedTask
-  })
-
-  const newTaskProjectId = computed(() => {
-    const project = projectStore.projects.find((project) => project.title === newTask.project)
-    return project?.id || null // Optional chaining + nullish coalescing
   })
 
   const projects = computed(() => {
@@ -310,7 +304,19 @@ export const useTaskStore = defineStore('tasks', () => {
       if (validTaskForm(newTask)) {
         // Get the project color
         const projectColor = await getProjectColor(newTask.project)
-        const projectId = newTaskProjectId.value
+
+        const project = projectStore.projects.find((project) => project.title === newTask.project)
+        const projectId = project?.id || null // Use optional chaining to safely access the project ID
+
+        if (!projectId) {
+          console.error('Project ID not found for project:', newTask.project)
+          notificationsStore.displaySnackbar(
+            'Project ID not found. Please select a valid project.',
+            'error',
+            'mdi-alert-circle'
+          )
+          return
+        }
         // Combine the date and time for the end date
         const endDate = newTask.endDate
         const [hours, minutes] = newTask.endDateHour.split(':').map(Number)
@@ -584,7 +590,7 @@ export const useTaskStore = defineStore('tasks', () => {
 
       // 6. Feedback y limpieza adicional
       notificationsStore.displaySnackbar(
-        'All tasks and related notifications deleted successfully',
+        'All tasks deleted successfully',
         'success',
         'mdi-check-circle'
       )
@@ -1018,7 +1024,6 @@ export const useTaskStore = defineStore('tasks', () => {
     listeners,
     newTaskData,
     editedTaskData,
-    newTaskProjectId,
     // State for pagination
     tasksData,
     // Getters (computed properties)
