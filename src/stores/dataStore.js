@@ -23,14 +23,15 @@ import {
   Timestamp
 } from 'firebase/firestore'
 import { useTaskStore } from './taskStore.js'
+import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { useRouter } from 'vue-router'
 import { validTaskForm } from '@/composables/validationFormRules.js'
-import { validProjectForm } from '@/composables/validationFormRules.js'
 
 export const useDataStore = defineStore('data', () => {
   const taskStore = useTaskStore()
+  const projectStore = useProjectStore()
   const userStore = useUserStore()
   const notificationsStore = useNotificationsStore()
   const router = useRouter()
@@ -38,7 +39,6 @@ export const useDataStore = defineStore('data', () => {
   // State
   const userData = ref([])
   const tasksData = ref([])
-  const projectsData = ref([])
   const projectTemplatesData = ref([])
   const labelsData = ref([])
   const prioritiesData = ref([])
@@ -74,24 +74,10 @@ export const useDataStore = defineStore('data', () => {
     endDateHour: null,
     updatedAt: serverTimestamp()
   })
-  const newProject = reactive({
-    color: '',
-    createdAt: '',
-    icon: '',
-    projectId: '',
-    title: '',
-    userId: ''
-  })
-  const editedProject = reactive({
-    title: '',
-    icon: '',
-    color: ''
-  })
   const isSaving = ref(false)
   // Listeners (store unsubscribe functions for each collection)
   const listeners = ref({
     tasks: null,
-    projects: null,
     projectTemplates: null,
     labels: null,
     priorities: null,
@@ -103,9 +89,6 @@ export const useDataStore = defineStore('data', () => {
   // Getters (computed properties for reactive data access)
   const tasks = computed(() => {
     return tasksData.value
-  })
-  const projects = computed(() => {
-    return projectsData.value
   })
   const projectTemplates = computed(() => {
     return projectTemplatesData.value
@@ -131,30 +114,9 @@ export const useDataStore = defineStore('data', () => {
   const editedTaskData = computed(() => {
     return editedTask
   })
-  const newProjectData = computed(() => {
-    return newProject
-  })
-  const editedProjectData = computed(() => {
-    return editedProject
-  })
-  const selectedProject = computed(() => {
-    return taskStore.selectedProject
-  })
-  const selectedProjectId = computed(() => {
-    const project = projects.value.find((project) => project.title === selectedProject.value)
-    const projectId = project?.id || ''
-    return projectId
-  })
   const newTaskProjectId = computed(() => {
-    const project = projects.value.find((project) => project.title === newTask.value.project)
-    const projectId = project ? project.id : null
-    return projectId
-  })
-  const projectItems = computed(() => {
-    return projectsData.value.map((project) => ({
-      value: project.title,
-      title: project.title
-    }))
+    const project = projectStore.projects.find((project) => project.title === newTask.value.project)
+    return project?.id || null // Optional chaining + nullish coalescing
   })
   const projectTemplateItems = computed(() => {
     return projectTemplatesData.value.map((projectTemplate) => ({
@@ -194,11 +156,6 @@ export const useDataStore = defineStore('data', () => {
   })
 
   // Actions
-  // Acciones para mostrar el snackbar
-  // const showSnackbar = (message, color = 'success', prependIcon = '', appendIcon = '') => {
-  //   notificationsStore.updateSnackbar(message, true, prependIcon, appendIcon, color)
-  // }
-
   // Fetch data for a collection, optionally filtering and unsubscribing after initial fetch
   const fetchCollection = async (collectionName, targetRef) => {
     subscribeToCollection(collectionName, targetRef, true)
@@ -409,14 +366,12 @@ export const useDataStore = defineStore('data', () => {
         // Fetch the task from Firestore to check ownership
         const taskDoc = await getDoc(taskRef)
         const taskData = taskDoc.data()
-        // const startDate = taskData.startDate
 
         // Check if the user owns the task
         if (taskData.createdBy === userStore.userId) {
           const isCompleted = editedTask.status === 'Done'
 
           // Combine the date and time for the start date
-          // const startDate = new Date(editedTask.startDate)
           const startDate = editedTask.startDate
           const [startHours, startMinutes] = editedTask.startDateHour.split(':').map(Number)
           const startDateFormatted = new Date(startDate)
@@ -614,264 +569,8 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
-  const deleteAllTasksInProject = async () => {
-    try {
-      // Verificar autenticación
-      if (!userStore.isLoggedIn) {
-        notificationsStore.displaySnackbar(
-          'Please log in to delete tasks.',
-          'error',
-          'mdi-account-off'
-        )
-        return
-      }
-
-      const currentUserId = userStore.userId
-      const projectId = selectedProjectId.value
-
-      // Obtener referencia del proyecto
-      const projectRef = doc(db, 'projects', projectId)
-      const projectDoc = await getDoc(projectRef)
-
-      if (!projectDoc.exists() || projectDoc.data().userId !== currentUserId) {
-        notificationsStore.displaySnackbar(
-          'Project not found or unauthorized',
-          'error',
-          'mdi-alert-circle'
-        )
-        return
-      }
-
-      // Crear batch para operaciones atómicas
-      const batch = writeBatch(db)
-
-      // 1. Obtener todas las tareas del proyecto
-      const tasksQuery = query(collection(db, 'tasks'), where('projectId', '==', projectId))
-      const tasksSnapshot = await getDocs(tasksQuery)
-
-      // 2. Colectar IDs de tareas y notificaciones
-      const taskIds = []
-      const notificationsToDelete = []
-
-      // Procesar cada tarea
-      for (const taskDoc of tasksSnapshot.docs) {
-        const taskId = taskDoc.id
-        taskIds.push(taskId)
-
-        // 3. Buscar notificaciones relacionadas
-        const notificationsQuery = query(
-          collection(db, 'users', currentUserId, 'notifications'),
-          where('taskId', '==', taskId)
-        )
-        const notificationsSnapshot = await getDocs(notificationsQuery)
-        notificationsSnapshot.forEach((doc) => notificationsToDelete.push(doc.ref))
-
-        // 4. Eliminar tarea y actualizar usuario
-        batch.delete(taskDoc.ref)
-        batch.update(doc(db, 'users', currentUserId), {
-          createdTasks: arrayRemove(taskId)
-        })
-      }
-
-      // 5. Eliminar todas las notificaciones encontradas
-      notificationsToDelete.forEach((ref) => batch.delete(ref))
-
-      // Ejecutar batch atómico
-      await batch.commit()
-
-      // 6. Limpiar estado y notificar
-      notificationsStore.displaySnackbar(
-        'All tasks and related notifications deleted successfully',
-        'success',
-        'mdi-check-circle'
-      )
-      router.push('/')
-    } catch (error) {
-      console.error('Error deleting project tasks:', error)
-      notificationsStore.displaySnackbar(`Error: ${error.message}`, 'error', 'mdi-close-circle')
-    }
-  }
-
-  // Add a new project to Firestore
-  const createProject = async (newProject) => {
-    // Check if a user is logged in
-    if (!userStore.isLoggedIn) {
-      console.error('User must be logged in to create a project.')
-      notificationsStore.displaySnackbar(
-        'Please log in to create a project.',
-        'error',
-        'mdi-account-off'
-      )
-      return // Stop execution if not logged in
-    }
-
-    // Check if the project is being created
-    if (isSaving.value) return
-    isSaving.value = true
-    try {
-      // Check if all fields are filled
-      if (validProjectForm(newProject)) {
-        // Add the project to Firestore
-        const docRef = await addDoc(collection(db, 'projects'), {
-          ...newProject,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          projectId: newProject.title.toLowerCase().replace(/\s/g, '-'),
-          userId: userStore.userId,
-          createdBy: userStore.userId // Add the user ID to the project data
-        })
-        // Display a success message
-        notificationsStore.displaySnackbar(
-          'Project with ID: ' + docRef.id + ' created successfully!',
-          'success',
-          'mdi-check-circle'
-        )
-      } else {
-        // Display an error message
-        throw new Error('All fields are required.')
-      }
-    } catch (error) {
-      // Display an error message
-      console.error('Error creating project:', error, error.message, 'Please try again!')
-      notificationsStore.displaySnackbar(
-        'Error creating project: ' + error.message + ' Please try again!',
-        'error',
-        'mdi-close-circle'
-      )
-    } finally {
-      // Reset isSaving flag
-      isSaving.value = false
-    }
-  }
-
-  // Edit an existing project in Firestore
-  const saveEditedProject = async (projectId, editedProject) => {
-    // Check if a user is logged in
-    if (!userStore.isLoggedIn) {
-      console.error('User must be logged in to edit a project.')
-      notificationsStore.displaySnackbar(
-        'Please log in to edit a project.',
-        'error',
-        'mdi-account-off'
-      )
-      return // Stop execution if not logged in
-    }
-
-    // Check if the project is being edited
-    if (isSaving.value) return
-    isSaving.value = true
-    try {
-      // Check if all fields are filled
-      if (validProjectForm(editedProject)) {
-        // Fetch the project from Firestore to check ownership
-        const projectRef = doc(db, 'projects', projectId)
-        const projectDoc = await getDoc(projectRef)
-        const projectData = projectDoc.data()
-
-        // Check if the user owns the project
-        if (projectData.createdBy === userStore.userId) {
-          // Update the project in Firestore
-          await updateDoc(projectRef, {
-            ...editedProject,
-            projectId: editedProject.title.toLowerCase().replace(/\s/g, '-')
-          })
-          // Display a success message
-          notificationsStore.displaySnackbar(
-            'Project with ID: ' + projectId + ' edited successfully',
-            'success',
-            'mdi-check-circle'
-          )
-        } else {
-          // Handle unauthorized access (e.g., show an error message)
-          console.error('Unauthorized access to project:', projectId)
-          notificationsStore.displaySnackbar(
-            'You are not authorized to edit this project.',
-            'warning',
-            'mdi-alert-circle'
-          )
-        }
-      } else {
-        // Display an error message
-        throw new Error('All fields are required. Please try again!')
-      }
-    } catch (error) {
-      // Display an error message
-      console.error('Error updating project:', error)
-      notificationsStore.displaySnackbar(
-        'Error updating project: ' + error.message + ' Please try again!',
-        'error',
-        'mdi-close-circle'
-      )
-    } finally {
-      // Reset isSaving flag
-      isSaving.value = false
-    }
-  }
-
-  // Delete a project from Firestore
-  const deleteProject = async (projectId) => {
-    try {
-      // Check if a user is logged in
-      if (!userStore.isLoggedIn) {
-        console.error('User must be logged in to delete a project.')
-        notificationsStore.displaySnackbar(
-          'Please log in to delete a project.',
-          'error',
-          'mdi-account-off'
-        )
-        return // Stop execution if not logged in
-      }
-
-      // Fetch the project from Firestore to check ownership
-      const projectRef = doc(db, 'projects', projectId)
-      const projectDoc = await getDoc(projectRef)
-      const projectData = projectDoc.data()
-
-      // Check if the user owns the project
-      if (projectData.userId === userStore.userId) {
-        // Delete all tasks in the project
-        await deleteAllTasksInProject(projectId)
-
-        // Delete the project from Firestore
-        await deleteDoc(projectRef)
-
-        // Display a success message
-        notificationsStore.displaySnackbar(
-          'Project deleted successfully',
-          'success',
-          'mdi-check-circle'
-        )
-
-        // Update taskStore.selectedProject if it matches the deleted project
-        if (selectedProject.value === projectId) {
-          selectedProject.value = null
-        }
-
-        // Redirect to '/' after deleting the project
-        router.push('/')
-      } else {
-        // Handle unauthorized access (e.g., show an error message)
-        console.error('Unauthorized access to project:', projectId)
-        notificationsStore.displaySnackbar(
-          'You are not authorized to delete this project.',
-          'warning',
-          'mdi-alert-circle'
-        )
-      }
-    } catch (error) {
-      // Display an error message
-      console.error('Error deleting project:', error)
-      notificationsStore.displaySnackbar(
-        'Error deleting project: ' + error.message + ' Please try again!',
-        'error',
-        'mdi-close-circle'
-      )
-    }
-  }
-
   const clearUserData = () => {
     tasksData.value = []
-    projectsData.value = []
     projectTemplatesData.value = []
     labelsData.value = []
     prioritiesData.value = []
@@ -900,15 +599,6 @@ export const useDataStore = defineStore('data', () => {
     editedTask.status = ''
     editedTask.startDate = null
     editedTask.endDate = null
-    newProject.color = ''
-    newProject.createdAt = ''
-    newProject.icon = ''
-    newProject.projectId = ''
-    newProject.title = ''
-    newProject.userId = ''
-    editedProject.title = ''
-    editedProject.icon = ''
-    editedProject.color = ''
   }
 
   watch(
@@ -916,6 +606,7 @@ export const useDataStore = defineStore('data', () => {
     (newUserValue) => {
       if (newUserValue === null) {
         clearUserData()
+        projectStore.clearProjectsData()
       }
     }
   )
@@ -944,7 +635,6 @@ export const useDataStore = defineStore('data', () => {
   onMounted(() => {
     subscribeToCollection('users', userData)
     subscribeToCollection('tasks', tasksData)
-    subscribeToCollection('projects', projectsData)
     subscribeToCollection('projectTemplates', projectTemplatesData)
     subscribeToCollection('labels', labelsData)
     subscribeToCollection('priorities', prioritiesData)
@@ -961,13 +651,10 @@ export const useDataStore = defineStore('data', () => {
     listeners,
     newTask,
     editedTask,
-    newProject,
-    editedProject,
     isSaving,
 
     // Getters
     tasks,
-    projects,
     projectTemplates,
     labels,
     priorities,
@@ -975,14 +662,12 @@ export const useDataStore = defineStore('data', () => {
     colors,
     icons,
     tasksData,
-    projectsData,
     projectTemplatesData,
     labelsData,
     prioritiesData,
     statusesData,
     colorsData,
     iconsData,
-    projectItems,
     projectTemplateItems,
     labelItems,
     priorityItems,
@@ -991,10 +676,6 @@ export const useDataStore = defineStore('data', () => {
     iconItems,
     newTaskData,
     editedTaskData,
-    newProjectData,
-    editedProjectData,
-    selectedProject,
-    selectedProjectId,
     newTaskProjectId,
     // userId,
 
@@ -1006,10 +687,6 @@ export const useDataStore = defineStore('data', () => {
     updateTask,
     deleteTask,
     deleteAllTasks,
-    deleteAllTasksInProject,
-    createProject,
-    saveEditedProject,
-    deleteProject,
     clearUserData,
     // Helper functions
     unsubscribeFromCollection,

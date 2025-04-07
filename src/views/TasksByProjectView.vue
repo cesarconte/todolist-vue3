@@ -1,4 +1,5 @@
 <script setup>
+import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
@@ -11,6 +12,7 @@ import VCardTask from '@/components/VCardTask.vue'
 import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const dataStore = useDataStore()
 const { submitEditedTask } = useSubmitEditedTask()
@@ -38,14 +40,14 @@ const progressPercentage = ref(0)
 const editProject = async (projectId) => {
   dialogEditProject.value = true
   // Get the project data from Firestore and update the UI
-  const projectData = await dataStore.projects.find((project) => project.id === projectId)
+  const projectData = await projectStore.projects.find((project) => project.id === projectId)
   // Update the form values with the project data
   if (projectData) {
-    dataStore.editedProject = {
+    projectStore.editedProject = {
       ...projectData
     }
   } else {
-    dataStore.editedProject = {
+    projectStore.editedProject = {
       id: '',
       name: '',
       description: ''
@@ -56,7 +58,7 @@ const editProject = async (projectId) => {
 const submitEditedProject = async () => {
   try {
     // Save the edited project to Firestore
-    await dataStore.saveEditedProject(dataStore.editedProject.id, dataStore.editedProject)
+    await projectStore.saveEditedProject(projectStore.editedProject.id, projectStore.editedProject)
     // Close the dialog
     dialogEditProject.value = false
   } catch (error) {
@@ -89,7 +91,7 @@ const btnsProject = [
     text: 'Edit project',
     icon: 'mdi-pencil',
     function: () => {
-      const projectId = dataStore.projects.find(
+      const projectId = projectStore.projects.find(
         (project) => project.title === taskStore.selectedProject
       )?.id
       if (projectId) {
@@ -105,11 +107,11 @@ const btnsProject = [
     label: 'Delete project',
     icon: 'mdi-delete',
     function: () => {
-      const projectId = dataStore.projects.find(
+      const projectId = projectStore.projects.find(
         (project) => project.title === taskStore.selectedProject
       )?.id
       if (projectId) {
-        dataStore.deleteProject(projectId)
+        projectStore.deleteProject(projectId)
       } else {
         // Handle the case where the project is not found
         console.error('Project not found:', taskStore.selectedProject)
@@ -189,7 +191,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
             icon
             variant="flat"
             class="delete-project-btn"
-            @click="dataStore.deleteAllTasksInProject"
+            @click="projectStore.deleteAllTasksInProject"
           >
             <v-icon>mdi-delete</v-icon>
             <v-tooltip activator="parent" location="bottom" class="delete-all-tasks-tooltip"
@@ -360,7 +362,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
           <v-card-text>
             <v-form class="form form-edit-project" ref="form" @submit.prevent="submitEditedProject">
               <v-text-field
-                v-model="dataStore.editedProject.title"
+                v-model="projectStore.editedProject.title"
                 placeholder="Enter project title"
                 prepend-inner-icon="mdi-format-title"
                 type="text"
@@ -371,7 +373,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
               ></v-text-field>
               <v-divider class="mb-4"></v-divider>
               <v-text-field
-                v-model="dataStore.editedProject.icon"
+                v-model="projectStore.editedProject.icon"
                 placeholder="Icon"
                 prepend-inner-icon="mdi-symbol"
                 type="text"
@@ -382,7 +384,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
               ></v-text-field>
               <v-divider class="mb-4"></v-divider>
               <v-select
-                v-model="dataStore.editedProject.color"
+                v-model="projectStore.editedProject.color"
                 label="Color"
                 prepend-inner-icon="mdi-palette"
                 variant="plain"
@@ -417,7 +419,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
           <v-card-text>
             <VTaskForm
               v-model="dataStore.editedTask"
-              :projects="dataStore.projects"
+              :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"
               :statuses="dataStore.statuses"

@@ -232,7 +232,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           <v-card-text>
             <VTaskForm
               v-model="dataStore.editedTask"
-              :projects="dataStore.projects"
+              :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"
               :statuses="dataStore.statuses"

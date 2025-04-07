@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useNotificationsStore } from '@/stores/notificationsStore'
@@ -20,6 +21,7 @@ import VBaseSnackbar from './VBaseSnackbar.vue'
  * Stores
  ************************************/
 const dataStore = useDataStore() // Accesses the data store
+const projectStore = useProjectStore() // Accesses the project store
 const taskStore = useTaskStore() // Accesses the task store
 const userStore = useUserStore() // Accesses the user store
 const notificationsStore = useNotificationsStore() // Accesses the notifications store
@@ -247,7 +249,7 @@ const resetAddProjectForm = () => {
 const addNewProject = async () => {
   // Define the addNewProject function to create a new project
   try {
-    await dataStore.createProject(dataStore.newProject)
+    await projectStore.createProject(projectStore.newProject)
     // Reset the form
     formAddProject.value?.reset()
     // Close the dialog
@@ -256,7 +258,7 @@ const addNewProject = async () => {
     drawer.value = false
     // Optionally display a success message
     showSnackbar(
-      `Project ${dataStore.newProject.title} added successfully!`,
+      `Project ${projectStore.newProject.title} added successfully!`,
       'success',
       'mdi-check-circle-outline'
     )
@@ -534,7 +536,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             </v-list-item>
           </template>
           <v-list-item
-            v-for="(project, i) in dataStore.projects"
+            v-for="(project, i) in projectStore.projects"
             :key="i"
             :prepend-icon="project.icon"
             :value="project.title"
@@ -545,7 +547,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
               <v-icon :color="project.color">{{ project.icon }}</v-icon>
             </template>
           </v-list-item>
-          <v-list-item v-if="!dataStore.projects.length">
+          <v-list-item v-if="!projectStore.projects.length">
             <v-list-item-title>No projects yet</v-list-item-title>
           </v-list-item>
           <v-list-group value="Actions">
@@ -600,7 +602,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       <v-card-text :class="mobile ? 'px-0' : ''">
         <VTaskForm
           v-model="dataStore.newTask"
-          :projects="dataStore.projects"
+          :projects="projectStore.projects"
           :labels="dataStore.labels"
           :priorities="dataStore.priorities"
           :statuses="dataStore.statuses"
@@ -626,7 +628,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       </v-card-title>
       <v-card-text>
         <VProjectForm
-          v-model="dataStore.newProject"
+          v-model="projectStore.newProject"
           :projectTemplates="dataStore.projectTemplates"
           :icons="dataStore.icons"
           :colors="dataStore.colors"

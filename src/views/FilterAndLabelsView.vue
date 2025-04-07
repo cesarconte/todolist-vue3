@@ -3,6 +3,7 @@
 <script setup>
 import { ref, watchEffect } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
@@ -15,6 +16,7 @@ import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 
 const dataStore = useDataStore()
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const { submitEditedTask } = useSubmitEditedTask()
@@ -123,7 +125,7 @@ when you pass JavaScript Date objects to the where clause. */
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.selectedProjects"
-            :items="userStore.isLoggedIn ? dataStore.projectItems : []"
+            :items="userStore.isLoggedIn ? projectStore.projectItems : []"
             :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
             item-value="value"
             item-title="title"
@@ -371,7 +373,7 @@ when you pass JavaScript Date objects to the where clause. */
           <v-card-text>
             <VTaskForm
               v-model="dataStore.editedTask"
-              :projects="dataStore.projects"
+              :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"
               :statuses="dataStore.statuses"

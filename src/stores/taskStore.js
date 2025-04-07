@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { useDataStore } from './dataStore.js'
+import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { db } from '../firebase.js'
@@ -21,6 +22,7 @@ import {
 export const useTaskStore = defineStore('tasks', () => {
   // State
   const dataStore = useDataStore()
+  const projectStore = useProjectStore()
   const userStore = useUserStore()
   const notificationsStore = useNotificationsStore()
   const selectedProject = ref(null)
@@ -60,7 +62,7 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   const projects = computed(() => {
-    return dataStore.projects
+    return projectStore.projects
   })
 
   const labels = computed(() => {
@@ -515,12 +517,12 @@ export const useTaskStore = defineStore('tasks', () => {
   // Helper function to fetch project data and get color
   const getProjectColor = async (projectName) => {
     // Fetch projects data only if it's not already loaded
-    if (!dataStore.projectsData.value) {
-      await dataStore.fetchCollection('projects', dataStore.projectsData)
+    if (!projectStore.projectsData.value) {
+      await dataStore.fetchCollection('projects', projectStore.projectsData)
     }
 
     // Find the project with the matching title
-    const project = dataStore.projects.find((project) => project.title === projectName)
+    const project = projectStore.projects.find((project) => project.title === projectName)
 
     // Get the project color
     return project ? project.color : 'default'
