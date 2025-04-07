@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useDataStore } from '@/stores/dataStore'
+// import { useDataStore } from '@/stores/dataStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
@@ -9,7 +9,7 @@ import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useDisplay } from 'vuetify'
 
 const router = useRouter()
-const dataStore = useDataStore()
+// const dataStore = useDataStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
@@ -30,7 +30,7 @@ const value = ref([new Date()])
 const events = computed(() => {
   // Check if user is logged in and only return tasks if logged in
   if (userStore.isLoggedIn) {
-    return dataStore.tasksData.map((task) => ({
+    return taskStore.tasksData.map((task) => ({
       id: task.id,
       title: task.title,
       start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
@@ -48,7 +48,7 @@ const events = computed(() => {
 onMounted(async () => {
   if (userStore.isLoggedIn) {
     await taskStore.getTasksByProjectPaginated()
-    notificationsStore.scheduleNotifications(dataStore.tasksData)
+    notificationsStore.scheduleNotifications(taskStore.tasksData)
   }
 })
 // Helper function to get the weekdays array from the selected title

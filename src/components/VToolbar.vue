@@ -601,7 +601,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
         <VTaskForm
-          v-model="dataStore.newTask"
+          v-model="taskStore.newTask"
           :projects="projectStore.projects"
           :labels="dataStore.labels"
           :priorities="dataStore.priorities"

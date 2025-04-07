@@ -322,7 +322,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
                 @edit-task="taskStore.editTask(task.id)"
-                @delete-task="dataStore.deleteTask(task.id)"
+                @delete-task="taskStore.deleteTask(task.id)"
                 @complete-task="taskStore.completeTask(task.id)"
               >
               </VCardTask>
@@ -414,11 +414,11 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
       >
         <v-card class="card card-edit-task pa-4">
           <v-card-title class="card-title card-title-edit-task">
-            <span class="text-h6">Edit task {{ dataStore.editedTask.title }} </span>
+            <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
             <VTaskForm
-              v-model="dataStore.editedTask"
+              v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"

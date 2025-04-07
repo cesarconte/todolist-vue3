@@ -1,13 +1,27 @@
+// taskStore.js
+
 import { defineStore } from 'pinia'
 import { useDataStore } from './dataStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
+import { useRouter } from 'vue-router'
 import { useNotificationsStore } from './notificationsStore.js'
+import { validTaskForm } from '@/composables/validationFormRules.js'
 import { db } from '../firebase.js'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive, onMounted } from 'vue'
 import {
   doc,
   updateDoc,
+  getDoc,
+  addDoc,
+  deleteDoc,
+  getDocs,
+  arrayUnion,
+  arrayRemove,
+  runTransaction,
+  writeBatch,
+  serverTimestamp,
+  Timestamp,
   collection,
   query,
   where,
@@ -20,11 +34,15 @@ import {
 } from 'firebase/firestore'
 
 export const useTaskStore = defineStore('tasks', () => {
-  // State
   const dataStore = useDataStore()
   const projectStore = useProjectStore()
   const userStore = useUserStore()
   const notificationsStore = useNotificationsStore()
+  const router = useRouter()
+
+  // State
+
+  const tasksData = ref([])
   const selectedProject = ref(null)
   const pageSize = 6
   const firstVisibleTask = ref(null)
@@ -55,10 +73,57 @@ export const useTaskStore = defineStore('tasks', () => {
   const error = ref(null) // Store error messages
   const dialogEditTask = ref(false)
   const noResultsMessage = ref(false)
+  const newTask = reactive({
+    title: '',
+    description: '',
+    project: '',
+    label: '',
+    priority: '',
+    status: '',
+    startDate: null,
+    startDateHour: null,
+    endDate: null,
+    endDateHour: null,
+    completed: false,
+    createdAt: null,
+    createdBy: '',
+    projectId: ''
+  })
+  const editedTask = reactive({
+    title: '',
+    description: '',
+    project: '',
+    label: '',
+    priority: '',
+    status: '',
+    startDate: null,
+    startDateHour: null,
+    endDate: null,
+    endDateHour: null,
+    updatedAt: serverTimestamp()
+  })
+  const isSaving = ref(false)
+
+  const listeners = ref({
+    tasks: null
+  })
 
   // Getters
   const tasks = computed(() => {
-    return dataStore.tasks
+    return tasksData.value
+  })
+
+  const newTaskData = computed(() => {
+    return newTask
+  })
+
+  const editedTaskData = computed(() => {
+    return editedTask
+  })
+
+  const newTaskProjectId = computed(() => {
+    const project = projectStore.projects.find((project) => project.title === newTask.project)
+    return project?.id || null // Optional chaining + nullish coalescing
   })
 
   const projects = computed(() => {
@@ -160,6 +225,383 @@ export const useTaskStore = defineStore('tasks', () => {
   // const showSnackbar = (message, color = 'success', prependIcon = '', appendIcon = '') => {
   //   notificationsStore.updateSnackbar(message, true, prependIcon, appendIcon, color)
   // }
+  const subscribeToTasks = () => {
+    const q = query(collection(db, 'tasks'), orderBy('title', 'asc'))
+    listeners.value.tasks = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        const index = tasksData.value.findIndex((t) => t.id === change.doc.id)
+        switch (change.type) {
+          case 'added':
+            if (index === -1) tasksData.value.push({ id: change.doc.id, ...change.doc.data() })
+            break
+          case 'modified':
+            if (index !== -1)
+              tasksData.value.splice(index, 1, { id: change.doc.id, ...change.doc.data() })
+            break
+          case 'removed':
+            if (index !== -1) tasksData.value.splice(index, 1)
+            break
+        }
+      })
+    })
+  }
+
+  // Get a single task from Firestore
+  const getTask = async (taskId) => {
+    try {
+      const taskRef = doc(db, 'tasks', taskId)
+      const taskDoc = await getDoc(taskRef)
+
+      if (taskDoc.exists()) {
+        const taskData = taskDoc.data()
+
+        // Convert startDate and endDate to Date objects if they are Timestamps
+        if (taskData.startDate instanceof Timestamp) {
+          taskData.startDate = taskData.startDate.toDate()
+        }
+        if (taskData.endDate instanceof Timestamp) {
+          taskData.endDate = taskData.endDate.toDate()
+        }
+
+        return {
+          id: taskDoc.id,
+          ...taskData
+        }
+      } else {
+        // Handle the case where the task doesn't exist
+        console.error('Task not found:', taskId)
+        return null
+      }
+    } catch (error) {
+      console.error('Error getting task:', error)
+      return null
+    }
+  }
+
+  // Create a new task in Firestore
+  const createTask = async (newTask) => {
+    // Check if a user is logged in
+    if (!userStore.isLoggedIn) {
+      console.error('User must be logged in to edit a task.')
+      notificationsStore.displaySnackbar(
+        'Please log in to edit a task.',
+        'error',
+        'mdi-account-off'
+      )
+      return // Stop execution if not logged in
+    }
+    // Check if the user ID is defined
+    if (!userStore.userId) {
+      console.error('User ID is undefined. Please log in.')
+      notificationsStore.displaySnackbar(
+        'User ID is undefined. Please log in.',
+        'error',
+        'mdi-account-off'
+      )
+      return // Stop execution if user ID is undefined
+    }
+    // Check if the task is being created
+    if (isSaving.value) {
+      return // Prevent multiple submissions
+    }
+    isSaving.value = true
+    try {
+      // Check if all fields are filled
+      if (validTaskForm(newTask)) {
+        // Get the project color
+        const projectColor = await getProjectColor(newTask.project)
+        const projectId = newTaskProjectId.value
+        // Combine the date and time for the end date
+        const endDate = newTask.endDate
+        const [hours, minutes] = newTask.endDateHour.split(':').map(Number)
+        const endDateFormatted = new Date(endDate)
+        endDateFormatted.setHours(hours, minutes, 0, 0)
+        // Combine the date and time for the start date
+        const startDate = newTask.startDate
+        const [startHours, startMinutes] = newTask.startDateHour.split(':').map(Number)
+        const startDateFormatted = new Date(startDate)
+        startDateFormatted.setHours(startHours, startMinutes, 0, 0)
+        // Add the task to Firestore
+        const taskDocRef = await addDoc(collection(db, 'tasks'), {
+          ...newTask,
+          startDate: startDateFormatted,
+          endDate: endDateFormatted,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          completed: false,
+          color: projectColor,
+          taskId: newTask.title.toLowerCase().replace(/ /g, '-'),
+          createdBy: userStore.userId,
+          projectId: projectId
+        })
+        // Get the taskId from the newly created document
+        const taskId = taskDocRef.id
+
+        // Update the user document with the taskId
+        const userRef = doc(db, 'users', userStore.userId)
+        await updateDoc(userRef, {
+          createdTasks: arrayUnion(taskId) // Add the taskId to the array
+        })
+        // Display a success message
+        notificationsStore.displaySnackbar(
+          'Task created successfully',
+          'success',
+          'mdi-check-circle'
+        )
+        // Display a success message
+      } else {
+        // Display an error message
+        notificationsStore.displaySnackbar(
+          'All fields are required. Please try again.',
+          'error',
+          'mdi-alert-circle'
+        )
+        throw new Error('All fields are required.')
+      }
+    } catch (error) {
+      console.error('createTask: Error creating task:', error) // Imprime el error en la consola
+      notificationsStore.displaySnackbar(
+        'An error occurred while creating the task. Please try again.',
+        'error',
+        'mdi-close-circle'
+      ) // Muestra un mensaje de error
+    } finally {
+      // Reset isSaving flag
+      isSaving.value = false
+    }
+  }
+
+  // Edit an existing task in Firestore
+  const updateTask = async (taskId, editedTask) => {
+    // Check if a user is logged in
+    if (!userStore.isLoggedIn) {
+      console.error('User must be logged in to edit a task.')
+      notificationsStore.displaySnackbar(
+        'Please log in to edit a task.',
+        'error',
+        'mdi-account-off'
+      )
+      return // Stop execution if not logged in
+    }
+
+    // Check if the task is being edited
+    if (isSaving.value) {
+      return
+    }
+    isSaving.value = true
+
+    try {
+      // Check if all fields are filled
+      if (validTaskForm(editedTask) && editedTask.startDate <= editedTask.endDate) {
+        // Get the project color
+        const projectColor = await getProjectColor(editedTask.project)
+        const taskRef = doc(db, 'tasks', taskId)
+
+        // Fetch the task from Firestore to check ownership
+        const taskDoc = await getDoc(taskRef)
+        const taskData = taskDoc.data()
+
+        // Check if the user owns the task
+        if (taskData.createdBy === userStore.userId) {
+          const isCompleted = editedTask.status === 'Done'
+
+          // Combine the date and time for the start date
+          const startDate = editedTask.startDate
+          const [startHours, startMinutes] = editedTask.startDateHour.split(':').map(Number)
+          const startDateFormatted = new Date(startDate)
+          startDateFormatted.setHours(startHours, startMinutes, 0, 0)
+          // Combine the date and time for the end date
+          const endDate = editedTask.endDate
+          const [hours, minutes] = editedTask.endDateHour.split(':').map(Number)
+          const endDateFormatted = new Date(endDate)
+          endDateFormatted.setHours(hours, minutes, 0, 0)
+
+          // Update the task in Firestore
+          await updateDoc(taskRef, {
+            ...editedTask,
+            completed: isCompleted,
+            startDate: startDateFormatted,
+            endDate: endDateFormatted,
+            updatedAt: new Date(),
+            color: projectColor
+          })
+
+          // Display a success message
+          notificationsStore.displaySnackbar(
+            'Task updated successfully',
+            'success',
+            'mdi-check-circle'
+          )
+        } else {
+          // Handle unauthorized access (e.g., show an error message)
+          console.error('Unauthorized access to task:', taskId)
+          notificationsStore.displaySnackbar(
+            'You are not authorized to edit this task.',
+            'warning',
+            'mdi-alert-circle'
+          )
+        }
+      } else {
+        // Display an error message
+        throw new Error('All fields are required. Please try again!')
+      }
+    } catch (error) {
+      // Display an error message
+      console.error('Error updating task:', error)
+      notificationsStore.displaySnackbar(
+        error.message || 'An error occurred while updating the task. Please try again.',
+        'error',
+        'mdi-close-circle'
+      )
+    } finally {
+      // Reset isSaving flag
+      isSaving.value = false
+    }
+  }
+
+  // Delete a task from Firestore
+  const deleteTask = async (taskId) => {
+    try {
+      // Check if a user is logged in
+      if (!userStore.isLoggedIn) {
+        console.error('User must be logged in to delete a task.')
+        notificationsStore.displaySnackbar(
+          'Please log in to delete a task.',
+          'error',
+          'mdi-account-off'
+        )
+        return // Stop execution if not logged in
+      }
+
+      // Fetch the task from Firestore to check ownership
+      const taskRef = doc(db, 'tasks', taskId)
+      const taskDoc = await getDoc(taskRef)
+      const taskData = taskDoc.data()
+
+      // Check if the user owns the task
+      if (taskData.createdBy === userStore.userId) {
+        // 1. Get the user's document reference
+        const userRef = doc(db, 'users', userStore.userId)
+
+        // 2. Update the user document to remove the taskId from createdTasks
+        try {
+          await updateDoc(userRef, {
+            createdTasks: arrayRemove(taskId) // Use arrayRemove to delete specific element
+          })
+        } catch (updateError) {
+          console.error('Error updating user document:', updateError)
+        }
+
+        // 3. Delete the task from Firestore
+        await deleteDoc(taskRef)
+
+        // 4. Delete notifications
+        const notificationsRef = collection(db, 'users', userStore.userId, 'notifications')
+        const q = query(notificationsRef, where('taskId', '==', taskId))
+        const querySnapshot = await getDocs(q)
+
+        if (!querySnapshot.empty) {
+          const batch = writeBatch(db)
+          querySnapshot.forEach((notificationDoc) => {
+            batch.delete(notificationDoc.ref)
+          })
+          await batch.commit()
+        }
+
+        // 5. Display a success message
+        notificationsStore.displaySnackbar(
+          'Task deleted successfully',
+          'success',
+          'mdi-check-circle'
+        )
+
+        // 6. Redirect to '/' after deleting the task
+        router.push('/')
+      } else {
+        // Handle unauthorized access (e.g., show an error message)
+        console.error('Unauthorized access to task:', taskId)
+        notificationsStore.displaySnackbar(
+          'You are not authorized to delete this task.',
+          'warning',
+          'mdi-alert-circle'
+        )
+      }
+    } catch (error) {
+      // Display an error message
+      console.error('Error deleting task:', error)
+      notificationsStore.displaySnackbar(
+        'Error deleting task: ' + error + 'Please try again!',
+        'error',
+        'mdi-close-circle'
+      )
+    }
+  }
+
+  const deleteAllTasks = async () => {
+    try {
+      // Check if a user is logged in
+      if (!userStore.isLoggedIn) {
+        console.error('User must be logged in to delete tasks.')
+        notificationsStore.displaySnackbar(
+          'Please log in to delete tasks.',
+          'error',
+          'mdi-account-off'
+        )
+        return
+      }
+
+      const currentUserId = userStore.userId
+
+      // Start transaction
+      await runTransaction(db, async (transaction) => {
+        // 1. Get all tasks created by the user
+        const tasksRef = collection(db, 'tasks')
+        const tasksQuery = query(tasksRef, where('createdBy', '==', currentUserId))
+        const tasksSnapshot = await getDocs(tasksQuery)
+
+        // 2. Delete all tasks
+        tasksSnapshot.docs.forEach((doc) => transaction.delete(doc.ref))
+
+        // 3. Get all notifications
+        const notificationsRef = collection(db, 'users', currentUserId, 'notifications')
+        const notificationsQuery = query(notificationsRef)
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+
+        // 4. Delete all notifications
+        notificationsSnapshot.docs.forEach((doc) => transaction.delete(doc.ref))
+
+        // 5. Clear createdTasks array
+        const userRef = doc(db, 'users', currentUserId)
+        transaction.update(userRef, {
+          createdTasks: [],
+          notificationSettings: {
+            // Reset settings opcional
+            enabled: false,
+            time: []
+          }
+        })
+      })
+
+      // 6. Feedback y limpieza adicional
+      notificationsStore.displaySnackbar(
+        'All tasks and related notifications deleted successfully',
+        'success',
+        'mdi-check-circle'
+      )
+
+      // 7. Resetear store de notificaciones si es necesario
+      const notificationsStore = useNotificationsStore()
+      notificationsStore.clearTimeouts()
+      notificationsStore.clearNotifications()
+    } catch (error) {
+      console.error('Error deleting tasks:', error)
+      notificationsStore.displaySnackbar(
+        `Error deleting tasks: ${error.message}. Please try again!`,
+        'error',
+        'mdi-close-circle'
+      )
+    }
+  }
 
   // Get tasks by project paginated
   const getTasksByProjectPaginated = async ({
@@ -171,7 +613,7 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       // Define the base query for tasks in the selected project
       let tasksRef = query(
-        collection(dataStore.db, 'tasks'),
+        collection(db, 'tasks'),
         where('createdBy', '==', userStore.userId), // Filter by user ID
         where('project', '==', selectedProject.value), // Filter by selected project
         orderBy('endDate', 'asc'), // Order by endDate first
@@ -545,6 +987,11 @@ export const useTaskStore = defineStore('tasks', () => {
     hasPrevPage.value = false
     currentPage.value = 1
   }
+
+  onMounted(() => {
+    subscribeToTasks() // Escucha los cambios en la colección 'tasks'
+  })
+
   return {
     // State
     selectedProject,
@@ -565,6 +1012,15 @@ export const useTaskStore = defineStore('tasks', () => {
     error,
     dialogEditTask,
     noResultsMessage,
+    newTask,
+    editedTask,
+    isSaving,
+    listeners,
+    newTaskData,
+    editedTaskData,
+    newTaskProjectId,
+    // State for pagination
+    tasksData,
     // Getters (computed properties)
     projects,
     tasks,
@@ -585,14 +1041,22 @@ export const useTaskStore = defineStore('tasks', () => {
     // Actions (methods)
     getTasksByProjectPaginated,
     setSelectedProject,
-    completeTask,
     getFilteredTasksPaginated,
+    // Actions for pagination
+    applyPagination,
+    applyFilters,
+    // Actions for task management
+    deleteAllTasks,
+    deleteTask,
+    getTask,
+    createTask,
+    updateTask,
+    completeTask,
+    subscribeToTasks,
+    resetFilters,
     // Helper functions
     editTask,
     getProjectColor,
-    applyFilters,
-    applyPagination,
-    updateTaskArray,
-    resetFilters
+    updateTaskArray
   }
 })

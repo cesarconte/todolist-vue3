@@ -318,7 +318,7 @@ when you pass JavaScript Date objects to the where clause. */
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
                 @edit-task="taskStore.editTask(task.id)"
-                @delete-task="dataStore.deleteTask(task.id)"
+                @delete-task="taskStore.deleteTask(task.id)"
                 @complete-task="taskStore.completeTask(task.id)"
               />
             </template>
@@ -368,11 +368,11 @@ when you pass JavaScript Date objects to the where clause. */
       >
         <v-card class="card card-edit-task pa-4">
           <v-card-title class="card-title card-title-edit-task">
-            <span class="text-h6">Edit task {{ dataStore.editedTask.title }} </span>
+            <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
             <VTaskForm
-              v-model="dataStore.editedTask"
+              v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"

@@ -1,22 +1,22 @@
 // src/composables/useSubmitNewTask.js
-import { useDataStore } from '@/stores/dataStore'
+import { useTaskStore } from '@/stores/taskStore'
 import { formatDate } from '@/utils/dateFormat'
 
 export function useSubmitNewTask() {
-  const dataStore = useDataStore()
+  const taskStore = useTaskStore()
 
   const submitNewTask = async () => {
     try {
-      const formattedStartDate = formatDate(dataStore.newTask.startDate)
-      const formattedEndDate = formatDate(dataStore.newTask.endDate)
+      const formattedStartDate = formatDate(taskStore.newTask.startDate)
+      const formattedEndDate = formatDate(taskStore.newTask.endDate)
 
       const newTaskData = {
-        ...dataStore.newTask,
+        ...taskStore.newTask,
         startDate: formattedStartDate,
         endDate: formattedEndDate
       }
 
-      await dataStore.createTask(newTaskData)
+      await taskStore.createTask(newTaskData)
     } catch (error) {
       console.error('Error creating task:', error)
       throw error

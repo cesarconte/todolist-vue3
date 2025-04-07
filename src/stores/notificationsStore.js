@@ -15,7 +15,8 @@ import {
   collection
 } from 'firebase/firestore'
 import { useUserStore } from '@/stores/userStore'
-import { useDataStore } from '@/stores/dataStore'
+// import { useDataStore } from '@/stores/dataStore'
+import { useTaskStore } from '@/stores/taskStore'
 
 /**
  * Notification Store - Manages all notification-related functionality
@@ -108,8 +109,9 @@ export const useNotificationsStore = defineStore('notifications', {
 
             // Schedule notifications if enabled
             if (this.notificationSettings.enabled) {
-              const dataStore = useDataStore()
-              this.scheduleNotifications(dataStore.tasksData)
+              // const dataStore = useDataStore()
+              const taskStore = useTaskStore()
+              this.scheduleNotifications(taskStore.tasksData)
             }
           }
         }
@@ -172,8 +174,9 @@ export const useNotificationsStore = defineStore('notifications', {
         // Clear existing timeouts and reschedule
         this.clearTimeouts()
         if (this.notificationSettings.enabled) {
-          const dataStore = useDataStore()
-          this.scheduleNotifications(dataStore.tasksData)
+          // const dataStore = useDataStore()
+          const taskStore = useTaskStore()
+          this.scheduleNotifications(taskStore.tasksData)
         }
       } catch (error) {
         this.handleError('Error saving settings', error)
@@ -255,8 +258,9 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         if (!this.notificationSettings.enabled) return
 
-        const dataStore = useDataStore()
-        const tasks = dataStore.tasksData
+        // const dataStore = useDataStore()
+        const taskStore = useTaskStore()
+        const tasks = taskStore.tasksData
 
         this.clearTimeouts()
 
