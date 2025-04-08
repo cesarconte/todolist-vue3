@@ -1,7 +1,7 @@
 // projectStore.js
 import { defineStore } from 'pinia'
 import { db } from '../firebase.js'
-import { ref, onMounted, computed, onUnmounted, reactive } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import {
   collection,
   onSnapshot,
@@ -106,14 +106,20 @@ export const useProjectStore = defineStore('projects', () => {
   //   })
   // }
   const subscribeToCollection = () => {
-    if (!userStore.isLoggedIn) {
-      console.warn('Not subscribed to projects as user is not logged in.')
+    // if (!userStore.isLoggedIn) {
+    //   console.warn('Not subscribed to projects as user is not logged in.')
+    //   return
+    // }
+    if (!userStore.userId) {
+      console.warn('Not subscribed to projects. User ID not available')
       return
     }
+
     const collectionRef = query(
       collection(db, 'users', userStore.userId, 'projects'),
       orderBy('title', 'asc')
     )
+
     listeners.value.projects = onSnapshot(
       collectionRef,
       (snapshot) => {
@@ -158,8 +164,8 @@ export const useProjectStore = defineStore('projects', () => {
           ...newProject,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-          projectId: newProject.title.toLowerCase().replace(/\s/g, '-')
-          // userId: userStore.userId,
+          projectId: newProject.title.toLowerCase().replace(/\s/g, '-'),
+          userId: userStore.userId
           // createdBy: userStore.userId
         })
         notificationsStore.displaySnackbar('Project created!', 'success', 'mdi-check-circle')
@@ -434,24 +440,36 @@ export const useProjectStore = defineStore('projects', () => {
   }
 
   // Lifecycle
-  onMounted(() => {
-    // Check if a user is logged in
-    if (!userStore.isLoggedIn) {
-      console.warn('User is not logged in. Not subscribing to projects.')
-      return
-    }
-    // Subscribe to the projects collection
-    subscribeToCollection('projects', projectsData)
-  })
+  // onMounted(() => {
+  //   // Check if a user is logged in
+  //   if (!userStore.isLoggedIn) {
+  //     console.warn('User is not logged in. Not subscribing to projects.')
+  //     return
+  //   }
+  //   // Subscribe to the projects collection
+  //   subscribeToCollection('projects', projectsData)
+  // })
 
   // onUnmounted(() => {
   //   Object.values(listeners.value).forEach((unsubscribe) => unsubscribe?.())
   //   clearProjectsData()
   // })
-  onUnmounted(() => {
-    listeners.value.projects?.() // Unsubscribe only the projects listener
-    clearProjectsData()
-  })
+  // onUnmounted(() => {
+  //   listeners.value.projects?.() // Unsubscribe only the projects listener
+  //   clearProjectsData()
+  // })
+  watch(
+    () => userStore.userId,
+    (newUserId) => {
+      if (newUserId) {
+        subscribeToCollection()
+      } else {
+        listeners.value.projects?.()
+        clearProjectsData()
+      }
+    },
+    { immediate: true }
+  )
 
   return {
     // State

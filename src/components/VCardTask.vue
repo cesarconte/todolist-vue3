@@ -31,7 +31,7 @@ const props = defineProps({
     required: true
   },
   project: {
-    type: String,
+    type: Object,
     required: true
   },
   priority: {
@@ -140,19 +140,19 @@ const tooltips = computed(() => [
  ************************************/
 const deleteTask = () => {
   // Emits the deleteTask event with the task's ID
-  emit('deleteTask', props.id)
+  emit('deleteTask', props.project.id, props.id)
 }
 
 // Define the editTask function
 const editTask = () => {
   // Emits the editTask event with the task's ID
-  emit('editTask', props.id)
+  emit('editTask', props.project.id, props.id)
 }
 
 // Define the completedTask function
 const completeTask = () => {
   // Emits the completeTask event with the task's ID
-  emit('completeTask', props.id)
+  emit('completeTask', props.project.id, props.id)
 }
 
 // Define the formatDate function
@@ -258,7 +258,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
       </v-btn>
     </v-card-title>
     <v-card-subtitle>
-      <span class="text-subtitle1">Project: {{ project }}</span>
+      <span class="text-subtitle1">Project: {{ project.title }}</span>
     </v-card-subtitle>
     <v-divider class="mt-1"></v-divider>
     <v-card-text class="card-text">

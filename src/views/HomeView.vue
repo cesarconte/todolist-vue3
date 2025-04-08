@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 // import { useDataStore } from '@/stores/dataStore'
+import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
@@ -10,6 +11,7 @@ import { useDisplay } from 'vuetify'
 
 const router = useRouter()
 // const dataStore = useDataStore()
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
@@ -27,30 +29,61 @@ const weekdays = ref([
 const value = ref([new Date()])
 
 // Computed variables for the calendar
-const events = computed(() => {
-  // Check if user is logged in and only return tasks if logged in
-  if (userStore.isLoggedIn) {
-    return taskStore.tasksData.map((task) => ({
-      id: task.id,
-      title: task.title,
-      start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
-      end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
-      allDay: false,
-      color: task.color,
-      label: task.label,
-      completed: task.completed
-    }))
-  } else {
-    return []
-  }
+// const events = computed(() => {
+//   // Check if user is logged in and only return tasks if logged in
+//   if (userStore.isLoggedIn) {
+//     return taskStore.tasksData.map((task) => ({
+//       id: task.id,
+//       title: task.title,
+//       start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
+//       end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
+//       allDay: false,
+//       color: task.color,
+//       label: task.label,
+//       completed: task.completed
+//     }))
+//   } else {
+//     return []
+//   }
+// })
+const calendarEvents = computed(() => {
+  return taskStore.tasks.map((task) => ({
+    id: task.id,
+    title: task.title,
+    // start: task.startDate,
+    // end: task.endDate,
+    start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
+    end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
+    allDay: false,
+    color: task.project.color,
+    label: task.label,
+    completed: task.completed,
+    extendedProps: {
+      project: task.project.title,
+      description: task.description
+    }
+  }))
 })
 
 onMounted(async () => {
   if (userStore.isLoggedIn) {
-    await taskStore.getTasksByProjectPaginated()
+    // await taskStore.getTasksByProjectPaginated()
     notificationsStore.scheduleNotifications(taskStore.tasksData)
   }
 })
+
+watch(
+  () => userStore.userId,
+  async (newVal) => {
+    if (newVal) {
+      projectStore.subscribeToCollection()
+      taskStore.subscribeToTasks()
+      // await taskStore.getTasksByProjectPaginated()
+    }
+  },
+  { immediate: true }
+)
+
 // Helper function to get the weekdays array from the selected title
 const getWeekdays = (title) => {
   if (title) return weekdays.value.find((item) => item.title === title).value
@@ -124,7 +157,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
               <v-calendar
                 ref="calendar"
                 v-model="value"
-                :events="events"
+                :events="calendarEvents"
                 :view-mode="type"
                 :weekdays="getWeekdays(weekday)"
                 color="primary"

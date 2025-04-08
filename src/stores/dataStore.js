@@ -92,57 +92,7 @@ export const useDataStore = defineStore('data', () => {
   const fetchCollection = async (collectionName, targetRef) => {
     subscribeToCollection(collectionName, targetRef, true)
   }
-
-  // const subscribeToCollection = (collectionName, targetRef) => {
-  //   // Creamos una consulta a la colección especificada, ordenando los documentos por el campo
-  //   // 'title' en orden ascendente.
-  //   const collectionRef = query(collection(db, collectionName), orderBy('title', 'asc'))
-  //   // Utilizamos onSnapshot para subscribirse a la colección.
-  //   listeners.value[collectionName] = onSnapshot(collectionRef, (snapshot) => {
-  //     try {
-  //       if (!targetRef.value) {
-  //         targetRef.value = []
-  //       }
-  //       // * Utilizamos docChanges() para obtener sólo los cambios en los documentos, lo que supone
-  //       // una mejora en el rendimiento.
-  //       // * Se itera sobre los cambios y se actualizan los arrays reactivos correspondientes
-  //       // (added, modified, removed).
-  //       snapshot.docChanges().forEach((change) => {
-  //         const index = targetRef.value.findIndex((item) => item.id === change.doc.id)
-  //         switch (change.type) {
-  //           case 'added':
-  //             // Check for duplicates before adding
-  //             if (index === -1) {
-  //               // Add the new document to the array
-  //               targetRef.value.push({
-  //                 id: change.doc.id,
-  //                 ...change.doc.data()
-  //               })
-  //             }
-  //             break
-  //           case 'modified':
-  //             if (index !== -1) {
-  //               // Update the existing document in the array
-  //               targetRef.value.splice(index, 1, {
-  //                 id: change.doc.id,
-  //                 ...change.doc.data()
-  //               })
-  //             }
-  //             break
-  //           case 'removed':
-  //             //if (index !== -1) {
-  //             // Remove the document from the array
-  //             targetRef.value.splice(index, 1) // No need to check for index here
-  //             //}
-  //             break
-  //         }
-  //       })
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error)
-  //       notificationsStore.displaySnackbar('Error fetching data', 'error', 'mdi-close-circle')
-  //     }
-  //   })
-  // }
+  // Subscribe to a collection and listen for real-time updates
   const subscribeToCollection = (collectionName) => {
     const targetRef = collections[collectionName]
     if (!targetRef) return

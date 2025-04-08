@@ -2,6 +2,7 @@
 import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
@@ -15,6 +16,7 @@ import VTaskForm from '@/components/VTaskForm.vue'
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const dataStore = useDataStore()
+const notificationsStore = useNotificationsStore()
 const { submitEditedTask } = useSubmitEditedTask()
 
 const props = defineProps({
@@ -30,7 +32,15 @@ const props = defineProps({
 
 onMounted(async () => {
   taskStore.setSelectedProject(props.projectName)
-  await taskStore.getTasksByProjectPaginated()
+  if (taskStore.selectedProject) {
+    await taskStore.getTasksByProjectPaginated()
+  } else {
+    notificationsStore.displaySnackbar(
+      'No project selected',
+      'Please select a project to view tasks.',
+      'error'
+    )
+  }
 })
 
 const form = ref(null)

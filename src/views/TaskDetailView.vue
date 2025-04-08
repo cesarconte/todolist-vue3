@@ -2,6 +2,7 @@
 import VCardTask from '@/components/VCardTask.vue'
 import { ref, computed } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useRouter } from 'vue-router'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
@@ -12,6 +13,7 @@ import VTaskForm from '@/components/VTaskForm.vue'
 import { useDisplay } from 'vuetify'
 
 const dataStore = useDataStore()
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const router = useRouter()
 const { submitEditedTask } = useSubmitEditedTask()
@@ -96,9 +98,9 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.id)"
-                @delete-task="taskStore.deleteTask(task.id)"
-                @complete-task="taskStore.completeTask(task.id)"
+                @edit-task="(projectId, taskId) => taskStore.editTask(projectId, taskId)"
+                @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+                @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
               />
             </template>
             <template #fallback>
