@@ -31,7 +31,7 @@ const props = defineProps({
     required: true
   },
   project: {
-    type: Object,
+    type: [String, Object],
     required: true
   },
   priority: {
@@ -258,7 +258,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
       </v-btn>
     </v-card-title>
     <v-card-subtitle>
-      <span class="text-subtitle1">Project: {{ project.title }}</span>
+      <span class="text-subtitle1">Project: {{ project.title || project }}</span>
     </v-card-subtitle>
     <v-divider class="mt-1"></v-divider>
     <v-card-text class="card-text">

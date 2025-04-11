@@ -319,6 +319,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
             <template #default>
               <VCardTask
                 v-if="task"
+                :key="task.id"
                 :title="task.title"
                 :id="task.id"
                 :description="task.description"
@@ -331,9 +332,10 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.id)"
-                @delete-task="taskStore.deleteTask(task.id)"
-                @complete-task="taskStore.completeTask(task.id)"
+                :projectId="task.projectId"
+                @edit-task="taskStore.editTask(task.projectId, task.id)"
+                @delete-task="taskStore.deleteTask(task.projectId, task.id)"
+                @complete-task="taskStore.completeTask(task.projectId, task.id)"
               >
               </VCardTask>
             </template>

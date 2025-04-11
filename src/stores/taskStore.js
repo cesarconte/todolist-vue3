@@ -109,13 +109,10 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   // Getters
-  // const tasks = computed(() => {
-  //   return tasksData.value
-  // })
   const tasks = computed(() => {
     return tasksData.value.map((task) => ({
       ...task,
-      projectId: task.projectPath, // Asegura que projectId esté disponible
+      projectId: task.projectPath,
       project: projectStore.projects.find((p) => p.id === task.projectId) || {
         title: 'Sin proyecto',
         color: '#ccc'
@@ -155,9 +152,21 @@ export const useTaskStore = defineStore('tasks', () => {
     return projects.value.find((project) => project.title === selectedProject.value)
   })
 
+  // const tasksInSelectedProject = computed(() => {
+  //   if (selectedProject.value) {
+  //     return tasks.value.filter((task) => task.project === selectedProject.value)
+  //   } else {
+  //     return []
+  //   }
+  // })
   const tasksInSelectedProject = computed(() => {
     if (selectedProject.value) {
-      return tasks.value.filter((task) => task.project === selectedProject.value)
+      const project = projectStore.projects.find((p) => p.title === selectedProject.value)
+      if (project) {
+        return tasks.value.filter((task) => task.projectId === project.id)
+      } else {
+        return []
+      }
     } else {
       return []
     }
@@ -317,6 +326,11 @@ export const useTaskStore = defineStore('tasks', () => {
   // }
   const getTask = async (projectId, taskId) => {
     try {
+      if (!projectId) {
+        console.error('Project ID is undefined')
+        notificationsStore.displaySnackbar('Project ID is undefined', 'error', 'mdi-alert-circle')
+        return null
+      }
       const taskRef = doc(db, 'users', userStore.userId, 'projects', projectId, 'tasks', taskId)
       const taskDoc = await getDoc(taskRef)
 
@@ -338,6 +352,7 @@ export const useTaskStore = defineStore('tasks', () => {
       return null
     } catch (error) {
       console.error('Error getting task:', error)
+      notificationsStore.displaySnackbar('Error getting task', 'error', 'mdi-alert-circle')
       return null
     }
   }
@@ -901,6 +916,87 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   // // Get tasks by project paginated
+  const getTasksByProjectPaginated = async ({
+    next = false,
+    prev = false,
+    last = false,
+    first = false
+  } = {}) => {
+    try {
+      if (!userStore.userId) {
+        notificationsStore.displaySnackbar(
+          'User ID is undefined. Please log in.',
+          'error',
+          'mdi-account-off'
+        )
+        return
+      }
+
+      if (!selectedProject.value) {
+        notificationsStore.displaySnackbar('No project selected.', 'error', 'mdi-alert-circle')
+        console.warn('No project selected.')
+        return
+      }
+
+      const project = projectStore.projects.find((p) => p.title === selectedProject.value)
+      if (!project?.id) {
+        notificationsStore.displaySnackbar(
+          'Project not found in local state',
+          'error',
+          'mdi-alert-circle'
+        )
+        return
+      }
+
+      // Define the base query for tasks in the selected project
+      let tasksRef = query(
+        collectionGroup(db, 'tasks'), // Use collectionGroup to access all tasks
+        where('createdBy', '==', userStore.userId), // Filter by user ID
+        where('projectId', '==', project.id), // Filter by selected project ID
+        orderBy('endDate', 'asc'), // Order by endDate first
+        orderBy('title', 'desc'), // Then by title in descending order
+        limit(pageSize) // Limit to pageSize
+      )
+
+      // Apply pagination logic based on options
+      tasksRef = applyPagination(tasksRef, next, prev, last, first)
+
+      if (tasksRef) {
+        // Clear the allTasksProject array before fetching new data
+        allTasksProject.value = []
+
+        // Subscribe to the new listener
+        onSnapshot(tasksRef, (snapshot) => {
+          // Use docChanges() to efficiently handle changes
+          snapshot.docChanges().forEach((change) => {
+            const taskData = {
+              id: change.doc.id,
+              ...change.doc.data(),
+              projectId: change.doc.ref.parent.parent?.id,
+              projectPath: change.doc.ref.parent.parent?.id
+            }
+            updateTaskArray(allTasksProject, change, taskData)
+          })
+
+          // Update pagination state
+          lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
+          firstVisibleTask.value = snapshot.docs[0]
+          hasNextPage.value =
+            snapshot.docs.length === pageSize &&
+            currentPage.value < totalPagesInSelectedProject.value
+
+          hasPrevPage.value = currentPage.value > 1
+        })
+      }
+    } catch (error) {
+      console.error('Error getting tasks:', error)
+      notificationsStore.displaySnackbar(
+        error.message || 'Failed to load tasks',
+        'error',
+        'mdi-close-circle'
+      )
+    }
+  }
   // const getTasksByProjectPaginated = async ({
   //   next = false,
   //   prev = false,
@@ -910,7 +1006,7 @@ export const useTaskStore = defineStore('tasks', () => {
   //   try {
   //     // Define the base query for tasks in the selected project
   //     let tasksRef = query(
-  //       collection(db, 'tasks'),
+  //       collectionGroup(db, 'tasks'), // Use collectionGroup to access all tasks
   //       where('createdBy', '==', userStore.userId), // Filter by user ID
   //       where('project', '==', selectedProject.value), // Filter by selected project
   //       orderBy('endDate', 'asc'), // Order by endDate first
@@ -931,7 +1027,6 @@ export const useTaskStore = defineStore('tasks', () => {
   //         snapshot.docChanges().forEach((change) => {
   //           updateTaskArray(allTasksProject, change)
   //         })
-
   //         // Update pagination state
   //         lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
   //         firstVisibleTask.value = snapshot.docs[0]
@@ -947,84 +1042,84 @@ export const useTaskStore = defineStore('tasks', () => {
   //     console.error('Error getting tasks:', error)
   //   }
   // }
-  const getTasksByProjectPaginated = async ({
-    next = false,
-    prev = false,
-    last = false,
-    first = false
-  } = {}) => {
-    try {
-      // Obtener el ID real del proyecto desde el store
-      const project = projectStore.projects.find((p) => p.title === selectedProject.value)
-      if (!project?.id) {
-        notificationsStore.displaySnackbar(
-          'Project not found in local state',
-          'error',
-          'mdi-alert-circle'
-        )
-        return
-      }
+  // const getTasksByProjectPaginated = async ({
+  //   next = false,
+  //   prev = false,
+  //   last = false,
+  //   first = false
+  // } = {}) => {
+  //   try {
+  //     // Obtener el ID real del proyecto desde el store
+  //     const project = projectStore.projects.find((p) => p.title === selectedProject.value)
+  //     if (!project?.id) {
+  //       notificationsStore.displaySnackbar(
+  //         'Project not found in local state',
+  //         'error',
+  //         'mdi-alert-circle'
+  //       )
+  //       return
+  //     }
 
-      // Construir la referencia base a la subcolección de tareas del proyecto
-      let tasksRef = query(
-        collection(db, 'users', userStore.userId, 'projects', project.id, 'tasks'),
-        orderBy('endDate', 'asc'),
-        orderBy('title', 'desc'),
-        limit(pageSize)
-      )
+  //     // Construir la referencia base a la subcolección de tareas del proyecto
+  //     let tasksRef = query(
+  //       collection(db, 'users', userStore.userId, 'projects', project.id, 'tasks'),
+  //       orderBy('endDate', 'asc'),
+  //       orderBy('title', 'desc'),
+  //       limit(pageSize)
+  //     )
 
-      // Aplicar lógica de paginación
-      tasksRef = applyPagination(tasksRef, next, prev, last, first)
+  //     // Aplicar lógica de paginación
+  //     tasksRef = applyPagination(tasksRef, next, prev, last, first)
 
-      if (tasksRef) {
-        // Limpiar datos anteriores
-        allTasksProject.value = []
+  //     if (tasksRef) {
+  //       // Limpiar datos anteriores
+  //       allTasksProject.value = []
 
-        // Suscribirse a los cambios
-        const unsubscribe = onSnapshot(
-          tasksRef,
-          (snapshot) => {
-            snapshot.docChanges().forEach((change) => {
-              const taskData = {
-                id: change.doc.id,
-                ...change.doc.data(),
-                // Convertir Timestamps a Date
-                startDate: change.doc.data().startDate?.toDate(),
-                endDate: change.doc.data().endDate?.toDate(),
-                createdAt: change.doc.data().createdAt?.toDate(),
-                updatedAt: change.doc.data().updatedAt?.toDate()
-              }
+  //       // Suscribirse a los cambios
+  //       const unsubscribe = onSnapshot(
+  //         tasksRef,
+  //         (snapshot) => {
+  //           snapshot.docChanges().forEach((change) => {
+  //             const taskData = {
+  //               id: change.doc.id,
+  //               ...change.doc.data(),
+  //               // Convertir Timestamps a Date
+  //               startDate: change.doc.data().startDate?.toDate(),
+  //               endDate: change.doc.data().endDate?.toDate(),
+  //               createdAt: change.doc.data().createdAt?.toDate(),
+  //               updatedAt: change.doc.data().updatedAt?.toDate()
+  //             }
 
-              updateTaskArray(allTasksProject, change, taskData)
-            })
+  //             updateTaskArray(allTasksProject, change, taskData)
+  //           })
 
-            // Actualizar estado de paginación
-            lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
-            firstVisibleTask.value = snapshot.docs[0]
-            hasNextPage.value = snapshot.docs.length === pageSize
-            hasPrevPage.value = currentPage.value > 1
+  //           // Actualizar estado de paginación
+  //           lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
+  //           firstVisibleTask.value = snapshot.docs[0]
+  //           hasNextPage.value = snapshot.docs.length === pageSize
+  //           hasPrevPage.value = currentPage.value > 1
 
-            // Actualizar cálculo de páginas
-            currentPage.value = Math.ceil(snapshot.docs.length / pageSize)
-          },
-          (error) => {
-            console.error('Snapshot error:', error)
-            notificationsStore.displaySnackbar('Error loading tasks', 'error', 'mdi-alert-circle')
-          }
-        )
+  //           // Actualizar cálculo de páginas
+  //           currentPage.value = Math.ceil(snapshot.docs.length / pageSize)
+  //         },
+  //         (error) => {
+  //           console.error('Snapshot error:', error)
+  //           notificationsStore.displaySnackbar('Error loading tasks', 'error', 'mdi-alert-circle')
+  //         }
+  //       )
 
-        // Guardar el unsubscribe en los listeners
-        listeners.value.projectsTasks = unsubscribe
-      }
-    } catch (error) {
-      console.error('Error getting tasks:', error)
-      notificationsStore.displaySnackbar(
-        error.message || 'Failed to load tasks',
-        'error',
-        'mdi-close-circle'
-      )
-    }
-  }
+  //       // Guardar el unsubscribe en los listeners
+  //       listeners.value.projectsTasks = unsubscribe
+  //     }
+  //   } catch (error) {
+  //     console.error('Error getting tasks:', error)
+  //     notificationsStore.displaySnackbar(
+  //       error.message || 'Failed to load tasks',
+  //       'error',
+  //       'mdi-close-circle'
+  //     )
+  //   }
+  // }
 
   // Mark a task as completed/uncompleted in Firestore
   // const completeTask = async (taskId) => {
@@ -1076,6 +1171,15 @@ export const useTaskStore = defineStore('tasks', () => {
   // }
   const completeTask = async (projectId, taskId) => {
     try {
+      if (!projectId || !taskId) {
+        console.error('Project ID or Task ID is undefined')
+        notificationsStore.displaySnackbar(
+          'Project ID or Task ID is undefined',
+          'error',
+          'mdi-alert-circle'
+        )
+        return
+      }
       const taskRef = doc(db, 'users', userStore.userId, 'projects', projectId, 'tasks', taskId)
       const taskDoc = await getDoc(taskRef)
 
@@ -1138,7 +1242,8 @@ export const useTaskStore = defineStore('tasks', () => {
 
       // Define the base query for filtered tasks
       let tasksRef = query(
-        collection(db, 'tasks'),
+        collectionGroup(db, 'tasks'),
+        where('createdBy', '==', userStore.userId), // Filter by user ID
         orderBy('endDate', 'asc'),
         orderBy('title', 'desc'),
         limit(pageSize)
@@ -1161,11 +1266,28 @@ export const useTaskStore = defineStore('tasks', () => {
       // Aplicar paginación
       q = applyPagination(q, next, prev, last, first)
 
+      // if (q) {
+      //   filteredTasks.value = []
+      //   onSnapshot(q, (snapshot) => {
+      //     snapshot.docChanges().forEach((change) => {
+      //       updateTaskArray(filteredTasks, change)
+      //     })
       if (q) {
         filteredTasks.value = []
         onSnapshot(q, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            updateTaskArray(filteredTasks, change)
+            // Crear taskData con los datos del documento y projectId
+            const taskData = {
+              id: change.doc.id,
+              ...change.doc.data(),
+              projectId: change.doc.ref.parent.parent?.id // Obtener projectId desde la referencia
+              // Convertir Timestamps a Date si es necesario
+              // startDate: change.doc.data().startDate?.toDate(),
+              // endDate: change.doc.data().endDate?.toDate(),
+              // createdAt: change.doc.data().createdAt?.toDate(),
+              // updatedAt: change.doc.data().updatedAt?.toDate()
+            }
+            updateTaskArray(filteredTasks, change, taskData)
           })
 
           lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
@@ -1433,9 +1555,13 @@ export const useTaskStore = defineStore('tasks', () => {
           id: taskId, // Asegurar que el ID está presente
           projectId: projectId // Mantener el ID del proyecto para referencia
         })
+      } else {
+        console.error('Task not found')
+        notificationsStore.displaySnackbar('Task not found', 'error', 'mdi-alert-circle')
       }
     } catch (error) {
       console.error('Error al cargar la tarea:', error)
+      notificationsStore.displaySnackbar('Error al cargar la tarea', 'error', 'mdi-alert-circle')
     }
   }
 
@@ -1469,6 +1595,21 @@ export const useTaskStore = defineStore('tasks', () => {
     hasNextPage.value = true
     hasPrevPage.value = false
     currentPage.value = 1
+  }
+
+  const clearTaskStore = () => {
+    tasksData.value = []
+    selectedProject.value = null
+    firstVisibleTask.value = null
+    lastVisibleTaskDoc.value = null
+    hasNextPage.value = true
+    hasPrevPage.value = false
+    currentPage.value = 1
+    allTasksProject.value = []
+    filteredTasks.value = []
+    error.value = null
+    noResultsMessage.value = false
+    resetFilters()
   }
 
   onMounted(() => {
@@ -1535,6 +1676,7 @@ export const useTaskStore = defineStore('tasks', () => {
     updateTask,
     completeTask,
     subscribeToTasks,
+    clearTaskStore,
     resetFilters,
     // Helper functions
     editTask,

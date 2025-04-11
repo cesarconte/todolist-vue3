@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watchEffect } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
+import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
@@ -13,6 +14,7 @@ import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 
 const dataStore = useDataStore()
+const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const { submitEditedTask } = useSubmitEditedTask()
@@ -176,9 +178,9 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.id)"
-                @delete-task="taskStore.deleteTask(task.id)"
-                @complete-task="taskStore.completeTask(task.id)"
+                @edit-task="taskStore.editTask(task.projectId, task.id)"
+                @delete-task="taskStore.deleteTask(task.projectId, task.id)"
+                @complete-task="taskStore.completeTask(task.projectId, task.id)"
               />
             </template>
             <template #fallback>

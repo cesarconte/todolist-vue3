@@ -5,6 +5,9 @@ import { signInWithPopup, GoogleAuthProvider, signOut, onIdTokenChanged } from '
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase.js'
 import { useRouter } from 'vue-router'
+import { useDataStore } from './dataStore.js'
+import { useTaskStore } from './taskStore.js'
+import { useProjectStore } from './projectStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 
 export const useUserStore = defineStore('user', () => {
@@ -13,6 +16,9 @@ export const useUserStore = defineStore('user', () => {
   const token = ref(null)
   const router = useRouter()
   const notificationsStore = useNotificationsStore()
+  const dataStore = useDataStore()
+  const taskStore = useTaskStore()
+  const projectStore = useProjectStore()
 
   // Getters
   const isLoggedIn = computed(() => !!user.value)
@@ -92,8 +98,27 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // Auth Listener
+  // const setupAuthListener = () => {
+  //   return onIdTokenChanged(auth, async (currentUser) => {
+  //     if (currentUser) {
+  //       user.value = currentUser
+  //       token.value = await currentUser.getIdToken()
+
+  //       try {
+  //         await createUserDocument(currentUser)
+  //       } catch (error) {
+  //         const { message, icon, level } = getErrorConfiguration(error, 'full')
+  //         notificationsStore.displaySnackbar(message, level, icon)
+  //         console.error('Sync error:', error)
+  //       }
+  //     } else {
+  //       user.value = null
+  //       token.value = null
+  //     }
+  //   })
+  // }
   const setupAuthListener = () => {
-    return onIdTokenChanged(auth, async (currentUser) => {
+    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
       if (currentUser) {
         user.value = currentUser
         token.value = await currentUser.getIdToken()
@@ -110,6 +135,7 @@ export const useUserStore = defineStore('user', () => {
         token.value = null
       }
     })
+    return unsubscribe // Return the unsubscribe function
   }
 
   // Initialize Auth Listener
@@ -213,6 +239,14 @@ export const useUserStore = defineStore('user', () => {
     try {
       const userName = user.value?.displayName || 'Guest'
       await signOut(auth)
+
+      // Clear data in all stores
+      dataStore.clearUserData()
+      // taskStore.resetFilters()
+      // taskStore.allTasksProject = []
+      // taskStore.tasksData = []
+      taskStore.clearTaskStore()
+      projectStore.clearProjectsData()
 
       notificationsStore.displaySnackbar(
         generateFarewellMessage(userName),
