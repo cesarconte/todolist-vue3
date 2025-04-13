@@ -25,7 +25,8 @@ const projectStore = useProjectStore() // Accesses the project store
 const taskStore = useTaskStore() // Accesses the task store
 const userStore = useUserStore() // Accesses the user store
 const notificationsStore = useNotificationsStore() // Accesses the notifications store
-const { submitNewTask } = useSubmitNewTask() // Accesses the submitNewTask function
+const taskFormRef = ref(null) // Reference to the form
+const { submitNewTask } = useSubmitNewTask(taskFormRef) // Accesses the submitNewTask function
 
 /************************************
  * Router
@@ -48,7 +49,6 @@ const dialogAddProject = ref(false) // Controls the add project dialog
 const showNotificationsList = ref(false) // Controls the notifications list dialog
 const showNotificationsSettings = ref(false) // Controls the notifications settings dialog
 const settingsMenu = ref(false) // Controls the settings menu
-const taskFormRef = ref(null) // Reference to the form
 const formAddProject = ref(null) // Reference to the add project form
 const loginParagraph = ref(null) // Reference to the login paragraph
 const snackbar = ref(false) // Controls the snackbar visibility

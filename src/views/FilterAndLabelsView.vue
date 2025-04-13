@@ -317,9 +317,9 @@ when you pass JavaScript Date objects to the where clause. */
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.id)"
-                @delete-task="taskStore.deleteTask(task.id)"
-                @complete-task="taskStore.completeTask(task.id)"
+                @edit-task="taskStore.editTask(task.projectId, task.id)"
+                @delete-task="taskStore.deleteTask(task.projectId, task.id)"
+                @complete-task="taskStore.completeTask(task.projectId, task.id)"
               />
             </template>
             <template #fallback>

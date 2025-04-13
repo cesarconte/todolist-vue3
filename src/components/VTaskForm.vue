@@ -1,3 +1,70 @@
+<script setup>
+import { ref, reactive, watch } from 'vue'
+import { useDisplay } from 'vuetify'
+
+const { xs } = useDisplay()
+
+const props = defineProps({
+  modelValue: {
+    type: Object,
+    required: true
+  },
+  projects: {
+    type: Array,
+    default: () => []
+  },
+  labels: {
+    type: Array,
+    default: () => []
+  },
+  priorities: {
+    type: Array,
+    default: () => []
+  },
+  statuses: {
+    type: Array,
+    default: () => []
+  },
+  rules: {
+    type: Array,
+    default: () => [(v) => !!v || 'This field is required']
+  }
+})
+
+const emit = defineEmits(['update:modelValue', 'submit'])
+
+const formData = reactive({ ...props.modelValue })
+
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    Object.assign(formData, newValue)
+  },
+  { deep: true }
+)
+
+watch(
+  formData,
+  (newValue) => {
+    emit('update:modelValue', newValue)
+  },
+  { deep: true }
+)
+
+const menuStart = ref(false)
+const menuEnd = ref(false)
+const taskFormRef = ref(null)
+
+defineExpose({
+  validate: () => taskFormRef.value?.validate(),
+  reset: () => {
+    Object.assign(formData, props.modelValue)
+    taskFormRef.value?.reset()
+  },
+  resetValidation: () => taskFormRef.value?.resetValidation()
+})
+</script>
+
 <template>
   <v-form class="form" ref="taskFormRef" @submit.prevent="$emit('submit')">
     <v-text-field
@@ -172,73 +239,6 @@
     <slot name="actions"></slot>
   </v-form>
 </template>
-
-<script setup>
-import { ref, reactive, watch } from 'vue'
-import { useDisplay } from 'vuetify'
-
-const { xs } = useDisplay()
-
-const props = defineProps({
-  modelValue: {
-    type: Object,
-    required: true
-  },
-  projects: {
-    type: Array,
-    default: () => []
-  },
-  labels: {
-    type: Array,
-    default: () => []
-  },
-  priorities: {
-    type: Array,
-    default: () => []
-  },
-  statuses: {
-    type: Array,
-    default: () => []
-  },
-  rules: {
-    type: Array,
-    default: () => [(v) => !!v || 'This field is required']
-  }
-})
-
-const emit = defineEmits(['update:modelValue', 'submit'])
-
-const formData = reactive({ ...props.modelValue })
-
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    Object.assign(formData, newValue)
-  },
-  { deep: true }
-)
-
-watch(
-  formData,
-  (newValue) => {
-    emit('update:modelValue', newValue)
-  },
-  { deep: true }
-)
-
-const menuStart = ref(false)
-const menuEnd = ref(false)
-const taskFormRef = ref(null)
-
-defineExpose({
-  validate: () => taskFormRef.value?.validate(),
-  reset: () => {
-    Object.assign(formData, props.modelValue)
-    taskFormRef.value?.reset()
-  },
-  resetValidation: () => taskFormRef.value?.resetValidation()
-})
-</script>
 
 <style scoped>
 .taskFormRef {

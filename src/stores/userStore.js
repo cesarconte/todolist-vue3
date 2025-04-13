@@ -98,25 +98,6 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // Auth Listener
-  // const setupAuthListener = () => {
-  //   return onIdTokenChanged(auth, async (currentUser) => {
-  //     if (currentUser) {
-  //       user.value = currentUser
-  //       token.value = await currentUser.getIdToken()
-
-  //       try {
-  //         await createUserDocument(currentUser)
-  //       } catch (error) {
-  //         const { message, icon, level } = getErrorConfiguration(error, 'full')
-  //         notificationsStore.displaySnackbar(message, level, icon)
-  //         console.error('Sync error:', error)
-  //       }
-  //     } else {
-  //       user.value = null
-  //       token.value = null
-  //     }
-  //   })
-  // }
   const setupAuthListener = () => {
     const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -269,7 +250,7 @@ export const useUserStore = defineStore('user', () => {
   const generateFarewellMessage = (name) => {
     const messages = [
       `See you soon, ${name}! 👋`,
-      `Until next time, ${name}!`,
+      `Until next time, ${name}! 👋`,
       `Have a great ${getTimePeriod()}, ${name}! ${getTimeEmoji()}`
     ]
     return messages[Math.floor(Math.random() * messages.length)]

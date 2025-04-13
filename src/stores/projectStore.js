@@ -252,6 +252,11 @@ export const useProjectStore = defineStore('projects', () => {
       const currentUserId = userStore.userId
       const projectId = selectedProjectId.value
 
+      if (!projectId) {
+        notificationsStore.displaySnackbar('Project ID is undefined.', 'error', 'mdi-alert-circle')
+        return
+      }
+
       // Obtener referencia del proyecto
       const projectRef = doc(db, 'users', currentUserId, 'projects', projectId)
       const projectDoc = await getDoc(projectRef)
@@ -270,8 +275,8 @@ export const useProjectStore = defineStore('projects', () => {
 
       // 1. Obtener todas las tareas del proyecto
       const tasksQuery = query(
-        collection(db, 'users', currentUserId, 'tasks'),
-        where('projectId', '==', projectId)
+        collection(db, 'users', currentUserId, 'projects', projectId, 'tasks')
+        // where('projectId', '==', projectId)
       )
       const tasksSnapshot = await getDocs(tasksQuery)
 
@@ -297,7 +302,8 @@ export const useProjectStore = defineStore('projects', () => {
         // batch.update(doc(db, 'users', currentUserId), {
         //   createdTasks: arrayRemove(taskId)
         // })
-        batch.delete(doc(db, 'users', currentUserId, 'projects', projectId, 'tasks', taskId))
+        // batch.delete(doc(db, 'users', currentUserId, 'projects', projectId, 'tasks', taskId))
+        batch.delete(taskDoc.ref)
       }
 
       // 5. Eliminar todas las notificaciones encontradas
@@ -314,6 +320,7 @@ export const useProjectStore = defineStore('projects', () => {
       )
       router.push('/')
     } catch (error) {
+      console.error('Error deleting all tasks in project:', error)
       notificationsStore.displaySnackbar(`Error: ${error.message}`, 'error', 'mdi-close-circle')
     }
   }

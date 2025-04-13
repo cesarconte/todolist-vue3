@@ -2,7 +2,7 @@
 import { useTaskStore } from '@/stores/taskStore'
 import { formatDate } from '@/utils/dateFormat'
 
-export function useSubmitNewTask() {
+export function useSubmitNewTask(taskFormRef) {
   const taskStore = useTaskStore()
 
   const submitNewTask = async () => {
@@ -17,6 +17,8 @@ export function useSubmitNewTask() {
       }
 
       await taskStore.createTask(newTaskData)
+      // Reset the form
+      taskFormRef.value?.reset()
     } catch (error) {
       console.error('Error creating task:', error)
       throw error
