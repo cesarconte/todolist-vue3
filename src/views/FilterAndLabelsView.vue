@@ -1,7 +1,7 @@
 <!-- FilterAndLabelsView.vue  -->
 
 <script setup>
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, onUnmounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -10,6 +10,7 @@ import { useDisplay } from 'vuetify'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import { useResetForm } from '@/composables/useResetForm'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VPagination from '@/components/VPagination.vue'
@@ -19,11 +20,24 @@ const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+
+const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
+const { reset } = useResetForm(form)
 
 const showCards = ref(false)
-const form = ref(null)
 const showAlert = ref(false)
+
+// Cleanup al desmontar el componente
+// onUnmounted(() => {
+//   if (taskStore.listeners.filteredTasks) {
+//     taskStore.listeners.filteredTasks()
+//     taskStore.listeners.filteredTasks = null
+//   }
+// })
+onUnmounted(() => {
+  taskStore.unsubscribeAll() // O limpiar específicamente filteredTasks
+})
 
 // Watch for changes in any of the filters and fetch filtered tasks
 watchEffect(async () => {
@@ -35,18 +49,24 @@ watchEffect(async () => {
     taskStore.selectedLabels.length > 0 ||
     taskStore.selectedEndDate
 
-  if (userStore.isLoggedIn) {
-    // Check if logged in only before fetching data
-    if (hasFiltersSelected) {
+  // Clean up previous listeners
+  if (taskStore.listeners.filteredTasks) {
+    taskStore.listeners.filteredTasks()
+    taskStore.listeners.filteredTasks = null
+  }
+  // Check if the user is logged in and if there are filters selected
+  if (userStore.isLoggedIn && hasFiltersSelected) {
+    try {
+      taskStore.isLoading = true
       await taskStore.getFilteredTasksPaginated()
       showCards.value = true
-    } else {
-      taskStore.filteredTasks.value = []
-      showCards.value = false
+      console.log('Filtered Tasks:', taskStore.filteredTasks)
+    } finally {
+      taskStore.isLoading = false
     }
-  } else if (hasFiltersSelected) {
-    // User is not logged in and tried to use filters
-    showAlert.value = true
+  } else {
+    showCards.value = false
+    if (hasFiltersSelected) showAlert.value = true
   }
 })
 
@@ -63,10 +83,10 @@ const handleClearDate = () => {
 }
 
 // Define the reset function to reset the form values
-const reset = () => {
-  form.value.reset()
-  alert('Form has been reset.')
-}
+// const reset = () => {
+//   form.value.reset()
+//   alert('Form has been reset.')
+// }
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
@@ -291,42 +311,61 @@ when you pass JavaScript Date objects to the where clause. */
           :thickness="1"
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
-        <v-col
-          v-for="(task, i) in taskStore.filteredTasks"
-          :key="i"
-          :task="task"
-          :value="task"
-          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-          lg="6"
-          :class="mdAndDown ? 'mx-auto' : ''"
-        >
-          <Suspense>
-            <template #default>
-              <VCardTask
-                v-if="task"
-                :key="task.id"
-                :title="task.title"
-                :id="task.id"
-                :description="task.description"
-                :label="task.label"
-                :project="task.project"
-                :priority="task.priority"
-                :status="task.status"
-                :startDate="task.startDate"
-                :endDate="task.endDate"
-                :createdAt="task.createdAt"
-                :completed="task.completed"
-                :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.projectId, task.id)"
-                @delete-task="taskStore.deleteTask(task.projectId, task.id)"
-                @complete-task="taskStore.completeTask(task.projectId, task.id)"
-              />
-            </template>
-            <template #fallback>
-              <div class="fallback">Loading...</div>
-            </template>
-          </Suspense>
-        </v-col>
+        <template v-if="!taskStore.isLoading">
+          <v-col
+            v-for="(task, i) in taskStore.filteredTasks"
+            :key="i"
+            :task="task"
+            :value="task"
+            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
+            lg="6"
+            :class="mdAndDown ? 'mx-auto' : ''"
+          >
+            <Suspense>
+              <template #default>
+                <VCardTask
+                  v-if="task"
+                  :key="task.id"
+                  :title="task.title"
+                  :id="task.id"
+                  :description="task.description"
+                  :label="task.label"
+                  :project="task.project"
+                  :priority="task.priority"
+                  :status="task.status"
+                  :startDate="task.startDate"
+                  :endDate="task.endDate"
+                  :createdAt="task.createdAt"
+                  :completed="task.completed"
+                  :color="task.color ? task.color : 'default'"
+                  @edit-task="taskStore.editTask(task.projectId, task.id)"
+                  @delete-task="taskStore.deleteTask(task.projectId, task.id)"
+                  @complete-task="taskStore.completeTask(task.projectId, task.id)"
+                />
+              </template>
+              <template #fallback>
+                <div class="fallback">Loading...</div>
+              </template>
+            </Suspense>
+          </v-col>
+        </template>
+        <template v-else>
+          <v-col
+            v-for="n in 4"
+            :key="n"
+            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
+            lg="6"
+            :class="mdAndDown ? 'mx-auto' : ''"
+          >
+            <div class="fallback">
+              <v-progress-circular
+                indeterminate
+                color="red-darken-2"
+                size="64"
+              ></v-progress-circular>
+            </div>
+          </v-col>
+        </template>
         <v-col
           v-if="taskStore.noResultsMessage"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
@@ -357,7 +396,7 @@ when you pass JavaScript Date objects to the where clause. */
           @last-page="taskStore.getFilteredTasksPaginated({ last: true })"
         >
           <template #default>
-            Page {{ taskStore.currentPage }} of {{ taskStore.totalPagesInFilteredTasks }}
+            Page {{ taskStore.currentPage }} of {{ taskStore.totalPagesInFilteredTasks || 1 }}
           </template>
         </VPagination>
       </v-row>
@@ -404,5 +443,36 @@ when you pass JavaScript Date objects to the where clause. */
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
+}
+
+.tasks {
+  min-height: 60vh;
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.tasks-loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.fallback {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin: 16px;
+}
+
+.v-col .fallback {
+  height: 200px;
+  width: 100%;
+}
+
+.date-create-task {
+  max-width: 300px;
+  margin: 0 auto;
 }
 </style>

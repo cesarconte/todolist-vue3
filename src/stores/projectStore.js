@@ -82,29 +82,6 @@ export const useProjectStore = defineStore('projects', () => {
     })
   }
 
-  // const subscribeToCollection = (collectionName, targetRef) => {
-  //   const collectionRef = query(
-  //     collection(db, 'users', userStore.userId, collectionName),
-  //     orderBy('title', 'asc')
-  //   )
-  //   listeners.value[collectionName] = onSnapshot(collectionRef, (snapshot) => {
-  //     snapshot.docChanges().forEach((change) => {
-  //       const index = targetRef.value.findIndex((item) => item.id === change.doc.id)
-  //       switch (change.type) {
-  //         case 'added':
-  //           if (index === -1) targetRef.value.push({ id: change.doc.id, ...change.doc.data() })
-  //           break
-  //         case 'modified':
-  //           if (index !== -1)
-  //             targetRef.value.splice(index, 1, { id: change.doc.id, ...change.doc.data() })
-  //           break
-  //         case 'removed':
-  //           if (index !== -1) targetRef.value.splice(index, 1)
-  //           break
-  //       }
-  //     })
-  //   })
-  // }
   const subscribeToCollection = () => {
     // if (!userStore.isLoggedIn) {
     //   console.warn('Not subscribed to projects as user is not logged in.')
@@ -166,7 +143,6 @@ export const useProjectStore = defineStore('projects', () => {
           updatedAt: serverTimestamp(),
           projectId: newProject.title.toLowerCase().replace(/\s/g, '-'),
           userId: userStore.userId
-          // createdBy: userStore.userId
         })
         notificationsStore.displaySnackbar('Project created!', 'success', 'mdi-check-circle')
       } else {
@@ -203,13 +179,28 @@ export const useProjectStore = defineStore('projects', () => {
         const projectData = projectDoc.data()
 
         // Check if the user owns the project
-        if (projectData.createdBy === userStore.userId) {
+        if (projectData.userId === userStore.userId) {
           // Update the project in Firestore
           await updateDoc(projectRef, {
             ...editedProject,
             updatedAt: serverTimestamp(),
             projectId: editedProject.title.toLowerCase().replace(/\s/g, '-')
           })
+
+          // Update tasks color
+          const tasksQuery = query(
+            collection(db, 'users', userStore.userId, 'projects', projectId, 'tasks')
+          )
+          const tasksSnapshot = await getDocs(tasksQuery)
+
+          const batch = writeBatch(db)
+
+          tasksSnapshot.forEach((taskDoc) => {
+            batch.update(taskDoc.ref, { color: editedProject.color })
+          })
+
+          await batch.commit()
+
           // Display a success message
           notificationsStore.displaySnackbar('Project updated!', 'success', 'mdi-check-circle')
         } else {
@@ -298,11 +289,6 @@ export const useProjectStore = defineStore('projects', () => {
         notificationsSnapshot.forEach((doc) => notificationsToDelete.push(doc.ref))
 
         // 4. Eliminar tarea y actualizar usuario
-        // batch.delete(taskDoc.ref)
-        // batch.update(doc(db, 'users', currentUserId), {
-        //   createdTasks: arrayRemove(taskId)
-        // })
-        // batch.delete(doc(db, 'users', currentUserId, 'projects', projectId, 'tasks', taskId))
         batch.delete(taskDoc.ref)
       }
 
@@ -325,66 +311,7 @@ export const useProjectStore = defineStore('projects', () => {
     }
   }
 
-  // const deleteProject = async (projectId) => {
-  //   try {
-  //     // Check if a user is logged in
-  //     if (!userStore.isLoggedIn) {
-  //       console.error('User must be logged in to delete a project.')
-  //       notificationsStore.displaySnackbar(
-  //         'Please log in to delete a project.',
-  //         'error',
-  //         'mdi-account-off'
-  //       )
-  //       return // Stop execution if not logged in
-  //     }
-
-  //     const currentUserId = userStore.userId
-  //     // Fetch the project from Firestore to check ownership
-  //     const projectRef = doc(db, 'users', currentUserId, 'projects', projectId)
-  //     const projectDoc = await getDoc(projectRef)
-  //     const projectData = projectDoc.data()
-
-  //     // Check if the user owns the project
-  //     if (projectData.userId === userStore.userId) {
-  //       // Delete all tasks in the project
-  //       await deleteAllTasksInProject(projectId)
-
-  //       // Delete the project from Firestore
-  //       await deleteDoc(projectRef)
-
-  //       // Display a success message
-  //       notificationsStore.displaySnackbar(
-  //         'Project deleted successfully',
-  //         'success',
-  //         'mdi-check-circle'
-  //       )
-
-  //       // Update taskStore.selectedProject if it matches the deleted project
-  //       if (selectedProject.value === projectId) {
-  //         selectedProject.value = null
-  //       }
-
-  //       // Redirect to '/' after deleting the project
-  //       router.push('/')
-  //     } else {
-  //       // Handle unauthorized access (e.g., show an error message)
-  //       console.error('Unauthorized access to project:', projectId)
-  //       notificationsStore.displaySnackbar(
-  //         'You are not authorized to delete this project.',
-  //         'warning',
-  //         'mdi-alert-circle'
-  //       )
-  //     }
-  //   } catch (error) {
-  //     // Display an error message
-  //     console.error('Error deleting project:', error)
-  //     notificationsStore.displaySnackbar(
-  //       'Error deleting project: ' + error.message + ' Please try again!',
-  //       'error',
-  //       'mdi-close-circle'
-  //     )
-  //   }
-  // }
+  // Delete a project
   const deleteProject = async (projectId) => {
     try {
       if (!userStore.isLoggedIn) {
@@ -446,25 +373,8 @@ export const useProjectStore = defineStore('projects', () => {
     }
   }
 
-  // Lifecycle
-  // onMounted(() => {
-  //   // Check if a user is logged in
-  //   if (!userStore.isLoggedIn) {
-  //     console.warn('User is not logged in. Not subscribing to projects.')
-  //     return
-  //   }
-  //   // Subscribe to the projects collection
-  //   subscribeToCollection('projects', projectsData)
-  // })
-
-  // onUnmounted(() => {
-  //   Object.values(listeners.value).forEach((unsubscribe) => unsubscribe?.())
-  //   clearProjectsData()
-  // })
-  // onUnmounted(() => {
-  //   listeners.value.projects?.() // Unsubscribe only the projects listener
-  //   clearProjectsData()
-  // })
+  // Watchers
+  // Watch for changes in userId to subscribe to the collection
   watch(
     () => userStore.userId,
     (newUserId) => {

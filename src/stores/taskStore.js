@@ -1,12 +1,17 @@
 // taskStore.js
 import { defineStore } from 'pinia'
+
+// Import local store modules
 import { useDataStore } from './dataStore.js'
+import { useNotificationsStore } from './notificationsStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
-import { useNotificationsStore } from './notificationsStore.js'
+
+// Import composables
 import { validTaskForm } from '@/composables/validationFormRules.js'
+
+// Import Firebase modules
 import { db } from '../firebase.js'
-import { ref, computed, watch, reactive, onMounted } from 'vue'
 import {
   doc,
   updateDoc,
@@ -26,6 +31,11 @@ import {
   limitToLast,
   collectionGroup
 } from 'firebase/firestore'
+
+// Import Vue core utilities
+import { ref, computed, watch, reactive, onMounted } from 'vue'
+
+// Import local utility functions
 import {
   convertTimestamp,
   combineDateTime,
@@ -40,38 +50,15 @@ export const useTaskStore = defineStore('tasks', () => {
   const notificationsStore = useNotificationsStore()
 
   // State
-  const tasksData = ref([])
-  const selectedProject = ref(null)
-  const pageSize = 6
-  const firstVisibleTask = ref(null)
-  const lastVisibleTaskDoc = ref(null)
-  /* ===> Recommendation:
-  For pagination, it's better to use lastVisibleTaskDoc,
-  because it allows you to interact directly with the Firestore document
-  and efficiently fetch the subsequent documents.
+  // --- Task Data ---
+  const tasksData = ref([]) // Array to store the main list of tasks
+  const allTasksProject = ref([]) // Array to store all tasks for the currently selected project (potentially for calculations)
+  const filteredTasks = ref([]) // Array to store tasks after applying filters
+  const isLoading = ref(false) // Flag to indicate if tasks are being loaded
 
-  Explanation:
-  * lastVisibleTaskDoc is a reference to the actual Firestore document that represents
-  the last visible task on the current page.
-  * Using lastVisibleTaskDoc with the startAfter method in Firestore allows you to fetch
-  the next page of documents efficiently, starting from the last visible document.
-  * This approach is more efficient than using lastVisibleTask because it avoids
-  fetching the entire dataset every time you want to navigate to a different page. */
-  const hasNextPage = ref(true)
-  const hasPrevPage = ref(false)
-  const currentPage = ref(1)
-  const allTasksProject = ref([])
-  const searchTaskTitle = ref(null)
-  const selectedProjects = ref([])
-  const selectedPriorities = ref([])
-  const selectedStatuses = ref([])
-  const selectedLabels = ref([])
-  const selectedEndDate = ref(null)
-  const filteredTasks = ref([])
-  const error = ref(null) // Store error messages
-  const dialogEditTask = ref(false)
-  const noResultsMessage = ref(false)
+  // --- Current/Editing Task State ---
   const newTask = reactive({
+    // Reactive object for creating new tasks
     title: '',
     description: '',
     project: '',
@@ -88,6 +75,7 @@ export const useTaskStore = defineStore('tasks', () => {
     projectId: ''
   })
   const editedTask = reactive({
+    // Reactive object for editing existing tasks
     title: '',
     description: '',
     project: '',
@@ -100,30 +88,62 @@ export const useTaskStore = defineStore('tasks', () => {
     endDateHour: null,
     updatedAt: serverTimestamp()
   })
-  const isSaving = ref(false)
+  const isSaving = ref(false) // Flag to indicate if a task creation/update operation is in progress
 
-  const listeners = ref({
-    tasks: null
+  // --- Selection & Filters ---
+  const selectedProject = ref(null) // Ref to store the title of the currently selected project
+  const searchTaskTitle = ref(null) // Ref to store the search term for filtering tasks by title
+  const selectedProjects = ref([]) // Ref to store an array of selected project titles for filtering
+  const selectedPriorities = ref([]) // Ref to store an array of selected priorities for filtering
+  const selectedStatuses = ref([]) // Ref to store an array of selected statuses for filtering
+  const selectedLabels = ref([]) // Ref to store an array of selected labels for filtering
+  const selectedEndDate = ref(null) // Ref to store the selected end date for filtering
+
+  // --- Pagination ---
+  const pageSize = 6 // Number of tasks to display per page
+  const firstVisibleTask = ref(null) // Ref to store the first visible task document on the current page (for pagination)
+  const lastVisibleTaskDoc = ref(null) // Ref to store the last visible task document on the current page (for pagination)
+  const hasNextPage = ref(true) // Flag to indicate if there is a next page of tasks
+  const hasPrevPage = ref(false) // Flag to indicate if there is a previous page of tasks
+  const currentPage = ref(1) // Ref to store the current page number
+  /* ===> Recommendation:
+  For pagination, it's better to use lastVisibleTaskDoc,
+  because it allows you to interact directly with the Firestore document
+  and efficiently fetch the subsequent documents.
+
+  Explanation:
+  * lastVisibleTaskDoc is a reference to the actual Firestore document that represents
+  the last visible task on the current page.
+  * Using lastVisibleTaskDoc with the startAfter method in Firestore allows you to fetch
+  the next page of documents efficiently, starting from the last visible document.
+  * This approach is more efficient than using lastVisibleTask because it avoids
+  fetching the entire dataset every time you want to navigate to a different page. */
+
+  // --- UI State & Errors ---
+  const error = ref(null) // Ref to store error messages
+  const dialogEditTask = ref(false) // Ref to control the visibility of the edit task dialog
+  const noResultsMessage = ref(false) // Flag to indicate if there are no tasks matching the current filters
+  // const listeners = ref({ tasks: null }) // Ref to store Firestore listener unsubscribe functions
+
+  // --- Listeners Management ---
+  const listeners = reactive({
+    tasks: null, // Listener principal de tareas
+    projectTasks: null, // Listener de tareas por proyecto
+    filteredTasks: null // Listener de tareas filtradas
   })
+  // Getters (computed properties)
 
-  // Getters
+  // --- Core Data Accessors ---
   const tasks = computed(() => {
     return tasksData.value.map((task) => ({
       ...task,
-      projectId: task.projectPath,
+      // projectId: task.projectPath,
       project: projectStore.projects.find((p) => p.id === task.projectId) || {
-        title: 'Sin proyecto',
+        // Default project if not found
+        title: 'No Project',
         color: '#ccc'
       }
     }))
-  })
-
-  const newTaskData = computed(() => {
-    return newTask
-  })
-
-  const editedTaskData = computed(() => {
-    return editedTask
   })
 
   const projects = computed(() => {
@@ -146,6 +166,16 @@ export const useTaskStore = defineStore('tasks', () => {
     return dataStore.colors
   })
 
+  // --- Form Data Accessors ---
+  const newTaskData = computed(() => {
+    return newTask
+  })
+
+  const editedTaskData = computed(() => {
+    return editedTask
+  })
+
+  // --- Project Specific Getters ---
   const isSelectedProject = computed(() => {
     return projects.value.find((project) => project.title === selectedProject.value)
   })
@@ -163,10 +193,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   })
 
-  const totalPagesInSelectedProject = computed(() => {
-    return Math.ceil(tasksInSelectedProject.value.length / pageSize)
-  })
-
+  // --- Filtered Tasks Getters ---
   const tasksInFilteredTasks = computed(() => {
     // Start with all tasks
     let filteredTasks = tasks.value
@@ -199,10 +226,16 @@ export const useTaskStore = defineStore('tasks', () => {
     return filteredTasks
   })
 
+  // --- Pagination Getters ---
+  const totalPagesInSelectedProject = computed(() => {
+    return Math.ceil(tasksInSelectedProject.value.length / pageSize)
+  })
+
   const totalPagesInFilteredTasks = computed(() => {
     return Math.ceil(tasksInFilteredTasks.value.length / pageSize)
   })
 
+  // --- Task Status Getters ---
   const completedTasks = computed(() => {
     return tasks.value.filter((task) => task.completed)
   })
@@ -219,15 +252,12 @@ export const useTaskStore = defineStore('tasks', () => {
     return tasksInSelectedProject.value.filter((task) => !task.completed)
   })
 
-  // const projectColor = computed(() => {
-  //   const project = projects.value.find((project) => project.title === selectedProject.value)
-  //   return project?.color || 'default'
-  // })
+  // --- UI Helper Getters ---
   const projectColor = computed(
     () => projects.value.find((p) => p.title === selectedProject.value)?.color || 'default'
   )
 
-  // Query Helpers
+  // --- Query Helper Functions ---
   const getBaseTasksQuery = (userId) => {
     return query(
       collectionGroup(db, 'tasks'),
@@ -254,32 +284,8 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   // Actions
-  const handleTaskSnapshot = (snapshot) => {
-    snapshot.docChanges().forEach((change) => {
-      const index = tasksData.value.findIndex((t) => t.id === change.doc.id)
-      const taskData = createTaskData(change.doc)
 
-      switch (change.type) {
-        case 'added':
-          if (index === -1) tasksData.value.push(taskData)
-          break
-        case 'modified':
-          if (index !== -1) tasksData.value.splice(index, 1, taskData)
-          break
-        case 'removed':
-          if (index !== -1) tasksData.value.splice(index, 1)
-          break
-      }
-    })
-  }
-
-  const subscribeToTasks = () => {
-    if (!userStore.userId) return
-
-    const tasksQuery = getBaseTasksQuery(userStore.userId)
-    listeners.value.tasks = onSnapshot(tasksQuery, handleTaskSnapshot)
-  }
-
+  // --- Task Management (CRUD Operations) ---
   // Get a single task from Firestore
   const getTask = async (projectId, taskId) => {
     try {
@@ -291,19 +297,6 @@ export const useTaskStore = defineStore('tasks', () => {
       const taskRef = doc(db, 'users', userStore.userId, 'projects', projectId, 'tasks', taskId)
       const taskDoc = await getDoc(taskRef)
 
-      // if (taskDoc.exists()) {
-      //   const taskData = taskDoc.data()
-
-      //   return {
-      //     id: taskDoc.id,
-      //     ...taskData,
-      //     startDate: convertTimestamp(taskData.startDate),
-      //     endDate: convertTimestamp(taskData.endDate),
-      //     createdAt: convertTimestamp(taskData.createdAt),
-      //     updatedAt: convertTimestamp(taskData.updatedAt)
-      //   }
-      // }
-      // return null
       return taskDoc.exists()
         ? {
             id: taskDoc.id,
@@ -417,6 +410,29 @@ export const useTaskStore = defineStore('tasks', () => {
       throw error // Throws the error for additional handling if necessary
     } finally {
       isSaving.value = false
+    }
+  }
+
+  // Edit a task in Firestore
+  const editTask = async (projectId, taskId) => {
+    try {
+      dialogEditTask.value = true
+      // Fetch the task data from Firestore
+      const task = await getTask(projectId, taskId)
+
+      if (task) {
+        Object.assign(editedTask, {
+          ...task,
+          id: taskId, // Keep the task ID for reference
+          projectId: projectId // Keep the project ID for reference
+        })
+      } else {
+        console.error('Task not found')
+        notificationsStore.displaySnackbar('Task not found', 'error', 'mdi-alert-circle')
+      }
+    } catch (error) {
+      console.error('Error al cargar la tarea:', error)
+      notificationsStore.displaySnackbar('Error al cargar la tarea', 'error', 'mdi-alert-circle')
     }
   }
 
@@ -576,89 +592,7 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  // Helper function to validate user and project
-  const validateProjectAndUser = async () => {
-    if (!userStore.userId) {
-      notificationsStore.displaySnackbar(
-        'User ID is undefined. Please log in.',
-        'error',
-        'mdi-account-off'
-      )
-      return false
-    }
-
-    if (!selectedProject.value) {
-      notificationsStore.displaySnackbar('No project selected.', 'error', 'mdi-alert-circle')
-      console.warn('No project selected.')
-      return false
-    }
-
-    const project = projectStore.projects.find((p) => p.title === selectedProject.value)
-    if (!project?.id) {
-      notificationsStore.displaySnackbar(
-        'Project not found in local state',
-        'error',
-        'mdi-alert-circle'
-      )
-      return false
-    }
-
-    return project
-  }
-
-  // Helper function to subscribe to task updates
-  const subscribeToTaskUpdates = (tasksRef, allTasksProject) => {
-    onSnapshot(tasksRef, (snapshot) => {
-      handleTaskSnapshot(snapshot, allTasksProject)
-      updatePaginationState(snapshot)
-    })
-  }
-
-  // Helper function to update pagination state
-  const updatePaginationState = (snapshot) => {
-    lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
-    firstVisibleTask.value = snapshot.docs[0]
-    hasNextPage.value =
-      snapshot.docs.length === pageSize && currentPage.value < totalPagesInSelectedProject.value
-
-    hasPrevPage.value = currentPage.value > 1
-  }
-
-  // Get tasks by project paginated
-  const getTasksByProjectPaginated = async ({
-    next = false,
-    prev = false,
-    last = false,
-    first = false
-  } = {}) => {
-    try {
-      const project = await validateProjectAndUser()
-      if (!project) return
-
-      // Define the base query for tasks in the selected project
-      // let tasksRef = defineBaseTaskQuery(userStore.userId, project.id)
-      let tasksRef = getProjectTasksQuery(userStore.userId, project.id)
-
-      // Apply pagination logic based on options
-      tasksRef = applyPagination(tasksRef, next, prev, last, first)
-
-      if (tasksRef) {
-        // Clear the allTasksProject array before fetching new data
-        allTasksProject.value = []
-
-        // Subscribe to the new listener
-        subscribeToTaskUpdates(tasksRef, allTasksProject)
-      }
-    } catch (error) {
-      console.error('Error getting tasks:', error)
-      notificationsStore.displaySnackbar(
-        error.message || 'Failed to load tasks',
-        'error',
-        'mdi-close-circle'
-      )
-    }
-  }
-
+  // --- Task Status Updates ---
   // Set the task as completed or in progress
   const completeTask = async (projectId, taskId) => {
     try {
@@ -702,11 +636,110 @@ export const useTaskStore = defineStore('tasks', () => {
     }
   }
 
-  // Set the selected project title
-  const setSelectedProject = (projectName) => {
-    selectedProject.value = projectName // Store the project title
+  // --- Data Subscription ---
+  const handleProjectTasksSnapshot = (snapshot, allTasksProject) => {
+    snapshot.docChanges().forEach((change) => {
+      const taskData = createTaskData(change.doc)
+      const index = allTasksProject.value.findIndex((t) => t.id === change.doc.id)
+
+      switch (change.type) {
+        case 'added':
+          if (index === -1) allTasksProject.value.push(taskData)
+          break
+        case 'modified':
+          if (index !== -1) allTasksProject.value.splice(index, 1, taskData)
+          break
+        case 'removed':
+          if (index !== -1) allTasksProject.value.splice(index, 1)
+          break
+      }
+    })
   }
 
+  const handleAllTasksSnapshot = (snapshot) => {
+    snapshot.docChanges().forEach((change) => {
+      const taskData = createTaskData(change.doc)
+      const index = tasksData.value.findIndex((t) => t.id === change.doc.id)
+
+      switch (change.type) {
+        case 'added':
+          if (index === -1) tasksData.value.push(taskData)
+          break
+        case 'modified':
+          if (index !== -1) {
+            const projectColor =
+              projectStore.projects.find((p) => p.id === taskData.projectId)?.color || 'default'
+            taskData.projectColor = projectColor
+            tasksData.value.splice(index, 1, taskData)
+          }
+          break
+        case 'removed':
+          if (index !== -1) tasksData.value.splice(index, 1)
+          break
+      }
+    })
+  }
+
+  // const subscribeToTasks = () => {
+  //   if (!userStore.userId) return
+
+  //   const tasksQuery = getBaseTasksQuery(userStore.userId)
+  //   listeners.value.tasks = onSnapshot(tasksQuery, handleAllTasksSnapshot) // Usar la nueva función
+  // }
+  const subscribeToTasks = () => {
+    if (!userStore.userId) return
+    if (listeners.tasks) listeners.tasks() // Limpiar listener anterior
+
+    const tasksQuery = getBaseTasksQuery(userStore.userId)
+    listeners.tasks = onSnapshot(tasksQuery, handleAllTasksSnapshot)
+  }
+
+  const subscribeToTaskUpdates = (tasksRef, allTasksProject) => {
+    if (listeners.projectTasks) listeners.projectTasks() // Limpiar listener anterior
+
+    listeners.projectTasks = onSnapshot(tasksRef, (snapshot) => {
+      handleProjectTasksSnapshot(snapshot, allTasksProject)
+      updatePaginationState(snapshot)
+    })
+  }
+
+  // --- Pagination Control ---
+  // Get tasks by project paginated
+  const getTasksByProjectPaginated = async ({
+    next = false,
+    prev = false,
+    last = false,
+    first = false
+  } = {}) => {
+    try {
+      const project = await validateProjectAndUser()
+      if (!project) return
+
+      // Define the base query for tasks in the selected project
+      // let tasksRef = defineBaseTaskQuery(userStore.userId, project.id)
+      let tasksRef = getProjectTasksQuery(userStore.userId, project.id)
+
+      // Apply pagination logic based on options
+      tasksRef = applyPagination(tasksRef, next, prev, last, first)
+
+      if (tasksRef) {
+        // Clear the allTasksProject array before fetching new data
+        allTasksProject.value = []
+
+        // Subscribe to the new listener
+        subscribeToTaskUpdates(tasksRef, allTasksProject)
+      }
+    } catch (error) {
+      console.error('Error getting tasks:', error)
+      notificationsStore.displaySnackbar(
+        error.message || 'Failed to load tasks',
+        'error',
+        'mdi-close-circle'
+      )
+    }
+  }
+
+  // --- Filtering Control ---
   // Get filtered tasks paginated
   const getFilteredTasksPaginated = async ({
     next = false,
@@ -715,6 +748,9 @@ export const useTaskStore = defineStore('tasks', () => {
     first = false
   } = {}) => {
     try {
+      isLoading.value = true
+
+      if (listeners.filteredTasks) listeners.filteredTasks() // Limpiar listener anterior
       // Verify if filters
       const hasValidFilters =
         searchTaskTitle.value?.trim()?.length > 0 ||
@@ -752,26 +788,83 @@ export const useTaskStore = defineStore('tasks', () => {
 
       if (q) {
         filteredTasks.value = []
-        onSnapshot(q, (snapshot) => {
+        listeners.filteredTasks = onSnapshot(q, (snapshot) => {
           snapshot.docChanges().forEach((change) => {
-            // Create taskData object with all necessary fields
             const taskData = createTaskData(change.doc)
             updateTaskArray(filteredTasks, change, taskData)
           })
 
+          // Actualizar estado de paginación basado en snapshot
           lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
           firstVisibleTask.value = snapshot.docs[0]
-          hasNextPage.value =
-            snapshot.docs.length === pageSize && currentPage.value < totalPagesInFilteredTasks.value
 
+          // Determinar si hay más páginas
+          hasNextPage.value = snapshot.docs.length === pageSize
           hasPrevPage.value = currentPage.value > 1
+
           noResultsMessage.value = snapshot.empty
+
+          allTasksProject.value = filteredTasks.value
         })
       }
     } catch (error) {
-      console.error('Error getting filtered tasks:', error)
+      // Handle errors
+      notificationsStore.displaySnackbar(
+        error.message || 'Error loading tasks',
+        'error',
+        'mdi-close-circle'
+      )
       error.value = 'Error loading tasks'
+    } finally {
+      isLoading.value = false
     }
+  }
+
+  // --- Project Selection ---
+  // Set the selected project title
+  const setSelectedProject = (projectName) => {
+    selectedProject.value = projectName // Store the project title
+  }
+
+  // --- Helper Actions ---
+  // Helper function to validate user and project
+  const validateProjectAndUser = async () => {
+    if (!userStore.userId) {
+      notificationsStore.displaySnackbar(
+        'User ID is undefined. Please log in.',
+        'error',
+        'mdi-account-off'
+      )
+      return false
+    }
+
+    if (!selectedProject.value) {
+      notificationsStore.displaySnackbar('No project selected.', 'error', 'mdi-alert-circle')
+      console.warn('No project selected.')
+      return false
+    }
+
+    const project = projectStore.projects.find((p) => p.title === selectedProject.value)
+    if (!project?.id) {
+      notificationsStore.displaySnackbar(
+        'Project not found in local state',
+        'error',
+        'mdi-alert-circle'
+      )
+      return false
+    }
+
+    return project
+  }
+
+  // Helper function to update pagination state
+  const updatePaginationState = (snapshot) => {
+    lastVisibleTaskDoc.value = snapshot.docs[snapshot.docs.length - 1]
+    firstVisibleTask.value = snapshot.docs[0]
+    hasNextPage.value =
+      // snapshot.docs.length === pageSize && currentPage.value < totalPagesInSelectedProject.value
+      snapshot.docs.length === pageSize
+    hasPrevPage.value = currentPage.value > 1
   }
 
   // Helper function to apply pagination logic
@@ -792,7 +885,11 @@ export const useTaskStore = defineStore('tasks', () => {
       ? totalPagesInFilteredTasks.value
       : totalPagesInSelectedProject.value
     const tasksArray = isFilteredTasks ? tasksInFilteredTasks.value : tasksInSelectedProject.value
-
+    console.log('Datos para paginación:', {
+      isFilteredTasks,
+      totalPages,
+      tasksArrayLength: tasksArray.length
+    })
     switch (true) {
       case next:
         // Get the next page using startAfter and limit
@@ -832,7 +929,6 @@ export const useTaskStore = defineStore('tasks', () => {
         currentPage.value = 1
         break
     }
-
     return tasksRef
   }
 
@@ -847,8 +943,7 @@ export const useTaskStore = defineStore('tasks', () => {
         if (index === -1) {
           taskArray.value.push({
             ...taskData,
-            projectColor:
-              projectStore.projects.find((p) => p.id === taskData.projectId)?.color || 'default'
+            projectColor: projectStore.projects.find((p) => p.id === taskData.projectId)?.color
           })
         }
         break
@@ -857,8 +952,7 @@ export const useTaskStore = defineStore('tasks', () => {
         if (index !== -1) {
           taskArray.value.splice(index, 1, {
             ...taskData,
-            projectColor:
-              projectStore.projects.find((p) => p.id === taskData.projectId)?.color || 'default'
+            projectColor: projectStore.projects.find((p) => p.id === taskData.projectId)?.color
           })
         }
         break
@@ -928,65 +1022,7 @@ export const useTaskStore = defineStore('tasks', () => {
     return q
   }
 
-  watch(
-    () => ({
-      selectedProject: selectedProject.value,
-      searchTaskTitle: searchTaskTitle.value,
-      selectedProjects: selectedProjects.value,
-      selectedPriorities: selectedPriorities.value,
-      selectedStatuses: selectedStatuses.value,
-      selectedLabels: selectedLabels.value,
-      selectedEndDate: selectedEndDate.value
-    }),
-    async (newVal, oldVal) => {
-      // Si cambia el proyecto seleccionado
-      if (newVal.selectedProject !== oldVal?.selectedProject) {
-        if (newVal.selectedProject) {
-          await getTasksByProjectPaginated()
-        } else {
-          await getFilteredTasksPaginated()
-        }
-      }
-
-      // Si hay cambios en los filtros y no hay proyecto seleccionado
-      if (
-        !newVal.selectedProject &&
-        (newVal.searchTaskTitle !== oldVal?.searchTaskTitle ||
-          newVal.selectedProjects !== oldVal?.selectedProjects ||
-          newVal.selectedPriorities !== oldVal?.selectedPriorities ||
-          newVal.selectedStatuses !== oldVal?.selectedStatuses ||
-          newVal.selectedLabels !== oldVal?.selectedLabels ||
-          newVal.selectedEndDate !== oldVal?.selectedEndDate)
-      ) {
-        await getFilteredTasksPaginated()
-      }
-    },
-    { immediate: true, deep: true }
-  )
-
-  // Edit a task in Firestore
-  const editTask = async (projectId, taskId) => {
-    try {
-      dialogEditTask.value = true
-      // Fetch the task data from Firestore
-      const task = await getTask(projectId, taskId)
-
-      if (task) {
-        Object.assign(editedTask, {
-          ...task,
-          id: taskId, // Keep the task ID for reference
-          projectId: projectId // Keep the project ID for reference
-        })
-      } else {
-        console.error('Task not found')
-        notificationsStore.displaySnackbar('Task not found', 'error', 'mdi-alert-circle')
-      }
-    } catch (error) {
-      console.error('Error al cargar la tarea:', error)
-      notificationsStore.displaySnackbar('Error al cargar la tarea', 'error', 'mdi-alert-circle')
-    }
-  }
-
+  // --- Helper Actions ---
   // Helper function to fetch project data and get color
   const getProjectColor = async (projectName) => {
     // Fetch projects data only if it's not already loaded
@@ -1001,6 +1037,7 @@ export const useTaskStore = defineStore('tasks', () => {
     return project ? project.color : 'default'
   }
 
+  // --- Filter Management ---
   // Helper function to clean filters
   const resetFilters = () => {
     // Clear filters in the taskStore state (reactive variables) to reset the UI
@@ -1018,8 +1055,22 @@ export const useTaskStore = defineStore('tasks', () => {
     hasPrevPage.value = false
     currentPage.value = 1
   }
+
+  // --- Store Management ---
+  const unsubscribeAll = () => {
+    Object.values(listeners).forEach((unsubscribe) => {
+      if (unsubscribe) unsubscribe()
+    })
+    Object.assign(listeners, {
+      tasks: null,
+      projectTasks: null,
+      filteredTasks: null
+    })
+  }
+
   // Clear the task store
   const clearTaskStore = () => {
+    unsubscribeAll()
     tasksData.value = []
     selectedProject.value = null
     firstVisibleTask.value = null
@@ -1034,90 +1085,127 @@ export const useTaskStore = defineStore('tasks', () => {
     resetFilters()
   }
 
+  // --- Watchers ---
+  // Watch for changes in selected project or filters to reload tasks
+  watch(
+    () => ({
+      selectedProject: selectedProject.value,
+      searchTaskTitle: searchTaskTitle.value,
+      selectedProjects: selectedProjects.value,
+      selectedPriorities: selectedPriorities.value,
+      selectedStatuses: selectedStatuses.value,
+      selectedLabels: selectedLabels.value,
+      selectedEndDate: selectedEndDate.value
+    }),
+    async (newVal, oldVal) => {
+      // If the selected project changes
+      if (newVal.selectedProject !== oldVal?.selectedProject) {
+        if (newVal.selectedProject) {
+          await getTasksByProjectPaginated()
+        } else {
+          await getFilteredTasksPaginated()
+        }
+      }
+
+      // If there are changes in the filters and no project is selected
+      if (
+        !newVal.selectedProject &&
+        (newVal.searchTaskTitle !== oldVal?.searchTaskTitle ||
+          newVal.selectedProjects !== oldVal?.selectedProjects ||
+          newVal.selectedPriorities !== oldVal?.selectedPriorities ||
+          newVal.selectedStatuses !== oldVal?.selectedStatuses ||
+          newVal.selectedLabels !== oldVal?.selectedLabels ||
+          newVal.selectedEndDate !== oldVal?.selectedEndDate)
+      ) {
+        await getFilteredTasksPaginated()
+      }
+    },
+    { immediate: true, deep: true }
+  )
+
+  // --- Lifecycle Hooks ---
+  // Subscribe to tasks when the component is mounted
   onMounted(() => {
-    subscribeToTasks() // Subscribe to tasks when the component is mounted
+    subscribeToTasks()
   })
 
   return {
-    // State
-    selectedProject,
-    pageSize,
-    firstVisibleTask,
-    lastVisibleTaskDoc,
-    hasNextPage,
-    hasPrevPage,
-    currentPage,
-    allTasksProject,
-    searchTaskTitle,
-    selectedProjects,
-    selectedPriorities,
-    selectedStatuses,
-    selectedLabels,
-    selectedEndDate,
-    filteredTasks,
-    error,
-    dialogEditTask,
-    noResultsMessage,
-    newTask,
-    editedTask,
-    isSaving,
-    listeners,
-    newTaskData,
-    editedTaskData,
-    // State for pagination
-    tasksData,
-    // Getters (computed properties)
-    projects,
-    tasks,
-    labels,
-    priorities,
-    statuses,
-    colors,
-    isSelectedProject,
-    tasksInSelectedProject,
-    tasksInFilteredTasks,
-    totalPagesInSelectedProject,
-    totalPagesInFilteredTasks,
-    completedTasks,
-    pendingTasks,
-    completedTasksInSelectedProject,
-    pendingTasksInSelectedProject,
-    projectColor,
-
-    // Query Helpers
-    getBaseTasksQuery,
-    getProjectTasksQuery,
-    getFilteredBaseQuery,
-
     // Actions (methods)
-    getTasksByProjectPaginated,
-    setSelectedProject,
-    getFilteredTasksPaginated,
-    // Actions for pagination
-    applyPagination,
     applyFilters,
-    // Actions for task management
+    applyPagination,
+    clearTaskStore,
+    completeTask,
+    createTask,
     deleteAllTasks,
     deleteTask,
-    getTask,
-    createTask,
-    updateTask,
-    completeTask,
-    subscribeToTasks,
-    clearTaskStore,
-    resetFilters,
-    // Helper functions
     editTask,
+    getFilteredTasksPaginated,
     getProjectColor,
-    updateTaskArray,
-    // defineBaseTaskQuery,
-    handleTaskSnapshot,
-    validateProjectAndUser,
-    subscribeToTaskUpdates,
-    updatePaginationState,
+    getTask,
+    getTasksByProjectPaginated,
+    resetFilters,
+    setSelectedProject,
+    subscribeToTasks,
+    unsubscribeAll,
+    updateTask,
+    // Getters (computed properties)
+    colors,
+    completedTasks,
+    completedTasksInSelectedProject,
+    editedTaskData,
+    isSelectedProject,
+    labels,
+    newTaskData,
+    pendingTasks,
+    pendingTasksInSelectedProject,
+    priorities,
+    projectColor,
+    projects,
+    statuses,
+    tasks,
+    tasksInFilteredTasks,
+    tasksInSelectedProject,
+    totalPagesInFilteredTasks,
+    totalPagesInSelectedProject,
+    // Helper functions
     combineDateTime,
     convertTimestamp,
     createTaskData,
-    validTaskForm
+    // handleTaskSnapshot,
+    handleAllTasksSnapshot,
+    handleProjectTasksSnapshot,
+    subscribeToTaskUpdates,
+    updatePaginationState,
+    updateTaskArray,
+    validateProjectAndUser,
+    validTaskForm,
+    // Query Helpers
+    getBaseTasksQuery,
+    getFilteredBaseQuery,
+    getProjectTasksQuery,
+    // State
+    allTasksProject,
+    currentPage,
+    dialogEditTask,
+    error,
+    filteredTasks,
+    firstVisibleTask,
+    hasNextPage,
+    hasPrevPage,
+    isSaving,
+    lastVisibleTaskDoc,
+    listeners,
+    newTask,
+    editedTask,
+    noResultsMessage,
+    pageSize,
+    selectedEndDate,
+    selectedLabels,
+    selectedPriorities,
+    selectedProject,
+    selectedProjects,
+    selectedStatuses,
+    searchTaskTitle,
+    tasksData
   }
 })

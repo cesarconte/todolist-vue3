@@ -55,11 +55,11 @@ const calendarEvents = computed(() => {
     start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
     end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
     allDay: false,
-    color: task.project.color,
+    color: task.color,
     label: task.label,
     completed: task.completed,
     extendedProps: {
-      project: task.project.title,
+      project: task.project,
       description: task.description
     }
   }))

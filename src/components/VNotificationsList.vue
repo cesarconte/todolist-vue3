@@ -106,19 +106,31 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             </v-list-item>
           </template>
           <template v-else>
-            <v-list-item class="d-flex justify-center">
-              <v-col class="d-flex flex-column align-center">
-                <v-icon
-                  icon="mdi-checkbox-marked-circle-auto-outline"
-                  size="96"
-                  color="grey-lighten-1"
-                  class="mb-4 d-flex flex-center"
-                />
-                <v-list-item-title class="text-center text-grey-lighten-1"
-                  >All caught up!</v-list-item-title
-                >
-              </v-col>
-            </v-list-item>
+            <v-container class="empty-state-container">
+              <v-list-item class="d-flex justify-center">
+                <v-col class="d-flex flex-column align-center">
+                  <v-icon
+                    icon="mdi-checkbox-marked-circle-auto-outline"
+                    size="96"
+                    color="grey-lighten-1"
+                    class="mb-4 d-flex flex-center empty-icon"
+                  />
+                  <v-list-item-title
+                    class="text-center text-h5 font-weight-medium text-grey-lighten-1 mb-2"
+                  >
+                    All caught up!</v-list-item-title
+                  >
+                  <v-list-item-subtitle
+                    class="text-center text-subtitle-1 text-grey-lighten-1 mb-1"
+                  >
+                    No new notifications
+                  </v-list-item-subtitle>
+                  <v-list-item-subtitle class="text-center text-subtitle-2 text-grey-lighten-1">
+                    Check back later for new notifications
+                  </v-list-item-subtitle>
+                </v-col>
+              </v-list-item>
+            </v-container>
           </template>
         </v-list>
       </v-card-text>
@@ -150,3 +162,33 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+.empty-state-container {
+  transition: all 0.3s ease;
+}
+
+.empty-icon {
+  opacity: 0.8;
+  transform: translateY(-5px);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.v-list-item-title {
+  letter-spacing: 0.5px !important;
+}
+
+.v-list-item-subtitle {
+  max-width: 400px;
+}
+</style>

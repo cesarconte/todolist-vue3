@@ -1,11 +1,15 @@
 <script setup>
+import { useUserStore } from '@/stores/userStore'
 import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
+import { useRouter } from 'vue-router'
+import { useSubmitNewTask } from '@/composables/useSubmitNewTask'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import { useResetForm } from '@/composables/useResetForm'
 import VActionButtons from '@/components/VActionButtons.vue'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useDisplay } from 'vuetify'
@@ -13,11 +17,16 @@ import VCardTask from '@/components/VCardTask.vue'
 import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 
+const userStore = useUserStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const dataStore = useDataStore()
 const notificationsStore = useNotificationsStore()
+const router = useRouter()
+
 const { submitEditedTask } = useSubmitEditedTask()
+const { submitNewTask } = useSubmitNewTask()
+// const { reset } = useResetForm(form)
 
 const props = defineProps({
   projectName: {
@@ -30,22 +39,62 @@ const props = defineProps({
   }
 })
 
+// onMounted(async () => {
+//   taskStore.setSelectedProject(props.projectName)
+
+//   if (taskStore.selectedProject) {
+//     await taskStore.getTasksByProjectPaginated()
+//   } else {
+//     notificationsStore.displaySnackbar(
+//       'No project selected',
+//       'Please select a project to view tasks.',
+//       'error'
+//     )
+//   }
+// })
 onMounted(async () => {
   taskStore.setSelectedProject(props.projectName)
-  if (taskStore.selectedProject) {
-    await taskStore.getTasksByProjectPaginated()
+
+  if (props.taskId) {
+    try {
+      await taskStore.fetchTaskById(props.taskId)
+    } catch (error) {
+      notificationsStore.displaySnackbar('Error loading task', 'error', 'mdi-alert-circle')
+      console.error('Error loading task:', error)
+    }
+  } else if (taskStore.selectedProject) {
+    try {
+      await taskStore.getTasksByProjectPaginated()
+    } catch (error) {
+      notificationsStore.displaySnackbar('Error loading tasks', 'error', 'mdi-alert-circle')
+      console.error('Error loading tasks:', error)
+    }
   } else {
-    notificationsStore.displaySnackbar(
-      'No project selected',
-      'Please select a project to view tasks.',
-      'error'
-    )
+    notificationsStore.displaySnackbar('No project selected', 'error', 'mdi-alert-circle')
   }
 })
 
 const form = ref(null)
+const taskFormRef = ref(null)
 const dialogEditProject = ref(false)
 const progressPercentage = ref(0)
+const dialogAddTask = ref(false)
+
+const handleAddTaskClick = () => {
+  if (!userStore.isLoggedIn) {
+    notificationsStore.displaySnackbar('Authentication required', 'info', 'mdi-information')
+    router.push({ path: '/login' })
+    return
+  }
+
+  // Establecer proyecto actual por defecto
+  const currentProject = projectStore.projects.find((p) => p.title === taskStore.selectedProject)
+  if (currentProject) {
+    taskStore.newTask.projectId = currentProject.id
+  }
+
+  dialogAddTask.value = true
+}
 
 const editProject = async (projectId) => {
   dialogEditProject.value = true
@@ -71,17 +120,119 @@ const submitEditedProject = async () => {
     await projectStore.saveEditedProject(projectStore.editedProject.id, projectStore.editedProject)
     // Close the dialog
     dialogEditProject.value = false
+    notificationsStore.displaySnackbar('Project updated', 'success', 'mdi-check')
   } catch (error) {
     console.error(error)
-    alert('Error saving project. Please try again.', error)
+    notificationsStore.displaySnackbar('Error updating project', 'error', 'mdi-alert-circle')
   }
 }
 
 // Define the reset function to reset the form values
-const reset = () => {
-  form.value.reset()
-  alert('Form has been reset.')
+// const reset = () => {
+//   form.value.reset()
+//   notificationsStore.displaySnackbar('Form reset', 'The form has been reset successfully.', 'info')
+// }
+// const reset = () => {
+//   if (dialogEditProject.value) {
+//     // Logic to reset the project form
+//     const projectId = projectStore.editedProject.id
+//     const originalProject = projectStore.projects.find((project) => project.id === projectId)
+//     if (originalProject) {
+//       projectStore.editedProject = { ...originalProject }
+//     } else {
+//       projectStore.editedProject = { id: '', title: '', icon: '', color: '' }
+//     }
+//     if (form.value) {
+//       form.value.reset()
+//     }
+//     notificationsStore.displaySnackbar('Project edit form reset', 'info', 'mdi-information')
+//   } else if (taskStore.dialogEditTask) {
+//     // Logic to reset the task form
+//     taskStore.editedTask = {
+//       projectId: '',
+//       title: '',
+//       description: '',
+//       label: '',
+//       priority: '',
+//       status: '',
+//       startDate: null,
+//       endDate: null,
+//       completed: false,
+//       color: null
+//     }
+//     if (form.value) {
+//       form.value.reset()
+//     }
+//     notificationsStore.displaySnackbar('Task edit form reset', 'info', 'mdi-information')
+//   } else {
+//     // Default case or if no dialog is open
+//     if (form.value) {
+//       form.value.reset()
+//     }
+//     notificationsStore.displaySnackbar('Form reset', 'info', 'mdi-information')
+//   }
+// }
+// Reseteo para el formulario de edición de proyecto
+const resetProjectFormState = () => {
+  const projectId = projectStore.editedProject.id
+  const originalProject = projectStore.projects.find((project) => project.id === projectId)
+  if (originalProject) {
+    projectStore.editedProject = { ...originalProject }
+  } else {
+    projectStore.editedProject = { id: '', title: '', icon: '', color: '' }
+  }
 }
+const { reset: resetProject } = useResetForm(
+  form,
+  'Project edit form reset',
+  'info',
+  'mdi-information',
+  resetProjectFormState
+)
+
+// Reseteo para el formulario de edición de tarea
+const resetTaskFormState = () => {
+  taskStore.editedTask = {
+    projectId: '',
+    title: '',
+    description: '',
+    label: '',
+    priority: '',
+    status: '',
+    startDate: null,
+    endDate: null,
+    completed: false,
+    color: null
+  }
+}
+const { reset: resetTask } = useResetForm(
+  form,
+  'Task edit form reset',
+  'info',
+  'mdi-information',
+  resetTaskFormState
+)
+
+// Reseteo por defecto
+const { reset: resetDefault } = useResetForm(form, 'Form reset', 'info', 'mdi-information')
+
+const reset = () => {
+  if (dialogEditProject.value) {
+    resetProject()
+  } else if (taskStore.dialogEditTask) {
+    resetTask()
+  } else {
+    resetDefault()
+  }
+}
+
+const { btnsForm: btnsNewTaskForm } = useFormBtnActions(
+  submitNewTask,
+  () => taskFormRef.value?.reset(),
+  () => (dialogAddTask.value = false)
+)
+btnsNewTaskForm[0].text = 'Create Task'
+btnsNewTaskForm[0].icon = 'mdi-plus'
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
@@ -170,17 +321,23 @@ const completedTasksIcon = computed(() => {
 })
 
 watch(
-  () => [taskStore.completedTasksInSelectedProject, taskStore.tasksInSelectedProject],
-  () => {
-    progressPercentage.value = Math.round(
-      (taskStore.completedTasksInSelectedProject.length / taskStore.tasksInSelectedProject.length) *
-        100
-    )
+  () => taskStore.tasksInSelectedProject,
+  (newVal) => {
+    if (newVal.length > 0) {
+      progressPercentage.value = Math.round(
+        (taskStore.completedTasksInSelectedProject.length / newVal.length) * 100
+      )
+    } else {
+      progressPercentage.value = 0 // Reset to 0 if no tasks
+    }
   },
-  { immediate: true } // Calculate initially on component mount
+  {
+    deep: true, // Watch for deep changes in the array
+    immediate: true // Calculate initially on component mount
+  }
 )
 
-const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
+const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
 </script>
 
 <template>
@@ -190,6 +347,33 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
       :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
     >
+      <v-dialog
+        v-model="dialogAddTask"
+        :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
+        class="dialog dialog-create-task"
+      >
+        <v-card class="card card-create-task pa-4">
+          <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
+            <span class="text-h6">Add new task</span>
+          </v-card-title>
+          <v-card-text :class="mobile ? 'px-0' : ''">
+            <VTaskForm
+              v-model="taskStore.newTask"
+              :projects="projectStore.projects"
+              :labels="dataStore.labels"
+              :priorities="dataStore.priorities"
+              :statuses="dataStore.statuses"
+              :rules="rules"
+              ref="taskFormRef"
+              @submit="submitNewTask"
+            >
+            </VTaskForm>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <VActionButtons :buttons="btnsNewTaskForm" />
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-row>
         <v-col cols="12" class="d-flex justify-content-between align-items-center">
           <h2 class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center">
@@ -299,7 +483,10 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
           </div>
         </v-col>
       </v-row>
-      <v-row class="tasks d-flex flex-wrap align-items-center justify-content-center">
+      <v-row
+        v-if="taskStore.allTasksProject.length > 0"
+        class="tasks d-flex flex-wrap align-items-center justify-content-center"
+      >
         <v-divider
           color="red-darken-2"
           :thickness="1"
@@ -345,6 +532,45 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
           </Suspense>
         </v-col>
       </v-row>
+      <template v-else>
+        <v-container class="empty-state-container">
+          <v-row class="d-flex flex-column align-center justify-center text-center pa-8">
+            <v-col cols="auto" class="py-8">
+              <v-icon
+                icon="mdi-clipboard-text-off"
+                size="128"
+                color="grey-lighten-1"
+                class="mb-6 empty-icon"
+              />
+              <v-list-item-title class="text-h5 font-weight-medium text-grey-lighten-1 mb-2">
+                No tasks in this project
+              </v-list-item-title>
+              <v-list-item-subtitle class="text-subtitle-1 text-grey-lighten-1">
+                Start by creating your first task!
+              </v-list-item-subtitle>
+            </v-col>
+
+            <v-col cols="auto">
+              <v-btn
+                :class="xs ? '' : 'px-8'"
+                :block="xs"
+                class="text-none text-button"
+                color="red-accent-2"
+                variant="tonal"
+                rounded="pill"
+                size="large"
+                prepend-icon="mdi-plus-circle-outline"
+                @click="handleAddTaskClick"
+              >
+                New Task
+                <v-tooltip activator="parent" location="bottom" class="add-task-tooltip"
+                  >Create a new task in this project</v-tooltip
+                >
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-container>
+      </template>
       <v-row class="pa-3">
         <VPagination
           :currentPage="taskStore.currentPage"
@@ -454,3 +680,34 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
     </v-responsive>
   </v-container>
 </template>
+
+<style scoped>
+.empty-state-container {
+  min-height: 60vh;
+  transition: all 0.3s ease;
+}
+
+.empty-icon {
+  opacity: 0.8;
+  transform: translateY(-5px);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+.v-list-item-title {
+  letter-spacing: 0.5px !important;
+}
+
+.v-list-item-subtitle {
+  max-width: 400px;
+}
+</style>

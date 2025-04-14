@@ -10,6 +10,7 @@ import { useDisplay } from 'vuetify'
 import { useSubmitNewTask } from '@/composables/useSubmitNewTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import { useResetForm } from '@/composables/useResetForm'
 import VActionButtons from './VActionButtons.vue'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
@@ -26,6 +27,7 @@ const taskStore = useTaskStore() // Accesses the task store
 const userStore = useUserStore() // Accesses the user store
 const notificationsStore = useNotificationsStore() // Accesses the notifications store
 const taskFormRef = ref(null) // Reference to the form
+
 const { submitNewTask } = useSubmitNewTask(taskFormRef) // Accesses the submitNewTask function
 
 /************************************
@@ -234,24 +236,35 @@ const openDialog = (value) => {
   }
 }
 
-const resetAddTaskForm = () => {
-  taskFormRef.value?.reset()
-  showSnackbar('Add Task Form has been reset', 'success')
-}
+// const resetAddTaskForm = () => {
+//   taskFormRef.value?.reset()
+//   showSnackbar('Add Task Form has been reset', 'success')
+// }
 
-const resetAddProjectForm = () => {
-  if (formAddProject.value) {
-    formAddProject.value.reset()
-    showSnackbar('Add Project Form has been reset', 'success')
-  }
-}
+// const resetAddProjectForm = () => {
+//   if (formAddProject.value) {
+//     formAddProject.value.reset()
+//     showSnackbar('Add Project Form has been reset', 'success')
+//   }
+// }
+const { reset: resetAddTaskForm } = useResetForm(
+  taskFormRef,
+  'Add Task Form has been reset',
+  'success'
+)
+
+const { reset: resetAddProjectFormFn } = useResetForm(
+  formAddProject,
+  'Add Project Form has been reset',
+  'success'
+)
 
 const addNewProject = async () => {
   // Define the addNewProject function to create a new project
   try {
     await projectStore.createProject(projectStore.newProject)
     // Reset the form
-    formAddProject.value?.reset()
+    resetAddProjectFormFn()
     // Close the dialog
     dialogAddProject.value = false
     // Close the drawer
@@ -345,7 +358,7 @@ const btnsFormAddProject = [
     height: '3rem',
     text: 'Reset Form',
     icon: 'mdi-refresh',
-    function: resetAddProjectForm
+    function: resetAddProjectFormFn
   },
   {
     type: 'button',

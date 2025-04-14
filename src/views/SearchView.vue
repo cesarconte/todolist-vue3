@@ -4,23 +4,27 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
+import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import { useResetForm } from '@/composables/useResetForm'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
-import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+const router = useRouter()
+
+const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
+const { reset } = useResetForm(form)
 
 const showCards = ref(false)
-const form = ref(null)
 const showAlert = ref(false)
 
 // Watch for changes in any of the filters and fetch filtered tasks
@@ -51,10 +55,10 @@ const handleSearchClick = () => {
 }
 
 // Define the reset function to reset the form values
-const reset = () => {
-  form.value.reset()
-  alert('Form has been reset.')
-}
+// const reset = () => {
+//   form.value.reset()
+//   alert('Form has been reset.')
+// }
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
@@ -66,6 +70,10 @@ const { btnsForm } = useFormBtnActions(
 // Configure the submit button for editing a task
 btnsForm[0].text = 'Update Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
+
+const goBack = () => {
+  router.back()
+}
 
 const rules = useMaxLengthRule()
 
@@ -159,7 +167,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           :task="task"
           :value="task"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '9' : xl ? '8' : ''"
-          class="py- mx-auto"
+          class="mx-auto"
         >
           <Suspense>
             <template #default>
@@ -206,21 +214,18 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           </v-alert>
         </v-col>
       </v-row>
-      <v-row v-if="showCards && taskStore.filteredTasks.length" class="pa-3">
-        <VPagination
-          :currentPage="taskStore.currentPage"
-          :totalPages="taskStore.totalPagesInFilteredTasks"
-          :hasPrevPage="taskStore.hasPrevPage"
-          :hasNextPage="taskStore.hasNextPage"
-          @prev-page="taskStore.getFilteredTasksPaginated({ prev: true })"
-          @next-page="taskStore.getFilteredTasksPaginated({ next: true })"
-          @first-page="taskStore.getFilteredTasksPaginated({ first: true })"
-          @last-page="taskStore.getFilteredTasksPaginated({ last: true })"
-        >
-          <template #default>
-            Page {{ taskStore.currentPage }} of {{ taskStore.totalPagesInFilteredTasks }}
-          </template>
-        </VPagination>
+      <v-row v-if="showCards">
+        <v-col cols="12" class="">
+          <div class="d-flex justify-space-between">
+            <v-spacer></v-spacer>
+            <v-btn
+              @click="goBack"
+              class="btn-back rounded-pill bg-red-darken-2 text-white text-none"
+              variant="flat"
+              ><v-icon>mdi-chevron-left</v-icon>Back</v-btn
+            >
+          </div>
+        </v-col>
       </v-row>
       <v-dialog
         v-model="taskStore.dialogEditTask"

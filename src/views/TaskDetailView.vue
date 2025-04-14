@@ -8,6 +8,7 @@ import { useRouter } from 'vue-router'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
+import { useResetForm } from '@/composables/useResetForm'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 import { useDisplay } from 'vuetify'
@@ -16,7 +17,10 @@ const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const router = useRouter()
+
+const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
+const { reset } = useResetForm(form)
 
 const props = defineProps({
   taskId: {
@@ -25,7 +29,6 @@ const props = defineProps({
   }
 })
 
-const form = ref(null)
 // Get the task from Firestore
 /* ==> El computed en TaskDetailView.vue asegura que la vista se actualice en tiempo real
 cuando se producen cambios en la base de datos de Firebase.
@@ -37,10 +40,10 @@ const task = computed(() => {
 })
 
 // Reset the form
-const reset = () => {
-  form.value.reset()
-  alert('Form has been reset')
-}
+// const reset = () => {
+//   form.value.reset()
+//   alert('Form has been reset')
+// }
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
