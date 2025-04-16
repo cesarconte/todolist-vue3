@@ -13,7 +13,7 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { onUnmounted, ref, watch } from 'vue'
+import { onUnmounted, ref, watchEffect } from 'vue'
 import { useDisplay } from 'vuetify'
 
 const dataStore = useDataStore()
@@ -28,68 +28,68 @@ const { reset } = useResetForm(form)
 const showCards = ref(false)
 const showAlert = ref(false)
 
-// Mostrar tareas solo si hay filtros activos y resultados
-const hasActiveFilters = () => {
-  return (
-    taskStore.state.selectedProjects.length > 0 ||
-    taskStore.state.selectedPriorities.length > 0 ||
-    taskStore.state.selectedStatuses.length > 0 ||
-    taskStore.state.selectedLabels.length > 0 ||
-    !!taskStore.state.selectedEndDate ||
-    !!taskStore.state.searchTerm
-  )
-}
-
 // Cleanup al desmontar el componente
 onUnmounted(() => {
-  taskStore.resetFilters()
+  taskStore.unsubscribeAll() // O limpiar específicamente filteredTasks
 })
 
-// Watcher para cambios en autenticación
-// watch(
-//   () => userStore.isLoggedIn,
-//   (loggedIn) => {
-//     if (loggedIn) taskStore.fetchTasks('first')
-//   }
-// )
+// Watch for changes in any of the filters and fetch filtered tasks
+watchEffect(async () => {
+  // Check if any filter is active
+  const hasFiltersSelected =
+    taskStore.selectedProjects.length > 0 ||
+    taskStore.selectedPriorities.length > 0 ||
+    taskStore.selectedStatuses.length > 0 ||
+    taskStore.selectedLabels.length > 0 ||
+    taskStore.selectedEndDate
 
-// Manejar cambios en filtros
-watch(
-  [
-    () => taskStore.state.filteredTasks,
-    () => taskStore.state.selectedProjects,
-    () => taskStore.state.selectedPriorities,
-    () => taskStore.state.selectedStatuses,
-    () => taskStore.state.selectedLabels,
-    () => taskStore.state.selectedEndDate,
-    () => taskStore.state.searchTerm
-  ],
-  () => {
-    showCards.value = hasActiveFilters() && taskStore.state.filteredTasks.length > 0
-  },
-  { immediate: true }
-)
+  // Clean up previous listeners
+  if (taskStore.listeners.filteredTasks) {
+    taskStore.listeners.filteredTasks()
+    taskStore.listeners.filteredTasks = null
+  }
+  // Check if the user is logged in and if there are filters selected
+  if (userStore.isLoggedIn && hasFiltersSelected) {
+    try {
+      taskStore.isLoading = true
+      await taskStore.getFilteredTasksPaginated()
+      showCards.value = true
+      console.log('Filtered Tasks:', taskStore.filteredTasks)
+    } finally {
+      taskStore.isLoading = false
+    }
+  } else {
+    showCards.value = false
+    if (hasFiltersSelected) showAlert.value = true
+  }
+})
 
-// Manejar clicks en filtros sin autenticación
+// Define the handleProjectClick function to show an alert if the user is not logged in
 const handleFilterClick = () => {
-  if (!userStore.isLoggedIn) showAlert.value = true
+  if (!userStore.isLoggedIn) {
+    showAlert.value = true // Show the alert
+  }
 }
 
 const handleClearDate = () => {
-  taskStore.state.selectedEndDate = null
+  taskStore.selectedEndDate = null
+  taskStore.getFilteredTasksPaginated()
 }
 
-// Configurar botones del formulario
+// Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
   submitEditedTask,
   reset,
-  () => (taskStore.state.isEditing = false)
+  () => (taskStore.dialogEditTask = false)
 )
-btnsForm[0].text = 'Update Task'
-btnsForm[0].icon = 'mdi-pencil'
+
+// Configure the submit button for editing a task
+btnsForm[0].text = 'Update Task' // Set the text for the submit button
+btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
 const rules = useMaxLengthRule()
-const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
+
+const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
 </script>
 
 <template>
@@ -106,11 +106,10 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
           </h2>
         </v-col>
       </v-row>
-      <!-- Filtros -->
       <v-row>
         <v-col cols="12" sm="6">
           <v-autocomplete
-            v-model="taskStore.state.selectedProjects"
+            v-model="taskStore.selectedProjects"
             :items="userStore.isLoggedIn ? projectStore.projectItems : []"
             :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
             item-value="value"
@@ -135,7 +134,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
         </v-col>
         <v-col cols="12" sm="6">
           <v-autocomplete
-            v-model="taskStore.state.selectedPriorities"
+            v-model="taskStore.selectedPriorities"
             :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
             item-value="value"
             item-title="title"
@@ -165,7 +164,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
       <v-row>
         <v-col cols="12" sm="6">
           <v-autocomplete
-            v-model="taskStore.state.selectedLabels"
+            v-model="taskStore.selectedLabels"
             :items="userStore.isLoggedIn ? dataStore.labelItems : []"
             item-value="value"
             item-title="title"
@@ -190,7 +189,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
         </v-col>
         <v-col cols="12" sm="6">
           <v-autocomplete
-            v-model="taskStore.state.selectedStatuses"
+            v-model="taskStore.selectedStatuses"
             :items="userStore.isLoggedIn ? dataStore.statusItems : []"
             item-value="value"
             item-text="text"
@@ -218,7 +217,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
       <v-row>
         <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
           <v-date-input
-            v-model="taskStore.state.selectedEndDate"
+            v-model="taskStore.selectedEndDate"
             :items="userStore.isLoggedIn ? dataStore.endDate : []"
             label="Filter by end date"
             clearable
@@ -234,9 +233,8 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
         </v-col>
       </v-row>
 
-      <!-- Alertas -->
       <v-alert
-        v-if="taskStore.state.error"
+        v-if="taskStore.error"
         type="error"
         dense
         outlined
@@ -245,7 +243,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
         width="32rem"
         class="mt-8 mx-auto rounded-pill"
       >
-        {{ taskStore.state.error }}
+        {{ error }}
       </v-alert>
 
       <v-alert
@@ -269,7 +267,6 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
         </v-btn>
       </v-alert>
 
-      <!-- Lista de tareas y mensajes -->
       <v-row
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
         v-if="showCards"
@@ -279,107 +276,107 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
           :thickness="1"
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
-        <template v-if="taskStore.state.isLoading">
-          <v-col v-for="n in 4" :key="n" cols="12" md="6" lg="4">
-            <v-skeleton-loader type="card" />
-          </v-col>
-        </template>
-
-        <template v-else-if="showCards">
+        <template v-if="!taskStore.isLoading">
           <v-col
-            v-for="task in taskStore.state.filteredTasks"
-            :key="task.id"
+            v-for="(task, i) in taskStore.filteredTasks"
+            :key="i"
+            :task="task"
+            :value="task"
             :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
             lg="6"
             :class="mdAndDown ? 'mx-auto' : ''"
           >
-            <VCardTask
-              :title="task.title"
-              :id="task.id"
-              :description="task.description"
-              :label="task.label"
-              :priority="task.priority"
-              :status="task.status"
-              :start-date="task.startDate"
-              :end-date="task.endDate"
-              :completed="task.completed"
-              :color="task.project?.color"
-              :project="task.project"
-              :created-at="task.createdAt"
-              @edit-task="taskStore.editTask(task.id)"
-              @delete-task="taskStore.deleteTask(task.projectId, task.id)"
-              @complete-task="taskStore.completeTask(task.projectId, task.id)"
-            />
+            <Suspense>
+              <template #default>
+                <VCardTask
+                  v-if="task"
+                  :key="task.id"
+                  :title="task.title"
+                  :id="task.id"
+                  :description="task.description"
+                  :label="task.label"
+                  :project="task.project"
+                  :priority="task.priority"
+                  :status="task.status"
+                  :startDate="task.startDate"
+                  :endDate="task.endDate"
+                  :createdAt="task.createdAt"
+                  :completed="task.completed"
+                  :color="task.color ? task.color : 'default'"
+                  @edit-task="taskStore.editTask(task.projectId, task.id)"
+                  @delete-task="taskStore.deleteTask(task.projectId, task.id)"
+                  @complete-task="taskStore.completeTask(task.projectId, task.id)"
+                />
+              </template>
+              <template #fallback>
+                <div class="fallback">Loading...</div>
+              </template>
+            </Suspense>
           </v-col>
         </template>
-      </v-row>
-      <v-row v-if="!hasActiveFilters()">
-        <v-col :cols="mobile ? '12' : '9 mx-auto'">
-          <v-alert
-            type="info"
-            class="text-center"
-            :class="mobile ? '' : 'ma-2'"
-            variant="tonal"
-            rounded="pill"
-            closable
+        <template v-else>
+          <v-col
+            v-for="n in 4"
+            :key="n"
+            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
+            lg="6"
+            :class="mdAndDown ? 'mx-auto' : ''"
           >
-            Use the filters above to search for tasks
+            <div class="fallback">
+              <v-progress-circular
+                indeterminate
+                color="red-darken-2"
+                size="64"
+              ></v-progress-circular>
+            </div>
+          </v-col>
+        </template>
+        <v-col
+          v-if="taskStore.noResultsMessage"
+          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
+          lg="6"
+          class="mx-auto"
+        >
+          <v-alert
+            type="error"
+            dense
+            outlined
+            closable
+            class="rounded-pill text-center text-subtitle-1"
+            color="red-darken-2"
+          >
+            <span>No tasks found for the selected filters.</span>
           </v-alert>
         </v-col>
       </v-row>
-      <v-row
-        v-if="
-          hasActiveFilters() &&
-          !taskStore.state.isLoading &&
-          taskStore.state.filteredTasks.length === 0
-        "
-      >
-        <v-col :cols="mobile ? '12' : '9 mx-auto'">
-          <v-alert
-            type="info"
-            class="text-center"
-            :class="mobile ? '' : 'ma-2'"
-            variant="tonal"
-            rounded="pill"
-            closable
-          >
-            No tasks found with current filters
-          </v-alert>
-        </v-col>
-      </v-row>
-
-      <!-- Paginación -->
-      <v-row v-if="taskStore.totalPages >= 1" class="pa-3">
+      <v-row v-if="showCards && taskStore.filteredTasks.length" class="pa-3">
         <VPagination
-          :currentPage="taskStore.state.currentPage"
-          :totalPages="taskStore.totalPages"
-          :hasPrevPage="taskStore.state.hasPrevPage"
-          :hasNextPage="taskStore.state.hasNextPage"
-          @prev-page="taskStore.prevPage"
-          @next-page="taskStore.nextPage"
-          @first-page="taskStore.firstPage"
-          @last-page="taskStore.lastPage"
+          :currentPage="taskStore.currentPage"
+          :totalPages="taskStore.totalPagesInFilteredTasks"
+          :hasPrevPage="taskStore.hasPrevPage"
+          :hasNextPage="taskStore.hasNextPage"
+          @prev-page="taskStore.getFilteredTasksPaginated({ prev: true })"
+          @next-page="taskStore.getFilteredTasksPaginated({ next: true })"
+          @first-page="taskStore.getFilteredTasksPaginated({ first: true })"
+          @last-page="taskStore.getFilteredTasksPaginated({ last: true })"
         >
           <template #default>
-            Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+            Page {{ taskStore.currentPage }} of {{ taskStore.totalPagesInFilteredTasks || 1 }}
           </template>
         </VPagination>
       </v-row>
-
-      <!-- Diálogo de edición -->
       <v-dialog
-        v-model="taskStore.state.isEditing"
+        v-model="taskStore.dialogEditTask"
         :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
         class="dialog dialog-edit-task"
       >
         <v-card class="card card-edit-task pa-4">
           <v-card-title class="card-title card-title-edit-task">
-            <!-- <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span> -->
-            <span class="text-h6">Edit task </span>
+            <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
             <VTaskForm
-              v-model="taskStore.state.editingTask"
+              v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"

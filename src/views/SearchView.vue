@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watchEffect } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -24,41 +24,25 @@ const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
 const { reset } = useResetForm(form)
 
-const showCards = ref(false)
-const showAlert = ref(false)
+// Campo de búsqueda local (ahora almacena el objeto seleccionado)
+const selectedTask = ref(null)
 
-// Watch for changes in any of the filters and fetch filtered tasks
-watchEffect(async () => {
-  // Check if any filter is active
-  const hasFiltersSelected = taskStore.searchTaskTitle // Search by title
-
-  if (userStore.isLoggedIn) {
-    // Check if logged in only before fetching data
-    if (hasFiltersSelected) {
-      await taskStore.getFilteredTasksPaginated() // Fetch filtered tasks
-      showCards.value = true // Show the cards
-    } else {
-      taskStore.filteredTasks.value = [] // Reset the filtered tasks
-      showCards.value = false // Hide the cards
-    }
-  } else if (hasFiltersSelected) {
-    // User is not logged in and tried to use filters
-    showAlert.value = true // Show the alert
-  }
+// Computed para filtrar tareas por título (case-insensitive)
+const filteredTasks = computed(() => {
+  if (!selectedTask.value) return []
+  // Si el usuario selecciona una tarea del autocomplete, mostrar solo esa
+  return taskStore.state.tasks.filter((task) => task.id === selectedTask.value.id)
 })
 
-// Define the handleSearchClick function to handle the search click event
+const showCards = computed(() => filteredTasks.value.length > 0)
+
+const showAlert = ref(false)
+
 const handleSearchClick = () => {
   if (!userStore.isLoggedIn) {
-    showAlert.value = true // Show the alert
+    showAlert.value = true
   }
 }
-
-// Define the reset function to reset the form values
-// const reset = () => {
-//   form.value.reset()
-//   alert('Form has been reset.')
-// }
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
@@ -78,6 +62,12 @@ const goBack = () => {
 const rules = useMaxLengthRule()
 
 const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
+
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    taskStore.loadAllUserTasks()
+  }
+})
 </script>
 
 <template>
@@ -95,8 +85,10 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
       <v-row>
         <v-col cols="12" md="9" lg="6" class="mx-auto">
           <v-autocomplete
-            v-model="taskStore.searchTaskTitle"
-            :items="userStore.isLoggedIn ? taskStore.tasks : []"
+            v-model="selectedTask"
+            :items="userStore.isLoggedIn ? taskStore.state.tasks : []"
+            item-title="title"
+            return-object
             :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
             label="Search by title..."
             clearable
@@ -109,6 +101,7 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
             chips
             prepend-inner-icon="mdi-magnify"
             auto-select-first
+            :multiple="false"
             @click="handleSearchClick"
           >
             <template v-slot:item="{ props, item }">
@@ -162,8 +155,8 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
         <v-col
-          v-for="(task, i) in taskStore.filteredTasks"
-          :key="i"
+          v-for="task in filteredTasks"
+          :key="task.id"
           :task="task"
           :value="task"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '9' : xl ? '8' : ''"
@@ -197,20 +190,20 @@ const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
           </Suspense>
         </v-col>
         <v-col
-          v-if="taskStore.noResultsMessage"
+          v-if="filteredTasks.length === 0 && selectedTask"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
           lg="6"
           class="mx-auto"
         >
           <v-alert
-            type="error"
+            type="info"
             dense
             outlined
             closable
             class="rounded-pill text-center text-subtitle-1"
             color="red-darken-2"
           >
-            <span>No tasks found for the selected filters.</span>
+            <span>No tasks found for the search term.</span>
           </v-alert>
         </v-col>
       </v-row>

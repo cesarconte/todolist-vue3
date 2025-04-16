@@ -223,11 +223,10 @@ export const useUserStore = defineStore('user', () => {
 
       // Clear data in all stores
       dataStore.clearUserData()
-      // taskStore.resetFilters()
-      // taskStore.allTasksProject = []
-      // taskStore.tasksData = []
       taskStore.clearTaskStore()
       projectStore.clearProjectsData()
+      // Limpia los filtros de proyectos seleccionados
+      taskStore.state.selectedProjects = []
 
       notificationsStore.displaySnackbar(
         generateFarewellMessage(userName),

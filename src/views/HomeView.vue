@@ -29,31 +29,13 @@ const weekdays = ref([
 const value = ref([new Date()])
 
 // Computed variables for the calendar
-// const events = computed(() => {
-//   // Check if user is logged in and only return tasks if logged in
-//   if (userStore.isLoggedIn) {
-//     return taskStore.tasksData.map((task) => ({
-//       id: task.id,
-//       title: task.title,
-//       start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
-//       end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
-//       allDay: false,
-//       color: task.color,
-//       label: task.label,
-//       completed: task.completed
-//     }))
-//   } else {
-//     return []
-//   }
-// })
 const calendarEvents = computed(() => {
-  return taskStore.tasks.map((task) => ({
+  // Usa tasksData (que siempre es un array) en vez de tasks
+  return (taskStore.tasksData || []).map((task) => ({
     id: task.id,
     title: task.title,
-    // start: task.startDate,
-    // end: task.endDate,
-    start: task.startDate ? task.startDate.toDate() : null, // Handles missing start dates
-    end: task.endDate ? task.endDate.toDate() : null, // Handles missing end dates
+    start: task.startDate || null,
+    end: task.endDate || null,
     allDay: false,
     color: task.color,
     label: task.label,
@@ -65,20 +47,31 @@ const calendarEvents = computed(() => {
   }))
 })
 
-onMounted(async () => {
+onMounted(() => {
   if (userStore.isLoggedIn) {
-    // await taskStore.getTasksByProjectPaginated()
+    taskStore.loadAllUserTasks()
     notificationsStore.scheduleNotifications(taskStore.tasksData)
   }
 })
+
+watch(
+  () => userStore.isLoggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
+      taskStore.loadAllUserTasks()
+      notificationsStore.scheduleNotifications(taskStore.tasksData)
+    } else {
+      taskStore.clearTaskStore()
+    }
+  },
+  { immediate: true }
+)
 
 watch(
   () => userStore.userId,
   async (newVal) => {
     if (newVal) {
       projectStore.subscribeToCollection()
-      taskStore.subscribeToTasks()
-      // await taskStore.getTasksByProjectPaginated()
     }
   },
   { immediate: true }

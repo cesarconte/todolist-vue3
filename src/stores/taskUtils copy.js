@@ -1,13 +1,9 @@
 //taskUtils.js
 
-// Helper function to convert Timestamps, Dates, or strings to Date objects
-export const convertTimestamp = (field) => {
-  if (!field) return null
-  if (typeof field.toDate === 'function') return field.toDate()
-  if (typeof field === 'string' || typeof field === 'number') return new Date(field)
-  if (field instanceof Date) return field
-  return null
-}
+import { Timestamp } from 'firebase/firestore'
+
+// Helper function to convert Timestamps to Date objects
+export const convertTimestamp = (field) => (field instanceof Timestamp ? field.toDate() : field)
 
 // Helper function to combine date and time
 export const combineDateTime = (date, time) => {

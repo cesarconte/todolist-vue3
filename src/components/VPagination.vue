@@ -1,4 +1,8 @@
+<!-- VPagination.vue -->
+
 <script setup>
+import { useDisplay } from 'vuetify'
+
 /************************************
  * Props
  ************************************/
@@ -44,12 +48,17 @@ const firstPage = () => {
 const lastPage = () => {
   emits('last-page')
 }
+
+const { mobile } = useDisplay()
 </script>
 
 <template>
   <v-row class="pa-3 d-flex">
-    <div class="container-tasks-title d-flex justify-content-between w-100">
-      <v-spacer></v-spacer>
+    <div
+      class="container-tasks-title d-flex mx-auto w-100"
+      :class="mobile ? 'justify-center' : 'justify-space-between'"
+    >
+      <v-spacer v-if="!mobile"></v-spacer>
       <v-btn
         icon
         class="me-2 align-self-center"
@@ -88,8 +97,8 @@ const lastPage = () => {
           Previous page
         </v-tooltip>
       </v-btn>
-      <span class="me-2 font-weight-semibold pa-3">
-        <slot></slot>
+      <span class="page-indicator me-2 font-weight-semibold pa-3">
+        <slot> Page {{ currentPage }} of {{ totalPages }} </slot>
       </span>
       <v-btn
         icon
@@ -111,7 +120,7 @@ const lastPage = () => {
         variant="elevated"
         color="red-accent-2"
         @click="lastPage"
-        :disabled="!props.hasNextPage"
+        :disabled="currentPage === totalPages || totalPages === 0"
         size="small"
       >
         <v-icon>mdi-skip-forward</v-icon>

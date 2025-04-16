@@ -53,7 +53,7 @@ export const useProjectStore = defineStore('projects', () => {
   // Getters
   const projects = computed(() => projectsData.value)
   const projectItems = computed(() =>
-    projectsData.value.map((project) => ({ value: project.title, title: project.title }))
+    projectsData.value.map((project) => ({ value: project.id, title: project.title }))
   )
   const selectedProject = computed(() => taskStore.selectedProject)
   const selectedProjectId = computed(() => {
@@ -373,6 +373,10 @@ export const useProjectStore = defineStore('projects', () => {
     }
   }
 
+  const getProjectById = (id) => {
+    return projectsData.value.find((project) => project.id === id) || null
+  }
+
   // Watchers
   // Watch for changes in userId to subscribe to the collection
   watch(
@@ -412,6 +416,7 @@ export const useProjectStore = defineStore('projects', () => {
     createProject,
     saveEditedProject,
     deleteProject,
-    deleteAllTasksInProject
+    deleteAllTasksInProject,
+    getProjectById
   }
 })

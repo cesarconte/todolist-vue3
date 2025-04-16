@@ -271,7 +271,9 @@ export const useNotificationsStore = defineStore('notifications', {
         tasks.forEach((task) => {
           if (!task.endDate) return
 
-          const taskEndTime = task.endDate.toDate().getTime()
+          // Convertir a timestamp seguro
+          const taskEndTime = task.endDate instanceof Date ? task.endDate.getTime() : null
+          if (!taskEndTime) return
 
           this.notificationSettings.time.forEach((time) => {
             const notificationTime = taskEndTime - time * 3600000
