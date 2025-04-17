@@ -9,9 +9,6 @@ import {
   query,
   doc,
   getDoc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
   where,
   writeBatch,
   serverTimestamp,
@@ -22,6 +19,16 @@ import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { useRouter } from 'vue-router'
 import { validProjectForm } from '@/composables/validationFormRules.js'
+import { getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestoreCrud.js'
+import { mapFirestoreProject } from '@/utils/projectMappers.js'
+import { requireUserId, showSnackbar, handleError } from '@/utils/notificationHelpers.js'
+import { batchDeleteDocuments } from '@/utils/firestoreBatch.js'
+// import { buildProjectQuery } from '@/utils/projectQueries.js'
+
+// Ejemplo de uso futuro (si necesitas paginación o filtrado):
+// const q = buildProjectQuery(userId, { title: 'Mi Proyecto', pageSize: 10, lastVisible: someDoc })
+// const snapshot = await getDocs(q)
+// projectsData.value = snapshot.docs.map(mapFirestoreProject)
 
 export const useProjectStore = defineStore('projects', () => {
   const taskStore = useTaskStore()
@@ -104,11 +111,10 @@ export const useProjectStore = defineStore('projects', () => {
           const index = projectsData.value.findIndex((item) => item.id === change.doc.id)
           switch (change.type) {
             case 'added':
-              if (index === -1) projectsData.value.push({ id: change.doc.id, ...change.doc.data() })
+              if (index === -1) projectsData.value.push(mapFirestoreProject(change.doc))
               break
             case 'modified':
-              if (index !== -1)
-                projectsData.value.splice(index, 1, { id: change.doc.id, ...change.doc.data() })
+              if (index !== -1) projectsData.value.splice(index, 1, mapFirestoreProject(change.doc))
               break
             case 'removed':
               if (index !== -1) projectsData.value.splice(index, 1)
@@ -118,79 +124,52 @@ export const useProjectStore = defineStore('projects', () => {
       },
       (error) => {
         console.error('Error subscribing to projects:', error)
-        notificationsStore.displaySnackbar('Error fetching projects.', 'error', 'mdi-alert-octagon')
+        showSnackbar(notificationsStore, 'Error fetching projects.', 'error', 'mdi-alert-octagon')
       }
     )
   }
 
   const createProject = async (newProject) => {
-    if (!userStore.isLoggedIn) {
-      notificationsStore.displaySnackbar(
-        'Please log in to create a project.',
-        'error',
-        'mdi-account-off'
-      )
-      return // Stop execution if not logged in
-    }
-    if (isSaving.value) return
-    isSaving.value = true
-
     try {
+      const userId = requireUserId(userStore)
+      if (isSaving.value) return
+      isSaving.value = true
       if (validProjectForm(newProject)) {
-        await addDoc(collection(db, 'users', userStore.userId, 'projects'), {
+        await addDocument(collection(db, 'users', userId, 'projects'), {
           ...newProject,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           projectId: newProject.title.toLowerCase().replace(/\s/g, '-'),
-          userId: userStore.userId
+          userId: userId
         })
-        notificationsStore.displaySnackbar('Project created!', 'success', 'mdi-check-circle')
+        showSnackbar(notificationsStore, 'Project created!', 'success', 'mdi-check-circle')
       } else {
-        // Display an error message
         throw new Error('All fields are required.')
       }
     } catch (error) {
-      notificationsStore.displaySnackbar(error.message, 'error', 'mdi-close-circle')
+      handleError(notificationsStore, 'Error creating project', error)
     } finally {
       isSaving.value = false
     }
   }
 
   const saveEditedProject = async (projectId, editedProject) => {
-    // Check if a user is logged in
-    if (!userStore.isLoggedIn) {
-      notificationsStore.displaySnackbar(
-        'Please log in to edit a project.',
-        'error',
-        'mdi-account-off'
-      )
-      return // Stop execution if not logged in
-    }
-
-    // Check if the project is being edited
-    if (isSaving.value) return
-    isSaving.value = true
     try {
-      // Check if all fields are filled
+      const userId = requireUserId(userStore)
+      if (isSaving.value) return
+      isSaving.value = true
       if (validProjectForm(editedProject)) {
-        // Fetch the project from Firestore to check ownership
-        const projectRef = doc(db, 'users', userStore.userId, 'projects', projectId)
-        const projectDoc = await getDoc(projectRef)
-        const projectData = projectDoc.data()
-
-        // Check if the user owns the project
-        if (projectData.userId === userStore.userId) {
-          // Update the project in Firestore
-          await updateDoc(projectRef, {
+        const projectRef = doc(db, 'users', userId, 'projects', projectId)
+        const projectDoc = await getDocument(projectRef)
+        const projectData = projectDoc
+        if (projectData.userId === userId) {
+          await updateDocument(projectRef, {
             ...editedProject,
             updatedAt: serverTimestamp(),
             projectId: editedProject.title.toLowerCase().replace(/\s/g, '-')
           })
 
-          // Update tasks color
-          const tasksQuery = query(
-            collection(db, 'users', userStore.userId, 'projects', projectId, 'tasks')
-          )
+          const tasksQuery = query(collection(db, 'users', userId, 'projects', projectId, 'tasks'))
           const tasksSnapshot = await getDocs(tasksQuery)
 
           const batch = writeBatch(db)
@@ -201,59 +180,41 @@ export const useProjectStore = defineStore('projects', () => {
 
           await batch.commit()
 
-          // Display a success message
-          notificationsStore.displaySnackbar('Project updated!', 'success', 'mdi-check-circle')
+          showSnackbar(notificationsStore, 'Project updated!', 'success', 'mdi-check-circle')
         } else {
-          // Handle unauthorized access (e.g., show an error message)
-          notificationsStore.displaySnackbar(
+          showSnackbar(
+            notificationsStore,
             'You are not authorized to edit this project.',
             'warning',
             'mdi-alert-circle'
           )
         }
       } else {
-        // Display an error message
         throw new Error('All fields are required. Please try again!')
       }
     } catch (error) {
-      // Display an error message
-      notificationsStore.displaySnackbar(
-        'Error updating project: ' + error.message + ' Please try again!',
-        'error',
-        'mdi-close-circle'
-      )
+      handleError(notificationsStore, 'Error updating project', error)
     } finally {
-      // Reset isSaving flag
       isSaving.value = false
     }
   }
 
   const deleteAllTasksInProject = async () => {
     try {
-      // Verificar autenticación
-      if (!userStore.isLoggedIn) {
-        notificationsStore.displaySnackbar(
-          'Please log in to delete tasks.',
-          'error',
-          'mdi-account-off'
-        )
-        return
-      }
-
-      const currentUserId = userStore.userId
+      const userId = requireUserId(userStore)
       const projectId = selectedProjectId.value
 
       if (!projectId) {
-        notificationsStore.displaySnackbar('Project ID is undefined.', 'error', 'mdi-alert-circle')
+        showSnackbar(notificationsStore, 'Project ID is undefined.', 'error', 'mdi-alert-circle')
         return
       }
 
-      // Obtener referencia del proyecto
-      const projectRef = doc(db, 'users', currentUserId, 'projects', projectId)
+      const projectRef = doc(db, 'users', userId, 'projects', projectId)
       const projectDoc = await getDoc(projectRef)
 
-      if (!projectDoc.exists() || projectDoc.data().userId !== currentUserId) {
-        notificationsStore.displaySnackbar(
+      if (!projectDoc.exists() || projectDoc.data().userId !== userId) {
+        showSnackbar(
+          notificationsStore,
           'Project not found or unauthorized',
           'error',
           'mdi-alert-circle'
@@ -261,75 +222,60 @@ export const useProjectStore = defineStore('projects', () => {
         return
       }
 
-      // Crear batch para operaciones atómicas
       const batch = writeBatch(db)
 
-      // 1. Obtener todas las tareas del proyecto
-      const tasksQuery = query(
-        collection(db, 'users', currentUserId, 'projects', projectId, 'tasks')
-        // where('projectId', '==', projectId)
-      )
+      const tasksQuery = query(collection(db, 'users', userId, 'projects', projectId, 'tasks'))
       const tasksSnapshot = await getDocs(tasksQuery)
 
-      // 2. Colectar IDs de tareas y notificaciones
       const taskIds = []
       const notificationsToDelete = []
 
-      // Procesar cada tarea
       for (const taskDoc of tasksSnapshot.docs) {
         const taskId = taskDoc.id
         taskIds.push(taskId)
 
-        // 3. Buscar notificaciones relacionadas
         const notificationsQuery = query(
-          collection(db, 'users', currentUserId, 'notifications'),
+          collection(db, 'users', userId, 'notifications'),
           where('taskId', '==', taskId)
         )
         const notificationsSnapshot = await getDocs(notificationsQuery)
         notificationsSnapshot.forEach((doc) => notificationsToDelete.push(doc.ref))
 
-        // 4. Eliminar tarea y actualizar usuario
         batch.delete(taskDoc.ref)
       }
 
-      // 5. Eliminar todas las notificaciones encontradas
-      notificationsToDelete.forEach((ref) => batch.delete(ref))
+      // Eliminar todas las notificaciones encontradas en batch
+      await batchDeleteDocuments(db, notificationsToDelete)
 
-      // Ejecutar batch atómico
       await batch.commit()
 
-      // 6. Limpiar estado y notificar
-      notificationsStore.displaySnackbar(
+      // Limpia las tareas del store relacionadas con el proyecto eliminado
+      taskStore.state.tasks = taskStore.state.tasks.filter((task) => task.projectId !== projectId)
+      taskStore.state.filteredTasks = taskStore.state.filteredTasks.filter(
+        (task) => task.projectId !== projectId
+      )
+
+      showSnackbar(
+        notificationsStore,
         'All tasks deleted successfully',
         'success',
         'mdi-check-circle'
       )
       router.push('/')
     } catch (error) {
-      console.error('Error deleting all tasks in project:', error)
-      notificationsStore.displaySnackbar(`Error: ${error.message}`, 'error', 'mdi-close-circle')
+      handleError(notificationsStore, 'Error deleting all tasks in project', error)
     }
   }
 
-  // Delete a project
   const deleteProject = async (projectId) => {
     try {
-      if (!userStore.isLoggedIn) {
-        console.error('User must be logged in to delete a project.')
-        notificationsStore.displaySnackbar(
-          'Please log in to delete a project.',
-          'error',
-          'mdi-account-off'
-        )
-        return
-      }
+      const userId = requireUserId(userStore)
+      const projectRef = doc(db, 'users', userId, 'projects', projectId)
+      const projectDoc = await getDocument(projectRef)
 
-      const currentUserId = userStore.userId
-      const projectRef = doc(db, 'users', currentUserId, 'projects', projectId) // Changed here
-      const projectDoc = await getDoc(projectRef)
-
-      if (!projectDoc.exists()) {
-        notificationsStore.displaySnackbar(
+      if (!projectDoc) {
+        showSnackbar(
+          notificationsStore,
           'Project not found or unauthorized',
           'error',
           'mdi-alert-circle'
@@ -337,12 +283,7 @@ export const useProjectStore = defineStore('projects', () => {
         return
       }
 
-      // Check if the user owns the project (implicitly by being in their subcollection)
-
-      // 1. Delete all tasks within the project
-      const tasksQuery = query(
-        collection(db, 'users', currentUserId, 'projects', projectId, 'tasks') // Changed here
-      )
+      const tasksQuery = query(collection(db, 'users', userId, 'projects', projectId, 'tasks'))
       const tasksSnapshot = await getDocs(tasksQuery)
       const batch = writeBatch(db)
       tasksSnapshot.forEach((doc) => {
@@ -350,10 +291,10 @@ export const useProjectStore = defineStore('projects', () => {
       })
       await batch.commit()
 
-      // 2. Delete the project document
-      await deleteDoc(projectRef)
+      await deleteDocument(projectRef)
 
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         'Project and its tasks deleted successfully',
         'success',
         'mdi-check-circle'
@@ -364,12 +305,7 @@ export const useProjectStore = defineStore('projects', () => {
       }
       router.push('/')
     } catch (error) {
-      console.error('Error deleting project:', error)
-      notificationsStore.displaySnackbar(
-        'Error deleting project: ' + error.message + ' Please try again!',
-        'error',
-        'mdi-close-circle'
-      )
+      handleError(notificationsStore, 'Error deleting project', error)
     }
   }
 
@@ -378,7 +314,6 @@ export const useProjectStore = defineStore('projects', () => {
   }
 
   // Watchers
-  // Watch for changes in userId to subscribe to the collection
   watch(
     () => userStore.userId,
     (newUserId) => {
@@ -393,7 +328,6 @@ export const useProjectStore = defineStore('projects', () => {
   )
 
   return {
-    // State
     projectsData,
     newProject,
     editedProject,
@@ -402,16 +336,11 @@ export const useProjectStore = defineStore('projects', () => {
     selectedProjectId,
     newProjectData,
     editedProjectData,
-    // Getters
     selectedProject,
-    // Reactive properties
     isSaving,
     listeners,
-    // Helpers
     subscribeToCollection,
-    // Validations
     validProjectForm,
-    // Actions
     clearProjectsData,
     createProject,
     saveEditedProject,

@@ -41,7 +41,7 @@ import {
   combineDateTime,
   getStartAndEndOfDay,
   createTaskData
-} from './taskUtils.js'
+} from '../utils/taskUtils.js'
 
 export const useTaskStore = defineStore('tasks', () => {
   const dataStore = useDataStore()

@@ -2,13 +2,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { signInWithPopup, GoogleAuthProvider, signOut, onIdTokenChanged } from 'firebase/auth'
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase.js'
 import { useRouter } from 'vue-router'
 import { useDataStore } from './dataStore.js'
 import { useTaskStore } from './taskStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
+import { getDocument, updateDocument } from '@/utils/firestoreCrud.js'
 
 export const useUserStore = defineStore('user', () => {
   // State
@@ -191,18 +192,18 @@ export const useUserStore = defineStore('user', () => {
   // Firestore Operations
   const createUserDocument = async (user) => {
     const userRef = doc(db, 'users', user.uid)
-    const userDoc = await getDoc(userRef)
+    const userDoc = await getDocument(userRef)
 
     const userData = {
       displayName: user.displayName,
       email: user.email,
       photoURL: user.photoURL,
       lastLogin: new Date(),
-      loginCount: (userDoc.data()?.loginCount || 0) + 1
+      loginCount: (userDoc?.loginCount || 0) + 1
     }
 
-    if (userDoc.exists()) {
-      await updateDoc(userRef, userData)
+    if (userDoc) {
+      await updateDocument(userRef, userData)
       return { isNewUser: false }
     }
 

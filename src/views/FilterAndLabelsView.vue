@@ -28,7 +28,6 @@ const { reset } = useResetForm(form)
 const showCards = ref(false)
 const showAlert = ref(false)
 
-// Mostrar tareas solo si hay filtros activos y resultados
 const hasActiveFilters = () => {
   return (
     taskStore.state.selectedProjects.length > 0 ||
@@ -44,14 +43,6 @@ const hasActiveFilters = () => {
 onUnmounted(() => {
   taskStore.resetFilters()
 })
-
-// Watcher para cambios en autenticación
-// watch(
-//   () => userStore.isLoggedIn,
-//   (loggedIn) => {
-//     if (loggedIn) taskStore.fetchTasks('first')
-//   }
-// )
 
 // Manejar cambios en filtros
 watch(
@@ -70,7 +61,6 @@ watch(
   { immediate: true }
 )
 
-// Manejar clicks en filtros sin autenticación
 const handleFilterClick = () => {
   if (!userStore.isLoggedIn) showAlert.value = true
 }
@@ -79,7 +69,6 @@ const handleClearDate = () => {
   taskStore.state.selectedEndDate = null
 }
 
-// Configurar botones del formulario
 const { btnsForm } = useFormBtnActions(
   submitEditedTask,
   reset,

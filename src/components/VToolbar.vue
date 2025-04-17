@@ -224,9 +224,26 @@ const openDialog = (value) => {
   }
 
   switch (value) {
-    case 'add task':
+    case 'add task': {
+      // Determina el proyecto seleccionado (si existe)
+      const currentProject = projectStore.projects.find(
+        (p) => p.title === taskStore.selectedProjectTitle
+      )
+      taskStore.newTask = {
+        projectId: currentProject ? currentProject.id : '',
+        title: '',
+        description: '',
+        label: '',
+        priority: '',
+        status: '',
+        startDate: null,
+        endDate: null,
+        completed: false,
+        color: currentProject ? currentProject.color : null
+      }
       dialogAddTask.value = true
       break
+    }
     case 'add project':
       dialogAddProject.value = true
       break
@@ -236,27 +253,18 @@ const openDialog = (value) => {
   }
 }
 
-// const resetAddTaskForm = () => {
-//   taskFormRef.value?.reset()
-//   showSnackbar('Add Task Form has been reset', 'success')
-// }
-
-// const resetAddProjectForm = () => {
-//   if (formAddProject.value) {
-//     formAddProject.value.reset()
-//     showSnackbar('Add Project Form has been reset', 'success')
-//   }
-// }
 const { reset: resetAddTaskForm } = useResetForm(
   taskFormRef,
   'Add Task Form has been reset',
-  'success'
+  'success',
+  'mdi-refresh'
 )
 
 const { reset: resetAddProjectFormFn } = useResetForm(
   formAddProject,
   'Add Project Form has been reset',
-  'success'
+  'success',
+  'mdi-refresh'
 )
 
 const addNewProject = async () => {
@@ -281,13 +289,14 @@ const addNewProject = async () => {
   }
 }
 
-const handleProjectClick = (project) => {
-  // Handles the click on a project item in the navigation drawer.
-  // Sets the selected project in the task store, fetches tasks for that project,
-  // navigates to the project's task list, and closes the drawer.
+const handleProjectClick = async (project) => {
+  // Selecciona el proyecto en el store de tareas
   taskStore.setSelectedProject(project.title)
-  taskStore.getTasksByProjectPaginated()
+  // Carga la primera página de tareas filtradas por ese proyecto
+  await taskStore.fetchTasks('first')
+  // Navega a la vista de tareas por proyecto (ajusta el nombre de la ruta si es necesario)
   router.push({ name: 'task-by-project', params: { projectName: project.title } })
+  // Cierra el drawer
   drawer.value = false
 }
 
@@ -614,7 +623,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
         <VTaskForm
-          v-model="taskStore.newTask"
+          v-model="taskStore.state.newTask"
           :projects="projectStore.projects"
           :labels="dataStore.labels"
           :priorities="dataStore.priorities"

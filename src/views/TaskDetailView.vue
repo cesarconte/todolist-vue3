@@ -36,7 +36,7 @@ La reactividad de computed permite que las ediciones en Firebase se reflejen en 
 * ==> Importante: la reactividad de computed funciona porque dataStore.tasks es un array reactivo.
 Si dataStore.tasks no fuera reactivo, computed no se recalcularía y la vista no se actualizaría. */
 const task = computed(() => {
-  return taskStore.tasks.find((task) => task.id === props.taskId)
+  return taskStore.tasksData.find((task) => task.id === props.taskId)
 })
 
 // Reset the form
@@ -101,7 +101,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
-                @edit-task="(projectId, taskId) => taskStore.editTask(projectId, taskId)"
+                @edit-task="() => taskStore.editTask(task.id)"
                 @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
                 @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
               />
@@ -145,7 +145,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
           :statuses="dataStore.statuses"
           :rules="rules"
           ref="form"
-          @submit="submitEditedTask"
+          @submit="taskStore.updateTask"
         ></VTaskForm>
       </v-card-text>
       <v-card-actions class="justify-center">

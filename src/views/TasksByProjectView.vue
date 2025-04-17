@@ -39,46 +39,71 @@ const props = defineProps({
   }
 })
 
-// onMounted(async () => {
-//   taskStore.setSelectedProject(props.projectName)
-
-//   if (taskStore.selectedProject) {
-//     await taskStore.getTasksByProjectPaginated()
-//   } else {
-//     notificationsStore.displaySnackbar(
-//       'No project selected',
-//       'Please select a project to view tasks.',
-//       'error'
-//     )
-//   }
-// })
 onMounted(async () => {
-  taskStore.setSelectedProject(props.projectName)
+  try {
+    taskStore.setSelectedProject(props.projectName);
 
-  if (props.taskId) {
-    try {
-      await taskStore.fetchTaskById(props.taskId)
-    } catch (error) {
-      notificationsStore.displaySnackbar('Error loading task', 'error', 'mdi-alert-circle')
-      console.error('Error loading task:', error)
+    if (!props.projectName) {
+      notificationsStore.displaySnackbar('No project selected', 'error', 'mdi-alert-circle');
+      return;
     }
-  } else if (taskStore.selectedProject) {
-    try {
-      await taskStore.getTasksByProjectPaginated()
-    } catch (error) {
-      notificationsStore.displaySnackbar('Error loading tasks', 'error', 'mdi-alert-circle')
-      console.error('Error loading tasks:', error)
+
+    const selectedProject = projectStore.projects.find(
+      (project) => project.title === props.projectName
+    );
+
+    if (!selectedProject) {
+      notificationsStore.displaySnackbar('Project not found', 'error', 'mdi-alert-circle');
+      return;
     }
-  } else {
-    notificationsStore.displaySnackbar('No project selected', 'error', 'mdi-alert-circle')
+
+    if (props.taskId) {
+      await taskStore.fetchTaskById(props.taskId);
+    } else {
+      await taskStore.loadAllUserTasks();
+    }
+  } catch (error) {
+    notificationsStore.displaySnackbar('Error loading tasks', 'error', 'mdi-alert-circle');
+    console.error('Error loading tasks:', error);
   }
-})
+});
 
 const form = ref(null)
 const taskFormRef = ref(null)
 const dialogEditProject = ref(false)
 const progressPercentage = ref(0)
 const dialogAddTask = ref(false)
+
+const localCurrentPage = ref(1)
+const localPageSize = 6
+
+const paginatedTasks = computed(() => {
+  const start = (localCurrentPage.value - 1) * localPageSize
+  const end = start + localPageSize
+  return taskStore.tasksInSelectedProject.slice(start, end)
+})
+
+const localTotalPages = computed(() => {
+  return Math.max(1, Math.ceil(taskStore.tasksInSelectedProject.length / localPageSize))
+})
+
+const goToFirstPage = () => { localCurrentPage.value = 1 }
+const goToLastPage = () => { localCurrentPage.value = localTotalPages.value }
+const goToNextPage = () => {
+  if (localCurrentPage.value < localTotalPages.value) localCurrentPage.value++
+}
+const goToPrevPage = () => {
+  if (localCurrentPage.value > 1) localCurrentPage.value--
+}
+
+watch(
+  () => taskStore.tasksInSelectedProject.length,
+  () => {
+    if (localCurrentPage.value > localTotalPages.value) {
+      localCurrentPage.value = localTotalPages.value
+    }
+  }
+)
 
 const handleAddTaskClick = () => {
   if (!userStore.isLoggedIn) {
@@ -87,10 +112,19 @@ const handleAddTaskClick = () => {
     return
   }
 
-  // Establecer proyecto actual por defecto
-  const currentProject = projectStore.projects.find((p) => p.title === taskStore.selectedProject)
-  if (currentProject) {
-    taskStore.newTask.projectId = currentProject.id
+  // Establecer proyecto actual por defecto y reinicializar newTask
+  const currentProject = projectStore.projects.find((p) => p.title === taskStore.selectedProjectTitle)
+  taskStore.newTask = {
+    projectId: currentProject ? currentProject.id : '',
+    title: '',
+    description: '',
+    label: '',
+    priority: '',
+    status: '',
+    startDate: null,
+    endDate: null,
+    completed: false,
+    color: currentProject ? currentProject.color : null
   }
 
   dialogAddTask.value = true
@@ -127,51 +161,6 @@ const submitEditedProject = async () => {
   }
 }
 
-// Define the reset function to reset the form values
-// const reset = () => {
-//   form.value.reset()
-//   notificationsStore.displaySnackbar('Form reset', 'The form has been reset successfully.', 'info')
-// }
-// const reset = () => {
-//   if (dialogEditProject.value) {
-//     // Logic to reset the project form
-//     const projectId = projectStore.editedProject.id
-//     const originalProject = projectStore.projects.find((project) => project.id === projectId)
-//     if (originalProject) {
-//       projectStore.editedProject = { ...originalProject }
-//     } else {
-//       projectStore.editedProject = { id: '', title: '', icon: '', color: '' }
-//     }
-//     if (form.value) {
-//       form.value.reset()
-//     }
-//     notificationsStore.displaySnackbar('Project edit form reset', 'info', 'mdi-information')
-//   } else if (taskStore.dialogEditTask) {
-//     // Logic to reset the task form
-//     taskStore.editedTask = {
-//       projectId: '',
-//       title: '',
-//       description: '',
-//       label: '',
-//       priority: '',
-//       status: '',
-//       startDate: null,
-//       endDate: null,
-//       completed: false,
-//       color: null
-//     }
-//     if (form.value) {
-//       form.value.reset()
-//     }
-//     notificationsStore.displaySnackbar('Task edit form reset', 'info', 'mdi-information')
-//   } else {
-//     // Default case or if no dialog is open
-//     if (form.value) {
-//       form.value.reset()
-//     }
-//     notificationsStore.displaySnackbar('Form reset', 'info', 'mdi-information')
-//   }
-// }
 // Reseteo para el formulario de edición de proyecto
 const resetProjectFormState = () => {
   const projectId = projectStore.editedProject.id
@@ -253,13 +242,13 @@ const btnsProject = [
     icon: 'mdi-pencil',
     function: () => {
       const projectId = projectStore.projects.find(
-        (project) => project.title === taskStore.selectedProject
+        (project) => project.title === taskStore.selectedProjectTitle
       )?.id
       if (projectId) {
         editProject(projectId)
       } else {
         // Handle the case where the project is not found
-        console.error('Project not found:', taskStore.selectedProject)
+        console.error('Project not found:', taskStore.selectedProjectTitle)
       }
     }
   },
@@ -269,13 +258,13 @@ const btnsProject = [
     icon: 'mdi-delete',
     function: () => {
       const projectId = projectStore.projects.find(
-        (project) => project.title === taskStore.selectedProject
+        (project) => project.title === taskStore.selectedProjectTitle
       )?.id
       if (projectId) {
         projectStore.deleteProject(projectId)
       } else {
         // Handle the case where the project is not found
-        console.error('Project not found:', taskStore.selectedProject)
+        console.error('Project not found:', taskStore.selectedProjectTitle)
       }
     }
   }
@@ -323,7 +312,7 @@ const completedTasksIcon = computed(() => {
 watch(
   () => taskStore.tasksInSelectedProject,
   (newVal) => {
-    if (newVal.length > 0) {
+    if (Array.isArray(newVal) && newVal.length > 0) {
       progressPercentage.value = Math.round(
         (taskStore.completedTasksInSelectedProject.length / newVal.length) * 100
       )
@@ -377,7 +366,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
       <v-row>
         <v-col cols="12" class="d-flex justify-content-between align-items-center">
           <h2 class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center">
-            {{ taskStore.selectedProject }} project tasks
+            {{ taskStore.selectedProjectTitle }} project tasks
           </h2>
           <v-spacer></v-spacer>
 
@@ -484,7 +473,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         </v-col>
       </v-row>
       <v-row
-        v-if="taskStore.allTasksProject.length > 0"
+        v-if="Array.isArray(taskStore.tasksInSelectedProject) && taskStore.tasksInSelectedProject.length > 0"
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
       >
         <v-divider
@@ -493,7 +482,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
         <v-col
-          v-for="(task, i) in taskStore.allTasksProject"
+          v-for="(task, i) in paginatedTasks"
           :key="i"
           :task="task"
           :value="task"
@@ -573,17 +562,17 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
       </template>
       <v-row class="pa-3">
         <VPagination
-          :currentPage="taskStore.currentPage"
-          :totalPages="taskStore.totalPagesInSelectedProject"
-          :hasPrevPage="taskStore.hasPrevPage"
-          :hasNextPage="taskStore.hasNextPage"
-          @prev-page="taskStore.getTasksByProjectPaginated({ prev: true })"
-          @next-page="taskStore.getTasksByProjectPaginated({ next: true })"
-          @first-page="taskStore.getTasksByProjectPaginated({ first: true })"
-          @last-page="taskStore.getTasksByProjectPaginated({ last: true })"
+          :currentPage="localCurrentPage"
+          :totalPages="localTotalPages"
+          :hasPrevPage="localCurrentPage > 1"
+          :hasNextPage="localCurrentPage < localTotalPages"
+          @prev-page="goToPrevPage"
+          @next-page="goToNextPage"
+          @first-page="goToFirstPage"
+          @last-page="goToLastPage"
         >
           <template #default>
-            Page {{ taskStore.currentPage }} of {{ taskStore.totalPagesInSelectedProject }}
+            Page {{ localCurrentPage }} of {{ localTotalPages }}
           </template>
         </VPagination>
       </v-row>

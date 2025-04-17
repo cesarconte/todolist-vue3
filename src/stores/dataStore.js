@@ -5,6 +5,11 @@ import { ref, computed, watch } from 'vue'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
+// import { getCollection } from '@/utils/firestoreCrud.js'
+
+// Puedes usar getCollection en fetchCollection si en algún momento necesitas obtener los datos de una colección de forma puntual (sin suscripción en tiempo real)
+// Por ahora, la lógica principal de dataStore.js usa onSnapshot para suscripción en tiempo real, que es lo más eficiente para colecciones de datos de referencia.
+// Si en el futuro necesitas una carga puntual (sincrónica) de una colección, puedes usar getCollection(collectionRef) y asignar el resultado al array reactivo correspondiente.
 
 export const useDataStore = defineStore('data', () => {
   const userStore = useUserStore()

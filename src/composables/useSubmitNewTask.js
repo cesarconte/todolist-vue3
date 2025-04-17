@@ -7,6 +7,9 @@ export function useSubmitNewTask(taskFormRef) {
 
   const submitNewTask = async () => {
     try {
+      if (!taskStore.newTask) {
+        throw new Error('No task data found. Please reintente abrir el formulario.')
+      }
       const formattedStartDate = formatDate(taskStore.newTask.startDate)
       const formattedEndDate = formatDate(taskStore.newTask.endDate)
 
@@ -17,6 +20,7 @@ export function useSubmitNewTask(taskFormRef) {
       }
 
       await taskStore.createTask(newTaskData)
+      await taskStore.loadAllUserTasks()
       // Reset the form
       taskFormRef.value?.reset()
     } catch (error) {

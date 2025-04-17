@@ -3,20 +3,20 @@ import { db } from '@/firebase'
 import {
   doc,
   updateDoc,
-  deleteDoc,
-  getDoc,
   getDocs,
-  addDoc,
-  orderBy,
   query,
   where,
-  writeBatch,
   onSnapshot,
   collection
 } from 'firebase/firestore'
 import { useUserStore } from '@/stores/userStore'
 // import { useDataStore } from '@/stores/dataStore'
 import { useTaskStore } from '@/stores/taskStore'
+import { getDocument, getCollection, addDocument, deleteDocument } from '@/utils/firestoreCrud.js'
+import { mapFirestoreNotification } from '@/utils/notificationMappers.js'
+import { showSnackbar, handleError, requireUserId } from '@/utils/notificationHelpers.js'
+import { buildNotificationQuery } from '@/utils/notificationQueries.js'
+import { batchDeleteDocuments } from '@/utils/firestoreBatch.js'
 
 /**
  * Notification Store - Manages all notification-related functionality
@@ -81,9 +81,6 @@ export const useNotificationsStore = defineStore('notifications', {
 
   // Business logic and async operations
   actions: {
-    // updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
-    //   this.showSnackbar = { show, message, prependIcon, appendIcon, color }
-    // },
     updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
       this.showSnackbar = { show, message, prependIcon, appendIcon, color }
     },
@@ -97,19 +94,18 @@ export const useNotificationsStore = defineStore('notifications', {
     async loadSettings() {
       const userStore = useUserStore()
       try {
-        if (!userStore.user) return
+        const userId = requireUserId(userStore)
 
         // Fetch user document from Firestore
-        const userDoc = await getDoc(doc(db, 'users', userStore.user.uid))
-        if (userDoc.exists()) {
-          const data = userDoc.data()
+        const userDoc = await getDocument(doc(db, 'users', userId))
+        if (userDoc) {
+          const data = userDoc
           if (data.notificationSettings) {
             // Update local state with stored settings
             this.notificationSettings = data.notificationSettings
 
             // Schedule notifications if enabled
             if (this.notificationSettings.enabled) {
-              // const dataStore = useDataStore()
               const taskStore = useTaskStore()
               this.scheduleNotifications(taskStore.tasksData)
             }
@@ -119,41 +115,24 @@ export const useNotificationsStore = defineStore('notifications', {
         // Suscribirse a notificaciones en tiempo real
         this.subscribeToNotifications()
       } catch (error) {
-        this.handleError('Error loading settings', error)
+        handleError(this, 'Error loading settings', error)
       }
     },
 
-    async subscribeToNotifications() {
+    async subscribeToNotifications({ unreadOnly = true, pageSize, lastVisible, order } = {}) {
       const userStore = useUserStore()
-      if (!userStore.user || this.unsubscribeNotifications) return
+      if (this.unsubscribeNotifications) return
 
       try {
-        const q = query(
-          collection(db, 'users', userStore.user.uid, 'notifications'),
-          where('read', '==', false),
-          orderBy('timestamp', 'desc')
-        )
+        const userId = requireUserId(userStore)
+        const q = buildNotificationQuery(userId, { unreadOnly, pageSize, lastVisible, order })
 
         this.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
           // Forzar una actualización reactiva
-          this.activeNotifications = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-            show: true
-          }))
-
-          // Opcional: Mostrar snackbar para nuevas notificaciones
-          // snapshot.docChanges().forEach((change) => {
-          //   if (change.type === 'added') {
-          //     this.showSnackbar = {
-          //       show: true,
-          //       message: 'New notification received!'
-          //     }
-          //   }
-          // })
+          this.activeNotifications = snapshot.docs.map(mapFirestoreNotification)
         })
       } catch (error) {
-        this.handleError('Error subscribing to notifications', error)
+        handleError(this, 'Error subscribing to notifications', error)
       }
     },
 
@@ -164,22 +143,23 @@ export const useNotificationsStore = defineStore('notifications', {
     async saveSettings() {
       const userStore = useUserStore()
       try {
-        if (!userStore.user) return
+        const userId = requireUserId(userStore)
 
         // Update Firestore document with current settings
-        await updateDoc(doc(db, 'users', userStore.user.uid), {
+        await updateDoc(doc(db, 'users', userId), {
           notificationSettings: this.notificationSettings
         })
 
         // Clear existing timeouts and reschedule
         this.clearTimeouts()
         if (this.notificationSettings.enabled) {
-          // const dataStore = useDataStore()
           const taskStore = useTaskStore()
           this.scheduleNotifications(taskStore.tasksData)
         }
+
+        showSnackbar(this, 'Settings saved!', 'success', 'mdi-content-save')
       } catch (error) {
-        this.handleError('Error saving settings', error)
+        handleError(this, 'Error saving settings', error)
         throw error
       }
     },
@@ -209,7 +189,7 @@ export const useNotificationsStore = defineStore('notifications', {
         }
         return true
       } catch (error) {
-        this.handleError(error.message, error)
+        handleError(this, error.message, error)
         return false
       }
     },
@@ -222,15 +202,15 @@ export const useNotificationsStore = defineStore('notifications', {
         const verified = await this.verifyNotificationSupport()
         if (!verified) return
 
-        // Guardar en Firestore
         const userStore = useUserStore()
-        if (userStore.user) {
-          await addDoc(collection(db, 'users', userStore.user.uid, 'notifications'), {
-            message: 'Test notification',
-            timestamp: new Date().toISOString(),
-            read: false
-          })
-        }
+        const userId = requireUserId(userStore)
+
+        // Guardar en Firestore
+        await addDocument(collection(db, 'users', userId, 'notifications'), {
+          message: 'Test notification',
+          timestamp: new Date().toISOString(),
+          read: false
+        })
 
         // Create system notification
         new Notification('Test Notification', {
@@ -240,13 +220,9 @@ export const useNotificationsStore = defineStore('notifications', {
         })
 
         // Show confirmation in UI
-        this.showSnackbar = {
-          show: true,
-          message: 'Test notification sent successfully',
-          prependIcon: 'mdi-bell-ring'
-        }
+        showSnackbar(this, 'Test notification sent successfully', 'success', 'mdi-bell-ring')
       } catch (error) {
-        this.handleError(error.message, error)
+        handleError(this, 'Error sending test notification', error)
       }
     },
 
@@ -258,7 +234,6 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         if (!this.notificationSettings.enabled) return
 
-        // const dataStore = useDataStore()
         const taskStore = useTaskStore()
         const tasks = taskStore.tasksData
 
@@ -266,7 +241,7 @@ export const useNotificationsStore = defineStore('notifications', {
 
         const now = Date.now()
         const userStore = useUserStore()
-        const userId = userStore.user?.uid // Capturar UID actual
+        const userId = requireUserId(userStore)
 
         tasks.forEach((task) => {
           if (!task.endDate) return
@@ -283,20 +258,16 @@ export const useNotificationsStore = defineStore('notifications', {
               const timeoutId = setTimeout(async () => {
                 try {
                   // 1. Guardar notificación en Firestore
-                  await addDoc(collection(db, 'users', userId, 'notifications'), {
+                  await addDocument(collection(db, 'users', userId, 'notifications'), {
                     message: `Task "${task.title}" due soon!`,
                     timestamp: new Date().toISOString(),
                     read: false,
                     taskId: task.id,
                     icon: 'mdi-email-mark-as-unread'
                   })
-                  this.showSnackbar = {
-                    show: true,
-                    message: `New reminder: "${task.title}" is due soon!`,
-                    prependIcon: 'mdi-alarm'
-                  }
+                  showSnackbar(this, `New reminder: "${task.title}" is due soon!`, 'success', 'mdi-alarm')
                 } catch (error) {
-                  this.handleError('Failed to create notification', error)
+                  handleError(this, 'Failed to create notification', error)
                 }
               }, notificationTime - now)
 
@@ -309,7 +280,7 @@ export const useNotificationsStore = defineStore('notifications', {
           })
         })
       } catch (error) {
-        this.handleError('Error scheduling notifications', error)
+        handleError(this, 'Error scheduling notifications', error)
       }
     },
 
@@ -335,81 +306,60 @@ export const useNotificationsStore = defineStore('notifications', {
       }
     },
 
-    async loadNotifications() {
+    async loadNotifications({ unreadOnly = false, pageSize, lastVisible, order } = {}) {
       const userStore = useUserStore()
       try {
-        if (!userStore.user) return
-
-        const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
-        const q = query(notificationsRef, orderBy('timestamp', 'desc'))
-
-        const snapshot = await getDocs(q)
-        this.activeNotifications = snapshot.docs.map((doc) => {
-          const data = doc.data()
-          return {
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp,
-            show: true
-          }
-        })
+        const userId = requireUserId(userStore)
+        const q = buildNotificationQuery(userId, { unreadOnly, pageSize, lastVisible, order })
+        const docs = await getCollection(q)
+        this.activeNotifications = docs.map(mapFirestoreNotification)
       } catch (error) {
-        this.handleError('Error loading notifications', error)
+        handleError(this, 'Error loading notifications', error)
       }
     },
 
     async markAsRead(notificationId) {
       const userStore = useUserStore()
       try {
-        if (!userStore.user || !notificationId) return
+        const userId = requireUserId(userStore)
 
         // Eliminar de Firestore
-        await deleteDoc(doc(db, 'users', userStore.user.uid, 'notifications', notificationId))
+        await deleteDocument(doc(db, 'users', userId, 'notifications', notificationId))
 
         // Actualizar estado local
         this.activeNotifications = this.activeNotifications.filter((n) => n.id !== notificationId)
-        this.showSnackbar = {
-          show: true,
-          message: 'Notification marked as read successfully',
-          prependIcon: 'mdi-bell-check'
-        }
+        showSnackbar(this, 'Notification marked as read successfully', 'success', 'mdi-bell-check')
       } catch (error) {
-        this.handleError('Error marking notification as read', error)
+        handleError(this, 'Error marking notification as read', error)
       }
     },
 
     async markAllAsRead() {
       const userStore = useUserStore()
       try {
-        if (!userStore.user) return
+        const userId = requireUserId(userStore)
 
         // Referencia a la colección de notificaciones
-        const notificationsRef = collection(db, 'users', userStore.user.uid, 'notifications')
+        const notificationsRef = collection(db, 'users', userId, 'notifications')
 
         // Obtener todas las notificaciones no leídas
         const q = query(notificationsRef, where('read', '==', false))
         const snapshot = await getDocs(q)
 
-        // Crear batch de eliminaciones
-        const batch = writeBatch(db)
-        snapshot.forEach((doc) => {
-          batch.delete(doc.ref)
-        })
+        // Obtener referencias de documentos
+        const docRefs = snapshot.docs.map((doc) => doc.ref)
 
-        await batch.commit()
+        // Eliminar documentos en batch
+        await batchDeleteDocuments(db, docRefs)
 
         // Actualizar estado local
         this.activeNotifications = this.activeNotifications.filter(
           (n) => !snapshot.docs.some((d) => d.id === n.id)
         )
 
-        this.showSnackbar = {
-          show: true,
-          message: 'All notifications marked as read successfully',
-          prependIcon: 'mdi-check-all'
-        }
+        showSnackbar(this, 'All notifications marked as read successfully', 'success', 'mdi-check-all')
       } catch (error) {
-        this.handleError('Error marking all as read', error)
+        handleError(this, 'Error marking all as read', error)
       }
     },
 
@@ -443,19 +393,7 @@ export const useNotificationsStore = defineStore('notifications', {
      * @param {Error} error - Original error object
      */
     handleError(message, error) {
-      console.error('Notification error:', error)
-
-      // Show error in UI
-      this.showSnackbar = {
-        show: true,
-        message: `${message}: ${error.message || 'Unknown error'}`,
-        prependIcon: 'mdi-alert-circle'
-      }
-
-      // Automatically disable notifications if permission denied
-      if (error.message.includes('Permission not granted')) {
-        this.notificationSettings.enabled = false
-      }
+      handleError(this, message, error)
     },
 
     unsubscribe() {
