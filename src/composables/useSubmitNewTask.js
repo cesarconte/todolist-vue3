@@ -1,9 +1,11 @@
 // src/composables/useSubmitNewTask.js
 import { useTaskStore } from '@/stores/taskStore'
 import { formatDate } from '@/utils/dateFormat'
+import { useProjectStore } from '@/stores/projectStore'
 
 export function useSubmitNewTask(taskFormRef) {
   const taskStore = useTaskStore()
+  const projectStore = useProjectStore()
 
   const submitNewTask = async () => {
     try {
@@ -20,6 +22,11 @@ export function useSubmitNewTask(taskFormRef) {
       }
 
       await taskStore.createTask(newTaskData)
+      // Actualiza el proyecto seleccionado al del formulario si es diferente
+      const project = projectStore.projects.find((p) => p.id === newTaskData.projectId)
+      if (project) {
+        taskStore.setSelectedProject(project.title)
+      }
       await taskStore.loadAllUserTasks()
       // Reset the form
       taskFormRef.value?.reset()
