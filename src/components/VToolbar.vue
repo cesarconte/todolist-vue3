@@ -31,7 +31,7 @@ const taskStore = useTaskStore() // Accesses the task store
 const userStore = useUserStore() // Accesses the user store
 const notificationsStore = useNotificationsStore() // Accesses the notifications store
 
-const { submitNewTask } = useSubmitNewTask(ref(null)) // Accesses the submitNewTask function
+const { submitNewTask } = useSubmitNewTask() // Accesses the submitNewTask function
 
 /************************************
  * Router
@@ -566,7 +566,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
         <span class="text-h6">Add new task</span>
       </v-card-title>
-      <v-card-text :class="mobile ? 'px-0' : ''">
+      <v-card-text :class="mobile ? 'px-0' : ''" max-height="70vh" scrollable>
         <VTaskForm
           v-model="taskStore.newTask"
           :projects="projectStore.projects"

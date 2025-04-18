@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import { useDisplay } from 'vuetify'
+import { requiredRule } from '@/composables/useFieldRules'
 
 const { xs } = useDisplay()
 
@@ -63,10 +64,36 @@ defineExpose({
   },
   resetValidation: () => taskFormRef.value?.resetValidation()
 })
+
+const titleRules = requiredRule('Title')
+const descriptionRules = requiredRule('Description')
+const projectRules = requiredRule('Project')
+const labelRules = requiredRule('Label')
+const priorityRules = requiredRule('Priority')
+const statusRules = requiredRule('Status')
+const startDateRules = requiredRule('Start Date')
+const endDateRules = requiredRule('Due Date')
 </script>
 
 <template>
   <v-form class="form" ref="taskFormRef" @submit.prevent="$emit('submit')">
+    <v-alert
+      v-if="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
+      type="warning"
+      class="mb-4"
+      border="start"
+      border-color="warning"
+      variant="tonal"
+      color="warning"
+      icon="mdi-alert-circle-outline"
+      prominent
+    >
+      <span v-if="projects.length === 0">You must create a project before creating a task.<br></span>
+      <span v-if="priorities.length === 0">You must define at least one priority.<br></span>
+      <span v-if="labels.length === 0">You must define at least one label.<br></span>
+      <span v-if="statuses.length === 0">You must define at least one status.<br></span>
+      The form is disabled until all required data is available.
+    </v-alert>
     <v-text-field
       v-model="formData.title"
       label="Title"
@@ -75,10 +102,11 @@ defineExpose({
       type="text"
       variant="plain"
       color="red-darken-2"
-      :rules="rules"
+      :rules="titleRules"
       counter
       clearable
       required
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-text-field>
     <v-divider class="mb-4"></v-divider>
     <v-textarea
@@ -91,12 +119,13 @@ defineExpose({
       color="red-darken-2"
       required
       counter
-      :rules="rules"
+      :rules="descriptionRules"
       clearable
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-textarea>
     <v-divider class="mb-4"></v-divider>
     <v-select
-      v-model="formData.project"
+      v-model="formData.projectId"
       label="Project"
       prepend-inner-icon="mdi-folder-outline"
       variant="plain"
@@ -104,6 +133,10 @@ defineExpose({
       clearable
       required
       :items="projects"
+      item-title="title"
+      item-value="id"
+      :rules="projectRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-select>
     <v-divider class="mb-4"></v-divider>
     <v-select
@@ -115,6 +148,8 @@ defineExpose({
       clearable
       required
       :items="labels"
+      :rules="labelRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-select>
     <v-divider class="mb-4"></v-divider>
     <v-select
@@ -126,6 +161,8 @@ defineExpose({
       clearable
       required
       :items="priorities"
+      :rules="priorityRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-select>
     <v-divider class="mb-4"></v-divider>
     <v-select
@@ -137,6 +174,8 @@ defineExpose({
       clearable
       required
       :items="statuses"
+      :rules="statusRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     ></v-select>
     <v-divider class="mb-4"></v-divider>
     <v-date-input
@@ -149,6 +188,8 @@ defineExpose({
       prepend-inner-icon="mdi-calendar"
       color="red-darken-2"
       class="date-create-task"
+      :rules="startDateRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     >
     </v-date-input>
     <v-divider class="mb-4"></v-divider>
@@ -162,6 +203,8 @@ defineExpose({
       prepend-inner-icon="mdi-calendar"
       color="red-darken-2"
       class="date-create-task"
+      :rules="endDateRules"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     >
     </v-date-input>
     <v-divider class="mb-4"></v-divider>
@@ -177,6 +220,7 @@ defineExpose({
       :focused="menuStart"
       color="red-darken-2"
       @click="menuStart = true"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     >
       <v-menu
         v-model="menuStart"
@@ -212,6 +256,7 @@ defineExpose({
       :active="menuEnd"
       :focused="menuEnd"
       @click="menuEnd = true"
+      :disabled="projects.length === 0 || priorities.length === 0 || labels.length === 0 || statuses.length === 0"
     >
       <v-menu
         v-model="menuEnd"

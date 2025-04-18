@@ -18,10 +18,10 @@ export const validTaskForm = (task) => {
   return (
     task?.title?.trim() &&
     task?.description?.trim() &&
-    task?.project?.trim() &&
-    task?.label?.trim() &&
-    task?.priority?.trim() &&
-    task?.status?.trim() &&
+    !!task?.projectId && // Cambiado: Comprobar projectId en lugar de project
+    task?.label !== null && // Cambiado: Comprobar que no sea null
+    task?.priority !== null && // Cambiado: Comprobar que no sea null
+    task?.status !== null && // Cambiado: Comprobar que no sea null
     task.startDate &&
     task.endDate
   )

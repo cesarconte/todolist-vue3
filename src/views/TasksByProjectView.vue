@@ -10,6 +10,7 @@ import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import { useResetForm } from '@/composables/useResetForm'
+import { requiredRule } from '@/composables/useFieldRules'
 import VActionButtons from '@/components/VActionButtons.vue'
 import { ref, onMounted, computed, watch } from 'vue'
 import { useDisplay } from 'vuetify'
@@ -26,7 +27,6 @@ const router = useRouter()
 
 const { submitEditedTask } = useSubmitEditedTask()
 const { submitNewTask } = useSubmitNewTask()
-// const { reset } = useResetForm(form)
 
 const props = defineProps({
   projectName: {
@@ -296,6 +296,10 @@ const btnsFormProject = [
 ]
 
 const rules = useMaxLengthRule()
+
+const titleRules = requiredRule('Title')
+const iconRules = requiredRule('Icon')
+const colorRules = requiredRule('Color')
 
 const totalTasksIcon = computed(() => {
   return taskStore.tasksInSelectedProject.length > 1
@@ -597,6 +601,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 type="text"
                 variant="plain"
                 color="red-darken-2"
+                :rules="titleRules"
                 clearable
                 required
               ></v-text-field>
@@ -608,6 +613,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 type="text"
                 variant="plain"
                 color="red-darken-2"
+                :rules="iconRules"
                 clearable
                 required
               ></v-text-field>
@@ -618,6 +624,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 prepend-inner-icon="mdi-palette"
                 variant="plain"
                 color="red-darken-2"
+                :rules="colorRules"
                 clearable
                 required
                 :items="dataStore.colors"

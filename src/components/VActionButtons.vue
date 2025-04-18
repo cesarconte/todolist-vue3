@@ -31,6 +31,7 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :key="index"
       :type="button.type"
       :text="button.text"
+      :aria-label="button.text || button.ariaLabel || 'Action'"
       :style="{ marginInlineStart: '0' }"
       :width="xs ? '100%' : sm ? '66%' : md ? '49%' : '10rem'"
       :height="button.height"
@@ -44,6 +45,9 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       @click="button.function"
     >
       {{ button.text }}
+      <v-tooltip v-if="!button.text && (button.ariaLabel || button.icon)" activator="parent" location="bottom">
+        {{ button.ariaLabel || button.text || 'Action' }}
+      </v-tooltip>
     </v-btn>
   </div>
 </template>

@@ -65,11 +65,13 @@ export const useTaskStore = defineStore('tasks', () => {
       projectId: '',
       title: '',
       description: '',
-      label: '',
-      priority: '',
-      status: '',
+      label: null,
+      priority: null,
+      status: null,
       startDate: null,
       endDate: null,
+      startDateHour: '',
+      endDateHour: '',
       completed: false,
       color: null
     }
