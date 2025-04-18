@@ -14,26 +14,6 @@ export const useMaxLengthRule = () => {
   ]
 }
 
-// export const validTaskForm = (task) => {
-//   return (
-//     task.title &&
-//     task.title.trim() !== '' &&
-//     task.description &&
-//     task.description.trim() !== '' &&
-//     task.project &&
-//     task.project.trim() !== '' &&
-//     task.label &&
-//     task.label.trim() !== '' &&
-//     task.priority &&
-//     task.priority.trim() !== '' &&
-//     task.status &&
-//     task.status.trim() !== '' &&
-//     task.startDate &&
-//     task.startDate.trim() !== '' &&
-//     task.endDate &&
-//     task.endDate.trim() !== ''
-//   )
-// }
 export const validTaskForm = (task) => {
   return (
     task?.title?.trim() &&
