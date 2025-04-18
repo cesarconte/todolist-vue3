@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, watch } from 'vue'
 import { useDisplay } from 'vuetify'
-import { requiredRule } from '@/composables/useFieldRules'
 
 const { xs } = useDisplay()
 
@@ -65,6 +64,7 @@ defineExpose({
   resetValidation: () => taskFormRef.value?.resetValidation()
 })
 
+const requiredRule = (label) => [(v) => !!v || `${label} is required`]
 const titleRules = requiredRule('Title')
 const descriptionRules = requiredRule('Description')
 const projectRules = requiredRule('Project')
