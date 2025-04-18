@@ -101,6 +101,8 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
                 :createdAt="task.createdAt"
                 :completed="task.completed"
                 :color="task.color ? task.color : 'default'"
+                :startDateHour="task.startDateHour"
+                :endDateHour="task.endDateHour"
                 @edit-task="() => taskStore.editTask(task.id)"
                 @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
                 @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"

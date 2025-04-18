@@ -62,6 +62,14 @@ const props = defineProps({
   color: {
     type: String,
     required: true
+  },
+  startDateHour: {
+    type: String,
+    required: false
+  },
+  endDateHour: {
+    type: String,
+    required: false
   }
 })
 
@@ -321,14 +329,13 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                 </v-col>
                 <v-col>
                   <span
-                    v-if="createdAt"
+                    v-if="props.startDateHour"
                     :class="
                       props.completed
                         ? 'text-decoration-line-through text-grey-lighten-1'
                         : 'font-weight-light'
                     "
-                    >{{ formatDate(startDate, 'time24h') }} h.</span
-                  >
+                  >{{ props.startDateHour }} h.</span>
                   <span v-else class="font-weight-light">No start time</span>
                 </v-col>
               </v-row>
@@ -365,14 +372,13 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                 </v-col>
                 <v-col>
                   <span
-                    v-if="endDate"
+                    v-if="props.endDateHour"
                     :class="
                       props.completed
                         ? 'text-decoration-line-through text-grey-lighten-1'
                         : 'font-weight-light'
                     "
-                    >{{ formatDate(endDate, 'time24h') }} h.</span
-                  >
+                  >{{ props.endDateHour }} h.</span>
                   <span v-else class="font-weight-light">No due time</span>
                 </v-col>
               </v-row>
