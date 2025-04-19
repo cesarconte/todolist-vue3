@@ -23,6 +23,7 @@ import { getDocument, addDocument, updateDocument, deleteDocument } from '@/util
 import { mapFirestoreProject } from '@/utils/projectMappers.js'
 import { requireUserId, showSnackbar, handleError } from '@/utils/notificationHelpers.js'
 import { batchDeleteDocuments } from '@/utils/firestoreBatch.js'
+import { getEmptyProject, getEmptyEditedProject } from '@/composables/useTaskHelpers.js'
 // import { buildProjectQuery } from '@/utils/projectQueries.js'
 
 // Ejemplo de uso futuro (si necesitas paginación o filtrado):
@@ -38,31 +39,20 @@ export const useProjectStore = defineStore('projects', () => {
 
   // State
   const projectsData = ref([])
-  const newProject = reactive({
-    color: '',
-    createdAt: '',
-    icon: '',
-    projectId: '',
-    title: '',
-    userId: ''
-  })
-  const editedProject = reactive({
-    title: '',
-    icon: '',
-    color: ''
-  })
+  const newProject = reactive(getEmptyProject())
+  const editedProject = reactive(getEmptyEditedProject())
   const isSaving = ref(false)
-  const listeners = ref({
-    projects: null,
-    projectTemplates: null
+  const listeners = reactive({
+    projects: null
   })
+  const selectedProject = ref(null) // Mejor opción: ref reactivo, inicia en null
 
   // Getters
   const projects = computed(() => projectsData.value)
   const projectItems = computed(() =>
     projectsData.value.map((project) => ({ value: project.id, title: project.title }))
   )
-  const selectedProject = computed(() => taskStore.selectedProject)
+  const selectedProjectTitle = computed(() => selectedProject.value) // computed string
   const selectedProjectId = computed(() => {
     const project = projects.value.find((project) => project.title === selectedProject.value)
     return project?.id || ''
@@ -74,26 +64,11 @@ export const useProjectStore = defineStore('projects', () => {
   const clearProjectsData = () => {
     // Limpia los datos reactivos
     projectsData.value = []
-    Object.assign(newProject, {
-      color: '',
-      createdAt: '',
-      icon: '',
-      projectId: '',
-      title: '',
-      userId: ''
-    })
-    Object.assign(editedProject, {
-      title: '',
-      icon: '',
-      color: ''
-    })
+    Object.assign(newProject, getEmptyProject())
+    Object.assign(editedProject, getEmptyEditedProject())
   }
 
   const subscribeToCollection = () => {
-    // if (!userStore.isLoggedIn) {
-    //   console.warn('Not subscribed to projects as user is not logged in.')
-    //   return
-    // }
     if (!userStore.userId) {
       console.warn('Not subscribed to projects. User ID not available')
       return
@@ -104,7 +79,7 @@ export const useProjectStore = defineStore('projects', () => {
       orderBy('title', 'asc')
     )
 
-    listeners.value.projects = onSnapshot(
+    listeners.projects = onSnapshot(
       collectionRef,
       (snapshot) => {
         snapshot.docChanges().forEach((change) => {
@@ -127,6 +102,13 @@ export const useProjectStore = defineStore('projects', () => {
         showSnackbar(notificationsStore, 'Error fetching projects.', 'error', 'mdi-alert-octagon')
       }
     )
+  }
+
+  const unsubscribeAll = () => {
+    Object.values(listeners).forEach((unsubscribe) => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    })
+    Object.keys(listeners).forEach((key) => (listeners[key] = null))
   }
 
   const createProject = async (newProject) => {
@@ -313,6 +295,11 @@ export const useProjectStore = defineStore('projects', () => {
     return projectsData.value.find((project) => project.id === id) || null
   }
 
+  // Cuando cambias de proyecto, siempre asigna un string (título) o null
+  function setSelectedProject(title) {
+    selectedProject.value = title || null
+  }
+
   // Watchers
   watch(
     () => userStore.userId,
@@ -320,7 +307,7 @@ export const useProjectStore = defineStore('projects', () => {
       if (newUserId) {
         subscribeToCollection()
       } else {
-        listeners.value.projects?.()
+        unsubscribeAll()
         clearProjectsData()
       }
     },
@@ -336,10 +323,13 @@ export const useProjectStore = defineStore('projects', () => {
     selectedProjectId,
     newProjectData,
     editedProjectData,
-    selectedProject,
+    selectedProject, // ref reactivo
+    selectedProjectTitle, // computed string
+    setSelectedProject, // función para cambiar el proyecto seleccionado
     isSaving,
     listeners,
     subscribeToCollection,
+    unsubscribeAll,
     validProjectForm,
     clearProjectsData,
     createProject,

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted, reactive } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -15,6 +15,7 @@ import { getEmptyTask } from '@/composables/useTaskHelpers'
 import { useDialogCleanup } from '@/composables/useDialogCleanup'
 import { useAddNewProject } from '@/composables/useAddNewProject'
 import { useToolbarNav } from '@/composables/useToolbarNav'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 import VActionButtons from './VActionButtons.vue'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
@@ -43,18 +44,18 @@ const router = useRouter() // Accesses the Vue Router
  ************************************/
 const rules = useMaxLengthRule() // Accesses validation rules
 
+const { initializeData, cleanup } = useDataInitialization()
+
 /************************************
  * Refs
  ************************************/
 const loginParagraph = ref(null) // Reference to the login paragraph
 
-// Agrupación de refs relacionados usando reactive
-const dialogs = reactive({
-  addTask: false,
-  addProject: false,
-  notificationsList: false,
-  notificationsSettings: false
-})
+const dialogAddTask = ref(false)
+const dialogAddProject = ref(false)
+const dialogNotificationsList = ref(false)
+const dialogNotificationsSettings = ref(false)
+
 const forms = reactive({
   addTask: null,
   addProject: null
@@ -107,11 +108,14 @@ const loginLogoutText = computed(() => {
 /************************************
  * Watchers
  ************************************/
-watch(() => menus.group, () => {
-  // Watch for changes in the group variable
-  // Closes the drawer when a group is selected
-  menus.drawer = false
-})
+watch(
+  () => menus.group,
+  () => {
+    // Watch for changes in the group variable
+    // Closes the drawer when a group is selected
+    menus.drawer = false
+  }
+)
 
 watch(
   // Watcher para manejar cambios de autenticación
@@ -135,6 +139,38 @@ watch(
     }
   },
   { immediate: true, flush: 'post' }
+)
+
+watch(
+  () => projectStore.selectedProject, // Esto es un string: el título del proyecto seleccionado
+  (newProjectTitle) => {
+    if (dialogAddTask.value) {
+      // Buscar el objeto de proyecto por título
+      const newProject = projectStore.projects.find((p) => p.title === newProjectTitle)
+      // 1. Si el proyecto ya no existe, cierra el diálogo y muestra mensaje
+      if (!newProject) {
+        dialogAddTask.value = false
+        showSnackbar(
+          'El proyecto seleccionado ya no existe. El formulario se ha cerrado para evitar inconsistencias.',
+          'warning',
+          'mdi-alert'
+        )
+        return
+      }
+      // 2. Si el proyecto cambió, resetea el formulario y actualiza el campo projectId
+      if (forms.addTask && forms.addTask.reset) {
+        forms.addTask.reset()
+      }
+      if (taskStore.newTask) {
+        taskStore.newTask.projectId = newProject.id
+      }
+      showSnackbar(
+        'El proyecto ha cambiado. El formulario se ha actualizado para reflejar el nuevo contexto.',
+        'info',
+        'mdi-information'
+      )
+    }
+  }
 )
 
 /************************************
@@ -168,11 +204,11 @@ const openDialog = (value) => {
         (p) => p.title === taskStore.selectedProjectTitle
       )
       taskStore.newTask = getEmptyTask(currentProject)
-      dialogs.addTask = true
+      dialogAddTask.value = true
       break
     }
     case 'add project':
-      dialogs.addProject = true
+      dialogAddProject.value = true
       break
     default:
       console.error('Invalid value, not found:', value)
@@ -194,13 +230,13 @@ const { reset: resetAddProjectFormFn } = useResetForm(
   'mdi-refresh'
 )
 
-const { addNewProject } = useAddNewProject(resetAddProjectFormFn, dialogs.addProject, menus.drawer)
+const { addNewProject } = useAddNewProject(resetAddProjectFormFn, dialogAddProject, menus.drawer)
 
 const handleProjectClick = async (project) => {
   // Selecciona el proyecto en el store de tareas
-  taskStore.setSelectedProject(project.title)
+  taskStore.setSelectedProject(project.id)
   // Carga la primera página de tareas filtradas por ese proyecto
-  await taskStore.fetchTasks('first')
+  // taskStore.fetchTasks('first')
   // Navega a la vista de tareas por proyecto (ajusta el nombre de la ruta si es necesario)
   router.push({ name: 'task-by-project', params: { projectName: project.title } })
   // Cierra el drawer
@@ -212,7 +248,7 @@ const handleNotificationsClick = async () => {
   // Loads notifications from the store and toggles the notifications list visibility.
   try {
     await notificationsStore.loadNotifications()
-    dialogs.notificationsList = !dialogs.notificationsList
+    dialogNotificationsList.value = !dialogNotificationsList.value
   } catch (error) {
     console.error('Error loading notifications:', error)
     notificationsStore.showSnackbar = {
@@ -224,12 +260,21 @@ const handleNotificationsClick = async () => {
 
 const handleNotificationsSettingsClick = () => {
   // Handles the click on the notifications settings
-  dialogs.notificationsSettings = true
+  dialogNotificationsSettings.value = true
 }
 
 const handleDotsClick = () => {
   // Handles the click on the dots button
   menus.drawerDots = !menus.drawerDots
+}
+
+const handleInvalidProject = () => {
+  showSnackbar(
+    'El proyecto seleccionado ya no existe o es inválido. El formulario se ha actualizado.',
+    'warning',
+    'mdi-alert'
+  )
+  // Opcional: dialogAddTask.value = false // para cerrar el diálogo si prefieres
 }
 
 /************************************
@@ -253,7 +298,7 @@ const cruds = [
 const { btnsForm } = useFormBtnActions(
   submitNewTask,
   resetAddTaskForm,
-  () => (dialogs.addTask = false)
+  () => (dialogAddTask.value = false)
 )
 
 // Configure the submit button for creating a new task
@@ -281,7 +326,7 @@ const btnsFormAddProject = [
     height: '3rem',
     text: 'Close',
     icon: 'mdi-close',
-    function: () => (dialogs.addProject = false)
+    function: () => (dialogAddProject.value = false)
   }
 ]
 
@@ -300,16 +345,27 @@ const { navItems, dotsItems } = useToolbarNav({
 /************************************
  * Lifecycle Hooks
  ************************************/
-onMounted(async () => {
+onMounted(() => {
+  initializeData()
   // Loads notification settings on mount
   if (userStore.isLoggedIn) {
-    await notificationsStore.loadSettings()
+    notificationsStore.loadSettings()
   }
 })
 
-useDialogCleanup(dialogs.addTask, () => {
+onUnmounted(() => {
+  cleanup()
+})
+
+// Corrige: pasar el ref directamente, no una función
+useDialogCleanup(dialogAddTask, () => {
   if (forms.addTask) forms.addTask.reset()
   taskStore.newTask = getEmptyTask()
+})
+
+useDialogCleanup(dialogAddProject, () => {
+  if (forms.addProject) forms.addProject.reset()
+  // Lógica adicional si es necesario para resetear el proyecto
 })
 
 const getTooltipTextForSnackbarIcon = (iconName) => {
@@ -336,13 +392,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         {{ tooltipText }}
       </v-tooltip>
     </v-btn>
-    <v-btn
-      router
-      to="/"
-      class="app-bar-title"
-      color="transparent"
-      aria-label="Go to home page"
-    >
+    <v-btn router to="/" class="app-bar-title" color="transparent" aria-label="Go to home page">
       <v-app-bar-title class="app-bar-title text-white">
         Todolist
         <v-icon color="white" class="app-bar-title icon"
@@ -367,12 +417,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       <span v-if="mdAndUp" class="text-white mr-2">{{ userStore.userName }}</span>
     </template>
     <template v-if="mdAndUp">
-      <v-btn
-        icon
-        aria-label="Login or Logout"
-        @click="handleLoginLogout"
-        class="login-btn"
-      >
+      <v-btn icon aria-label="Login or Logout" @click="handleLoginLogout" class="login-btn">
         <v-icon :icon="loginLogoutIcon" class="login-btn icon"></v-icon>
         <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
           {{ loginLogoutText }}
@@ -446,9 +491,9 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </template>
   </v-app-bar>
 
-  <VNotificationSettings v-model="dialogs.notificationsSettings" />
+  <VNotificationSettings v-model="dialogNotificationsSettings" />
 
-  <VNotificationsList v-model="dialogs.notificationsList" />
+  <VNotificationsList v-model="dialogNotificationsList" />
 
   <v-navigation-drawer
     v-model="menus.drawer"
@@ -558,7 +603,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </v-list>
   </v-navigation-drawer>
   <v-dialog
-    v-model="dialogs.addTask"
+    v-model="dialogAddTask"
     :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
     class="dialog dialog-create-task"
   >
@@ -576,6 +621,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           :rules="rules"
           ref="forms.addTask"
           @submit="submitNewTask"
+          @invalid-project="handleInvalidProject"
         >
         </VTaskForm>
       </v-card-text>
@@ -585,7 +631,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </v-card>
   </v-dialog>
   <v-dialog
-    v-model="dialogs.addProject"
+    v-model="dialogAddProject"
     :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
     class="dialog dialog-add-project"
   >
@@ -676,7 +722,9 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     :message="snackbarGroup.message"
     :color="snackbarGroup.color"
     :append-icon="snackbarGroup.icon"
-    :append-icon-tooltip-text="snackbarGroup.icon ? getTooltipTextForSnackbarIcon(snackbarGroup.icon) : ''"
+    :append-icon-tooltip-text="
+      snackbarGroup.icon ? getTooltipTextForSnackbarIcon(snackbarGroup.icon) : ''
+    "
   >
   </VBaseSnackbar>
 </template>

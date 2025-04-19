@@ -1,7 +1,9 @@
 // VLoginCard.vue
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/userStore'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 
 /************************************
  * Props
@@ -34,6 +36,19 @@ const userStore = useUserStore() // Accesses the user store
  * Vuetify Display
  ************************************/
 const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
+
+/************************************
+ * Data Initialization
+ ************************************/
+const { initializeData, cleanup } = useDataInitialization()
+
+onMounted(() => {
+  initializeData()
+})
+
+onUnmounted(() => {
+  cleanup()
+})
 </script>
 
 <template>

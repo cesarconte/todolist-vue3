@@ -1,8 +1,9 @@
 <!-- VProjectForm.vue -->
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { requiredRule } from '@/composables/useFieldRules'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const props = defineProps({
   modelValue: {
@@ -60,6 +61,16 @@ defineExpose({
     formProject.value?.reset()
   },
   resetValidation: () => formProject.value?.resetValidation()
+})
+
+const { initializeData, cleanup } = useDataInitialization()
+
+onMounted(() => {
+  initializeData()
+})
+
+onUnmounted(() => {
+  cleanup()
 })
 </script>
 

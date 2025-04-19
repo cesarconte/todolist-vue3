@@ -1,7 +1,7 @@
 //dataStore.js
 import { defineStore } from 'pinia'
 import { db } from '../firebase.js'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
@@ -24,7 +24,7 @@ export const useDataStore = defineStore('data', () => {
   const iconsData = ref([])
   const isSaving = ref(false)
   // Listeners (store unsubscribe functions for each collection)
-  const listeners = ref({})
+  const listeners = reactive({})
 
   const collections = {
     // Centralize collections
@@ -106,7 +106,7 @@ export const useDataStore = defineStore('data', () => {
     // 'title' en orden ascendente.
     const collectionRef = query(collection(db, collectionName), orderBy('title', 'asc'))
     // Utilizamos onSnapshot para subscribirse a la colección.
-    listeners.value[collectionName] = onSnapshot(collectionRef, (snapshot) => {
+    listeners[collectionName] = onSnapshot(collectionRef, (snapshot) => {
       try {
         if (!targetRef.value) {
           targetRef.value = []
@@ -138,10 +138,8 @@ export const useDataStore = defineStore('data', () => {
               }
               break
             case 'removed':
-              //if (index !== -1) {
               // Remove the document from the array
-              targetRef.value.splice(index, 1) // No need to check for index here
-              //}
+              targetRef.value.splice(index, 1)
               break
           }
         })
@@ -160,10 +158,10 @@ export const useDataStore = defineStore('data', () => {
 
   // Helper function to unsubscribe from a specific collection
   const unsubscribeFromCollection = (collectionName) => {
-    if (listeners.value[collectionName]) {
+    if (listeners[collectionName]) {
       try {
-        listeners.value[collectionName]()
-        delete listeners.value[collectionName]
+        listeners[collectionName]()
+        delete listeners[collectionName]
       } catch (error) {
         console.error('Error unsubscribing from listener:', error)
       }
@@ -172,10 +170,10 @@ export const useDataStore = defineStore('data', () => {
 
   // Helper function to unsubscribe from all listeners
   const unsubscribeAll = () => {
-    for (const collectionName in listeners.value) {
-      unsubscribeFromCollection(collectionName)
-    }
-    listeners.value = {} // Reset listeners object
+    Object.values(listeners).forEach((unsubscribe) => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    })
+    Object.keys(listeners).forEach((key) => (listeners[key] = null))
   }
 
   // Watch for changes in the user store

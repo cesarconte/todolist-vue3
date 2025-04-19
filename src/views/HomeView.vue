@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-// import { useDataStore } from '@/stores/dataStore'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
@@ -8,14 +7,15 @@ import { useNotificationsStore } from '@/stores/notificationsStore'
 import useLabelIcons from '@/composables/useLabelIcons.js'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useDisplay } from 'vuetify'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const router = useRouter()
-// const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
 const { labelIcons } = useLabelIcons()
+const { initializeData, cleanup } = useDataInitialization()
 
 // Ref variables for the calendar
 const type = ref('month')
@@ -48,10 +48,11 @@ const calendarEvents = computed(() => {
 })
 
 onMounted(() => {
-  if (userStore.isLoggedIn) {
-    taskStore.loadAllUserTasks()
-    notificationsStore.scheduleNotifications(taskStore.tasksData)
-  }
+  initializeData()
+})
+
+onUnmounted(() => {
+  cleanup()
 })
 
 watch(

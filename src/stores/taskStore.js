@@ -12,7 +12,8 @@ import {
   orderBy,
   collectionGroup,
   serverTimestamp,
-  getDocs
+  getDocs,
+  onSnapshot
 } from 'firebase/firestore'
 import { useNotificationsStore } from './notificationsStore.js'
 import { useProjectStore } from './projectStore.js'
@@ -39,7 +40,8 @@ export const useTaskStore = defineStore('tasks', () => {
   // 3. Estado reactivo
   const state = reactive({
     tasks: [],
-    filteredTasks: [],
+    allFilteredTasks: [], // Nuevo: todas las tareas filtradas (no paginadas)
+    filteredTasks: [], // Solo la página actual
     currentPage: 1,
     pageSize: 6,
     totalTasks: 0,
@@ -80,6 +82,11 @@ export const useTaskStore = defineStore('tasks', () => {
   // Estado para saber si estamos en la última página
   const isLastPageMode = ref(false)
 
+  // --- Listeners para sincronización en tiempo real ---
+  const listeners = reactive({
+    tasks: null
+  })
+
   // Computadas
   const totalPages = computed(() => Math.max(1, Math.ceil(state.totalTasks / state.pageSize)))
 
@@ -116,24 +123,52 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   // --- Mejor solución: Getters reactivos para tareas del proyecto seleccionado ---
-  const selectedProjectTitle = computed(() => state.selectedProjects[0] || null)
+  const selectedProjectId = computed(() => state.selectedProjects[0] || null)
 
-  const tasksInSelectedProject = computed(() => {
-    if (!selectedProjectTitle.value) return []
-    // Usar filteredTasks si hay filtros activos, sino tasks
-    const source = state.filteredTasks.length > 0 ? state.filteredTasks : state.tasks
-    // Filtrar por projectId o por project.title según cómo estén mapeadas las tareas
-    const project = projectStore.projects.find((p) => p.title === selectedProjectTitle.value)
-    if (!project) return []
-    return source.filter((task) => task.projectId === project.id)
+  const selectedProjectTitle = computed(() => {
+    const id = selectedProjectId.value
+    if (!id) return ''
+    const project = projectStore.projects.find((p) => p.id === id)
+    return project ? project.title : ''
   })
 
-  const completedTasksInSelectedProject = computed(() =>
-    tasksInSelectedProject.value.filter((task) => task.completed)
+  // Todas las tareas filtradas (no paginadas)
+  const allFilteredTasks = computed(() => state.allFilteredTasks)
+
+  // Tareas de la página actual (paginadas)
+  const tasksPage = computed(() => state.filteredTasks)
+
+  // Tareas filtradas del proyecto seleccionado (no paginadas)
+  const tasksInSelectedProject = computed(() => {
+    if (!selectedProjectId.value) return []
+    return state.allFilteredTasks.filter((task) => task.projectId === selectedProjectId.value)
+  })
+
+  // Tareas de la página actual y del proyecto seleccionado (paginadas)
+  const paginatedTasksInSelectedProject = computed(() => {
+    if (!selectedProjectId.value) return []
+    return state.filteredTasks.filter((task) => task.projectId === selectedProjectId.value)
+  })
+
+  // Totales globales filtrados (no paginados)
+  const totalFilteredTasks = computed(() => state.allFilteredTasks.length)
+
+  const completedFilteredTasks = computed(
+    () => state.allFilteredTasks.filter((task) => task.completed).length
+  )
+  const remainingFilteredTasks = computed(
+    () => state.allFilteredTasks.filter((task) => !task.completed).length
   )
 
-  const pendingTasksInSelectedProject = computed(() =>
-    tasksInSelectedProject.value.filter((task) => !task.completed)
+  // Totales filtrados por proyecto seleccionado (no paginados)
+  const totalFilteredTasksInProject = computed(() => tasksInSelectedProject.value.length)
+
+  const completedFilteredTasksInProject = computed(
+    () => tasksInSelectedProject.value.filter((task) => task.completed).length
+  )
+
+  const remainingFilteredTasksInProject = computed(
+    () => tasksInSelectedProject.value.filter((task) => !task.completed).length
   )
 
   // 5. Métodos principales (CRUD, helpers)
@@ -163,10 +198,13 @@ export const useTaskStore = defineStore('tasks', () => {
         state.currentPage = 1
       }
 
-      // Obtener conteo total (sin limit)
+      // Obtener todas las tareas filtradas (no paginadas)
       const countQuery = buildQuery('first', true)
       const countSnapshot = await getCollection(countQuery)
-      state.totalTasks = countSnapshot.length
+      state.allFilteredTasks = countSnapshot.map((doc) =>
+        mapFirestoreTask(doc, projectStore.getProjectById)
+      )
+      state.totalTasks = state.allFilteredTasks.length
 
       // Calcular totalPages después de actualizar totalTasks
       const totalPagesValue = Math.ceil(state.totalTasks / state.pageSize)
@@ -319,6 +357,9 @@ export const useTaskStore = defineStore('tasks', () => {
         if (taskData.endDate) state.tasks[idx].endDate = taskData.endDate
       }
 
+      // --- REFRESCAR LISTA FILTRADA TRAS EDICIÓN ---
+      await fetchTasks('first')
+
       state.dialogEditTask = false
       notificationsStore.displaySnackbar('Task updated!', 'success', 'mdi-check-circle')
     } catch (error) {
@@ -359,6 +400,8 @@ export const useTaskStore = defineStore('tasks', () => {
 
       const docRef = await addDocument(tasksRef, task)
       notificationsStore.displaySnackbar('Task created!', 'success', 'mdi-check-circle')
+      // --- REFRESCAR LISTA FILTRADA TRAS CREAR ---
+      await fetchTasks('first')
       return docRef.id
     } catch (error) {
       notificationsStore.displaySnackbar(error.message, 'error', 'mdi-alert-circle')
@@ -371,16 +414,20 @@ export const useTaskStore = defineStore('tasks', () => {
       state.isLoading = true
       state.error = null
       state.tasks = []
+
       if (!userStore.userId) {
-        console.log('[loadAllUserTasks] No userId, aborting')
+        console.warn('[loadAllUserTasks] No userId, skipping task loading')
         return
       }
+
       const q = query(collectionGroup(db, 'tasks'), where('createdBy', '==', userStore.userId))
       const docs = await getCollection(q)
+
       console.log('[loadAllUserTasks] docs.length:', docs.length)
       state.tasks = docs.map((doc) =>
         mapFirestoreTask({ data: () => doc, id: doc.id }, projectStore.getProjectById)
       )
+
       console.log('[loadAllUserTasks] state.tasks:', state.tasks)
     } catch (error) {
       state.error = error.message
@@ -393,6 +440,7 @@ export const useTaskStore = defineStore('tasks', () => {
 
   const clearTaskStore = () => {
     state.tasks = []
+    state.allFilteredTasks = []
     state.filteredTasks = []
     state.currentPage = 1
     state.totalTasks = 0
@@ -453,6 +501,8 @@ export const useTaskStore = defineStore('tasks', () => {
         state.tasks[taskIndex].completed = newStatus
         state.tasks[taskIndex].status = newStatus ? 'Done' : 'In Progress'
       }
+      // --- REFRESCAR LISTA FILTRADA TRAS COMPLETAR ---
+      await fetchTasks('first')
     } catch (error) {
       console.error('Error updating task status:', error)
       notificationsStore.displaySnackbar(
@@ -491,6 +541,8 @@ export const useTaskStore = defineStore('tasks', () => {
       state.tasks = state.tasks.filter((task) => task.id !== taskId)
 
       notificationsStore.displaySnackbar('Task deleted successfully', 'success', 'mdi-check-circle')
+      // --- REFRESCAR LISTA FILTRADA TRAS ELIMINAR ---
+      await fetchTasks('first')
     } catch (error) {
       console.error('Error deleting task:', error)
       notificationsStore.displaySnackbar(
@@ -502,21 +554,39 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   // Añadir método para seleccionar un proyecto desde la UI
-  const setSelectedProject = (projectTitle) => {
-    if (!projectTitle) {
-      console.warn('No project title provided to setSelectedProject')
+  const setSelectedProject = (projectId) => {
+    if (!projectId) {
+      console.warn('No projectId provided to setSelectedProject')
       state.selectedProjects = []
       return
     }
+    state.selectedProjects = [projectId]
+  }
 
-    const project = projectStore.projects.find((p) => p.title === projectTitle)
-    if (!project) {
-      console.warn('Project not found:', projectTitle)
-      state.selectedProjects = []
-      return
-    }
+  // Suscribirse a los cambios en tiempo real de las tareas del usuario
+  const subscribeToTasks = () => {
+    if (!userStore.userId) return
+    // Limpiar listener anterior si existe
+    if (listeners.tasks) listeners.tasks()
+    const q = query(collectionGroup(db, 'tasks'), where('createdBy', '==', userStore.userId))
+    listeners.tasks = onSnapshot(q, (snapshot) => {
+      state.tasks = snapshot.docs.map((doc) => {
+        // Si doc.data existe, es un documento Firestore; si no, es un objeto plano
+        const data = typeof doc.data === 'function' ? doc.data() : doc
+        return mapFirestoreTask(
+          { data: () => data, id: doc.id || data.id },
+          projectStore.getProjectById
+        )
+      })
+    })
+  }
 
-    state.selectedProjects = [projectTitle]
+  // Limpiar todos los listeners activos
+  const unsubscribeAll = () => {
+    Object.values(listeners).forEach((unsubscribe) => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    })
+    listeners.tasks = null
   }
 
   // Watcher para cambios en filtros
@@ -555,11 +625,23 @@ export const useTaskStore = defineStore('tasks', () => {
     dialogEditTask,
     editedTask,
     newTask,
+    // Arrays globales y paginados
+    allFilteredTasks,
+    tasksPage,
+    // Totales globales filtrados
+    totalFilteredTasks,
+    completedFilteredTasks,
+    remainingFilteredTasks,
+    // Totales filtrados por proyecto seleccionado
     tasksInSelectedProject,
-    completedTasksInSelectedProject,
-    pendingTasksInSelectedProject,
+    totalFilteredTasksInProject,
+    completedFilteredTasksInProject,
+    remainingFilteredTasksInProject,
+    paginatedTasksInSelectedProject,
+    selectedProjectId,
     selectedProjectTitle,
     isLastPageMode,
+    listeners,
     buildQuery,
     fetchTasks,
     nextPage,
@@ -574,6 +656,8 @@ export const useTaskStore = defineStore('tasks', () => {
     clearTaskStore,
     completeTask,
     deleteTask,
-    setSelectedProject
+    setSelectedProject,
+    subscribeToTasks,
+    unsubscribeAll
   }
 })

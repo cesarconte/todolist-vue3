@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -10,6 +10,7 @@ import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import { useResetForm } from '@/composables/useResetForm'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
@@ -63,10 +64,14 @@ const rules = useMaxLengthRule()
 
 const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
 
+const { initializeData, cleanup } = useDataInitialization()
+
 onMounted(() => {
-  if (userStore.isLoggedIn) {
-    taskStore.loadAllUserTasks()
-  }
+  initializeData()
+})
+
+onUnmounted(() => {
+  cleanup()
 })
 </script>
 
@@ -154,41 +159,51 @@ onMounted(() => {
           :thickness="1"
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
-        <v-col
-          v-for="task in filteredTasks"
-          :key="task.id"
-          :task="task"
-          :value="task"
-          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '9' : xl ? '8' : ''"
-          class="mx-auto"
-        >
-          <Suspense>
-            <template #default>
-              <VCardTask
-                v-if="task"
-                :key="task.id"
-                :title="task.title"
-                :id="task.id"
-                :description="task.description"
-                :label="task.label"
-                :project="task.project"
-                :priority="task.priority"
-                :status="task.status"
-                :startDate="task.startDate"
-                :endDate="task.endDate"
-                :createdAt="task.createdAt"
-                :completed="task.completed"
-                :color="task.color ? task.color : 'default'"
-                @edit-task="taskStore.editTask(task.projectId, task.id)"
-                @delete-task="taskStore.deleteTask(task.projectId, task.id)"
-                @complete-task="taskStore.completeTask(task.projectId, task.id)"
-              />
-            </template>
-            <template #fallback>
-              <div class="fallback">Loading...</div>
-            </template>
-          </Suspense>
-        </v-col>
+        <template v-if="taskStore.state.isLoading">
+          <v-col cols="12" class="d-flex justify-center align-center" style="min-height: 200px">
+            <v-skeleton-loader type="card" />
+          </v-col>
+        </template>
+        <template v-else>
+          <v-col
+            v-for="task in filteredTasks"
+            :key="task.id"
+            :task="task"
+            :value="task"
+            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '9' : xl ? '8' : ''"
+            class="mx-auto"
+          >
+            <Suspense>
+              <template #default>
+                <VCardTask
+                  v-if="task"
+                  :key="task.id"
+                  :title="task.title"
+                  :id="task.id"
+                  :description="task.description"
+                  :label="task.label"
+                  :project="task.project"
+                  :priority="task.priority"
+                  :status="task.status"
+                  :startDate="task.startDate"
+                  :endDate="task.endDate"
+                  :createdAt="task.createdAt"
+                  :completed="task.completed"
+                  :color="task.color ? task.color : 'default'"
+                  :projectId="task.projectId"
+                  :startDateHour="task.startDateHour"
+                  :endDateHour="task.endDateHour"
+                  @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
+                  @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+                  @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
+                />
+              </template>
+              <template #fallback>
+                <div class="fallback">Loading...</div>
+              </template>
+            </Suspense>
+          </v-col>
+        </template>
         <v-col
           v-if="filteredTasks.length === 0 && selectedTask"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"

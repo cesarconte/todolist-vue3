@@ -13,8 +13,9 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -39,8 +40,15 @@ const hasActiveFilters = () => {
   )
 }
 
+const { initializeData, cleanup } = useDataInitialization()
+
+onMounted(() => {
+  initializeData()
+})
+
 // Cleanup al desmontar el componente
 onUnmounted(() => {
+  cleanup()
   taskStore.resetFilters()
 })
 
@@ -72,13 +80,13 @@ const handleClearDate = () => {
 const { btnsForm } = useFormBtnActions(
   submitEditedTask,
   reset,
-  () => (taskStore.state.isEditing = false)
+  () => (taskStore.dialogEditTask = false)
 )
 btnsForm[0].text = 'Update Task'
 btnsForm[0].icon = 'mdi-pencil'
 
 const rules = useMaxLengthRule()
-const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
+const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
 </script>
 
 <template>
@@ -269,11 +277,10 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
           class="mx-auto border-opacity-50 mb-4"
         ></v-divider>
         <template v-if="taskStore.state.isLoading">
-          <v-col v-for="n in 4" :key="n" cols="12" md="6" lg="4">
+          <v-col v-for="n in taskStore.state.pageSize" :key="n" cols="12" md="6" lg="4">
             <v-skeleton-loader type="card" />
           </v-col>
         </template>
-
         <template v-else-if="showCards">
           <v-col
             v-for="task in taskStore.state.filteredTasks"
@@ -287,55 +294,44 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
               :id="task.id"
               :description="task.description"
               :label="task.label"
+              :project="task.project"
               :priority="task.priority"
               :status="task.status"
-              :start-date="task.startDate"
-              :end-date="task.endDate"
+              :startDate="task.startDate"
+              :endDate="task.endDate"
+              :createdAt="task.createdAt"
               :completed="task.completed"
-              :color="task.project?.color"
-              :project="task.project"
-              :created-at="task.createdAt"
+              :color="task.color ? task.color : task.project?.color || 'default'"
+              :projectId="task.projectId"
               :startDateHour="task.startDateHour"
               :endDateHour="task.endDateHour"
-              @edit-task="taskStore.editTask(task.id)"
-              @delete-task="taskStore.deleteTask(task.projectId, task.id)"
-              @complete-task="taskStore.completeTask(task.projectId, task.id)"
+              @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
+              @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+              @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
             />
           </v-col>
         </template>
       </v-row>
       <v-row v-if="!hasActiveFilters()">
-        <v-col :cols="mobile ? '12' : '9 mx-auto'">
-          <v-alert
-            type="info"
-            class="text-center"
-            :class="mobile ? '' : 'ma-2'"
-            variant="tonal"
-            rounded="pill"
-            closable
-          >
+        <v-col class="text-center py-8 d-flex flex-column align-center">
+          <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-filter-outline</v-icon>
+          <span class="text-h6 font-weight-medium text-grey-lighten-1 mt-2">
             Use the filters above to search for tasks
-          </v-alert>
+          </span>
         </v-col>
       </v-row>
       <v-row
-        v-if="
+        v-else-if="
           hasActiveFilters() &&
           !taskStore.state.isLoading &&
           taskStore.state.filteredTasks.length === 0
         "
       >
-        <v-col :cols="mobile ? '12' : '9 mx-auto'">
-          <v-alert
-            type="info"
-            class="text-center"
-            :class="mobile ? '' : 'ma-2'"
-            variant="tonal"
-            rounded="pill"
-            closable
-          >
+        <v-col class="text-center py-8 d-flex flex-column align-center">
+          <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
+          <span class="text-h6 font-weight-medium text-grey-lighten-1 mt-2">
             No tasks found with current filters
-          </v-alert>
+          </span>
         </v-col>
       </v-row>
 
@@ -359,18 +355,17 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
 
       <!-- Diálogo de edición -->
       <v-dialog
-        v-model="taskStore.state.isEditing"
+        v-model="taskStore.dialogEditTask"
         :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
         class="dialog dialog-edit-task"
       >
         <v-card class="card card-edit-task pa-4">
           <v-card-title class="card-title card-title-edit-task">
-            <!-- <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span> -->
             <span class="text-h6">Edit task </span>
           </v-card-title>
           <v-card-text>
             <VTaskForm
-              v-model="taskStore.state.editingTask"
+              v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
               :priorities="dataStore.priorities"
@@ -433,5 +428,21 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = u
 .date-create-task {
   max-width: 300px;
   margin: 0 auto;
+}
+
+.empty-icon {
+  opacity: 0.8;
+  transform: translateY(-5px);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(5px);
+  }
 }
 </style>

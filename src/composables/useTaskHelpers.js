@@ -1,17 +1,36 @@
 // src/composables/useTaskHelpers.js
-export function getEmptyTask(project) {
+export function getEmptyTask() {
   return {
-    projectId: project ? project.id : '',
+    projectId: null, // Siempre null para que el v-select empiece vacío
     title: '',
     description: '',
-    label: null, // Corregido: inicializar como null
-    priority: null, // Corregido: inicializar como null
-    status: null, // Corregido: inicializar como null
+    label: null,
+    priority: null,
+    status: null,
     startDate: null,
     endDate: null,
-    startDateHour: '', // Mantener como '' si es un campo de texto para hora
-    endDateHour: '', // Mantener como '' si es un campo de texto para hora
+    startDateHour: '',
+    endDateHour: '',
     completed: false,
-    color: project ? project.color : null
+    color: null
+  }
+}
+
+export function getEmptyProject() {
+  return {
+    color: '',
+    createdAt: '',
+    icon: '',
+    projectId: '',
+    title: '',
+    userId: ''
+  }
+}
+
+export function getEmptyEditedProject() {
+  return {
+    title: '',
+    icon: '',
+    color: ''
   }
 }

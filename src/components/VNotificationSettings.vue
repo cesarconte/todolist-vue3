@@ -1,8 +1,11 @@
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
+import { useDataInitialization } from '@/composables/useDataInitialization'
+
+const { initializeData, cleanup } = useDataInitialization()
 
 /************************************
  * Props & Emits
@@ -53,60 +56,13 @@ const isDisabled = computed(
 /************************************
  * Lifecycle Hooks
  ************************************/
-onMounted(async () => {
-  // Executes when the component is mounted
-  if (!userStore.isLoggedIn) {
-    emit('update:modelValue', false)
-    return
-  }
-
-  try {
-    isLoading.value = true // Sets loading state to true
-    await notificationsStore.loadSettings() // Loads notification settings from the store
-  } catch (error) {
-    handleError('Error loading settings', error) // Handles any errors that occur during loading
-  } finally {
-    isLoading.value = false // Sets loading state to false
-  }
+onMounted(() => {
+  initializeData()
 })
 
-/************************************
- * Watchers
- ************************************/
-watch(
-  () => notificationsStore.notificationSettings,
-  async (newSettings) => {
-    // Watches for changes in the notification settings
-    if (!userStore.isLoggedIn) {
-      // Checks if the user is logged in
-      notificationsStore.showSnackbar = {
-        show: true,
-        message: 'Authentication required to modify settings'
-      }
-      return
-    }
-
-    try {
-      isLoading.value = true // Sets loading state to true
-      saveError.value = null // Resets the save error
-      await notificationsStore.saveSettings() // Saves the notification settings to the store
-
-      if (newSettings.enabled) {
-        // Checks if notifications are enabled
-        const verified = await verifyNotifications() // Verifies notification permissions
-        if (!verified) {
-          // Disables notifications if permissions are not granted
-          notificationsStore.notificationSettings.enabled = false
-        }
-      }
-    } catch (error) {
-      handleError('Error saving settings', error) // Handles any errors that occur during saving
-    } finally {
-      isLoading.value = false // Sets loading state to false
-    }
-  },
-  { deep: true }
-)
+onUnmounted(() => {
+  cleanup()
+})
 
 /************************************
  * Methods / Functions
@@ -149,6 +105,31 @@ const handleError = (message, error) => {
 const closeDialog = () => {
   // Closes the dialog by emitting the update:modelValue event
   emit('update:modelValue', false)
+}
+
+const handleSaveSettings = async () => {
+  if (!userStore.isLoggedIn) {
+    notificationsStore.showSnackbar = {
+      show: true,
+      message: 'Authentication required to modify settings'
+    }
+    return
+  }
+  try {
+    isLoading.value = true
+    saveError.value = null
+    await notificationsStore.saveSettings(true)
+    if (notificationsStore.notificationSettings.enabled) {
+      const verified = await verifyNotifications()
+      if (!verified) {
+        notificationsStore.notificationSettings.enabled = false
+      }
+    }
+  } catch (error) {
+    handleError('Error saving settings', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const notificationTimeOptions = [
@@ -282,8 +263,27 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
       <v-divider class="mb-4" />
 
-      <v-card-actions :class="xs ? '' : 'justify-center'">
+      <v-card-actions class="d-flex flex-column align-center justify-center">
         <v-tooltip text="Send test notification" location="top">
+          <template v-slot:activator="{ props }">
+            <v-btn
+              v-bind="props"
+              :disabled="isDisabled"
+              :class="xs ? '' : 'px-8'"
+              :block="xs"
+              class="text-none text-button mb-4"
+              color="red-accent-2"
+              variant="tonal"
+              rounded="pill"
+              size="large"
+              prepend-icon="mdi-bell-alert-outline"
+              @click="notificationsStore.sendTestNotification()"
+            >
+              Test Notification
+            </v-btn>
+          </template>
+        </v-tooltip>
+        <v-tooltip text="Save notification settings" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
@@ -295,10 +295,10 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               variant="tonal"
               rounded="pill"
               size="large"
-              prepend-icon="mdi-bell-alert-outline"
-              @click="notificationsStore.sendTestNotification()"
+              prepend-icon="mdi-content-save"
+              @click="handleSaveSettings"
             >
-              Test Notification
+              Save Settings
             </v-btn>
           </template>
         </v-tooltip>

@@ -1,6 +1,7 @@
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useDisplay } from 'vuetify'
+import { formatDate } from '@/utils/dateFormat'
 
 /************************************
  * Props & Emits
@@ -22,17 +23,6 @@ const notificationsStore = useNotificationsStore() // Accesses the notifications
 /************************************
  * Methods / Functions
  ************************************/
-const formatDate = (timestamp) => {
-  // Formats a timestamp into a localized date and time string
-  return new Date(timestamp).toLocaleString('es-ES', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
 const handleCheckboxChange = async (item) => {
   // Marks a notification as read and triggers the shaking animation
   await notificationsStore.markAsRead(item.id)

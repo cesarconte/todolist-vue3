@@ -1,13 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/useLabelIcons.js'
+import { formatDate } from '@/utils/dateFormat'
+import { useDataInitialization } from '@/composables/useDataInitialization'
 
 /************************************
  * Composables
  ************************************/
 const { labelIcons } = useLabelIcons() // Accesses label icons from the composable
+const { initializeData, cleanup } = useDataInitialization()
 
 /************************************
  * Props
@@ -163,59 +166,6 @@ const completeTask = () => {
   emit('completeTask', props.project.id, props.id)
 }
 
-// Define the formatDate function
-const formatDate = (date, formatType) => {
-  // Formats a date object based on the specified format type
-  // Check if the date object is valid
-  if (typeof date === 'object' && date !== null) {
-    // Convert the timestamp to a Date object
-    if ('seconds' in date) {
-      date = new Date(date.seconds * 1000)
-    }
-
-    // Format the date object using Intl.DateTimeFormat
-    if (formatType === 'date') {
-      return date.toLocaleDateString('es-ES', {
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
-      })
-    } else if (formatType === 'shortDate') {
-      return date.toLocaleDateString('es-ES', {
-        month: 'numeric',
-        day: 'numeric',
-        year: '2-digit'
-      })
-    } else if (formatType === 'longDate') {
-      return date.toLocaleDateString('es-ES', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })
-    } else if (formatType === 'time') {
-      return date.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } else if (formatType === 'time12h') {
-      return date.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      })
-    } else if (formatType === 'time24h') {
-      return date.toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      })
-    }
-  }
-  // Handle invalid date objects
-  return 'Invalid Date'
-}
-
 const navigateToTaskDetail = () => {
   // Navigates to the task detail page
   router.push({ name: 'task-detail', params: { taskId: props.id } })
@@ -225,6 +175,17 @@ const navigateToTaskDetail = () => {
  * Vuetify Display
  ************************************/
 const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
+
+/************************************
+ * Lifecycle Hooks
+ ************************************/
+onMounted(() => {
+  initializeData()
+})
+
+onUnmounted(() => {
+  cleanup()
+})
 </script>
 
 <template>
@@ -316,7 +277,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                         ? 'text-decoration-line-through text-grey-lighten-1'
                         : 'font-weight-light'
                     "
-                    >{{ formatDate(startDate, 'date') }}</span
+                    >{{ formatDate(startDate) }}</span
                   >
                   <span v-else class="font-weight-light">No start date</span>
                 </v-col>
@@ -335,7 +296,8 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                         ? 'text-decoration-line-through text-grey-lighten-1'
                         : 'font-weight-light'
                     "
-                  >{{ props.startDateHour }} h.</span>
+                    >{{ props.startDateHour }} h.</span
+                  >
                   <span v-else class="font-weight-light">No start time</span>
                 </v-col>
               </v-row>
@@ -359,7 +321,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                         : 'font-weight-light'
                     "
                   >
-                    {{ formatDate(endDate, 'date') }}
+                    {{ formatDate(endDate) }}
                   </span>
                   <span v-else class="font-weight-light"> No due date </span>
                 </v-col>
@@ -378,7 +340,8 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
                         ? 'text-decoration-line-through text-grey-lighten-1'
                         : 'font-weight-light'
                     "
-                  >{{ props.endDateHour }} h.</span>
+                    >{{ props.endDateHour }} h.</span
+                  >
                   <span v-else class="font-weight-light">No due time</span>
                 </v-col>
               </v-row>

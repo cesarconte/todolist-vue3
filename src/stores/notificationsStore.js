@@ -1,14 +1,6 @@
 import { defineStore } from 'pinia'
 import { db } from '@/firebase'
-import {
-  doc,
-  updateDoc,
-  getDocs,
-  query,
-  where,
-  onSnapshot,
-  collection
-} from 'firebase/firestore'
+import { doc, updateDoc, getDocs, query, where, onSnapshot, collection } from 'firebase/firestore'
 import { useUserStore } from '@/stores/userStore'
 // import { useDataStore } from '@/stores/dataStore'
 import { useTaskStore } from '@/stores/taskStore'
@@ -140,7 +132,7 @@ export const useNotificationsStore = defineStore('notifications', {
      * Saves current notification settings to Firestore
      * Re-schedules notifications with updated settings
      */
-    async saveSettings() {
+    async saveSettings(showSuccess = false) {
       const userStore = useUserStore()
       try {
         const userId = requireUserId(userStore)
@@ -157,7 +149,9 @@ export const useNotificationsStore = defineStore('notifications', {
           this.scheduleNotifications(taskStore.tasksData)
         }
 
-        showSnackbar(this, 'Settings saved!', 'success', 'mdi-content-save')
+        if (showSuccess) {
+          showSnackbar(this, 'Settings saved!', 'success', 'mdi-content-save')
+        }
       } catch (error) {
         handleError(this, 'Error saving settings', error)
         throw error
@@ -265,7 +259,12 @@ export const useNotificationsStore = defineStore('notifications', {
                     taskId: task.id,
                     icon: 'mdi-email-mark-as-unread'
                   })
-                  showSnackbar(this, `New reminder: "${task.title}" is due soon!`, 'success', 'mdi-alarm')
+                  showSnackbar(
+                    this,
+                    `New reminder: "${task.title}" is due soon!`,
+                    'success',
+                    'mdi-alarm'
+                  )
                 } catch (error) {
                   handleError(this, 'Failed to create notification', error)
                 }
@@ -357,7 +356,12 @@ export const useNotificationsStore = defineStore('notifications', {
           (n) => !snapshot.docs.some((d) => d.id === n.id)
         )
 
-        showSnackbar(this, 'All notifications marked as read successfully', 'success', 'mdi-check-all')
+        showSnackbar(
+          this,
+          'All notifications marked as read successfully',
+          'success',
+          'mdi-check-all'
+        )
       } catch (error) {
         handleError(this, 'Error marking all as read', error)
       }

@@ -39,12 +39,6 @@ const task = computed(() => {
   return taskStore.tasksData.find((task) => task.id === props.taskId)
 })
 
-// Reset the form
-// const reset = () => {
-//   form.value.reset()
-//   alert('Form has been reset')
-// }
-
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
   submitEditedTask,
