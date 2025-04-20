@@ -3,6 +3,7 @@ import { useTaskStore } from '@/stores/taskStore'
 import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useUserStore } from '@/stores/userStore'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 export function useDataInitialization() {
   const taskStore = useTaskStore()
@@ -13,7 +14,7 @@ export function useDataInitialization() {
   // Function to handle errors consistently
   const handleError = (error, message = 'An error occurred') => {
     console.error(error)
-    notificationsStore.displaySnackbar(message, 'error', 'mdi-alert-circle')
+    showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle') // Use the centralized helper function
   }
 
   // Function to initialize tasks and projects
@@ -50,6 +51,7 @@ export function useDataInitialization() {
                 err
               )
             }
+            // Ensure the store nullifies the listener reference as well
             taskStore.listeners[key] = null
           }
         })
@@ -71,25 +73,10 @@ export function useDataInitialization() {
                 err
               )
             }
+            // Ensure the store nullifies the listener reference as well
             projectStore.listeners[key] = null
           }
         })
-      }
-
-      // Limpia los datos si existen los métodos y son funciones
-      if (typeof taskStore.clearTasksData === 'function') {
-        try {
-          taskStore.clearTasksData()
-        } catch (err) {
-          console.warn('[useDataInitialization] Error clearing taskStore data:', err)
-        }
-      }
-      if (typeof projectStore.clearProjectsData === 'function') {
-        try {
-          projectStore.clearProjectsData()
-        } catch (err) {
-          console.warn('[useDataInitialization] Error clearing projectStore data:', err)
-        }
       }
     } catch (error) {
       console.error('[useDataInitialization] Error during cleanup:', error)
@@ -103,7 +90,7 @@ export function useDataInitialization() {
       if (isLoggedIn) {
         initializeData()
       } else {
-        cleanup() // Llama a cleanup cuando el usuario se desloguea
+        cleanup() // Now only unsubscribes listeners
       }
     },
     { immediate: true } // Ejecuta inmediatamente al montar
@@ -111,7 +98,6 @@ export function useDataInitialization() {
 
   return {
     initializeData, // Exponer si se necesita llamar manualmente
-    handleError,
-    cleanup // Ahora cleanup también se expone para uso en los componentes
+    handleError
   }
 }

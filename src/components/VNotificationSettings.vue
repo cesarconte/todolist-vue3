@@ -1,11 +1,9 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
-import { useDataInitialization } from '@/composables/useDataInitialization'
-
-const { initializeData, cleanup } = useDataInitialization()
+import { showSnackbar } from '@/utils/notificationHelpers.js'
 
 /************************************
  * Props & Emits
@@ -22,7 +20,6 @@ const emit = defineEmits(['update:modelValue'])
 /************************************
  * Reactive Variables (refs)
  ************************************/
-const isLoading = ref(false) // Controls the loading state of the component
 const saveError = ref(null) // Stores any error messages that occur during saving
 const browserSupport = ref({
   notifications: 'Notification' in window,
@@ -49,20 +46,7 @@ const switchLabel = computed(() =>
 const switchColor = computed(() =>
   notificationsStore.notificationSettings.enabled ? 'red-accent-2' : 'grey-darken-1'
 ) // Sets the color of the notification switch
-const isDisabled = computed(
-  () => isLoading.value || !notificationsStore.hasFullSupport || !userStore.isLoggedIn
-) // Determines if the notification switch should be disabled
-
-/************************************
- * Lifecycle Hooks
- ************************************/
-onMounted(() => {
-  initializeData()
-})
-
-onUnmounted(() => {
-  cleanup()
-})
+const isDisabled = computed(() => !notificationsStore.hasFullSupport || !userStore.isLoggedIn) // Determines if the notification switch should be disabled
 
 /************************************
  * Methods / Functions
@@ -107,28 +91,32 @@ const closeDialog = () => {
   emit('update:modelValue', false)
 }
 
-const handleSaveSettings = async () => {
+const handleSwitchChange = async (enabled) => {
   if (!userStore.isLoggedIn) {
-    notificationsStore.showSnackbar = {
-      show: true,
-      message: 'Authentication required to modify settings'
-    }
+    showSnackbar(notificationsStore, 'Authentication required to modify settings', 'error', '', '')
+    notificationsStore.notificationSettings.enabled = false // Revert the switch
     return
   }
+
   try {
-    isLoading.value = true
-    saveError.value = null
-    await notificationsStore.saveSettings(true)
-    if (notificationsStore.notificationSettings.enabled) {
+    if (enabled) {
       const verified = await verifyNotifications()
       if (!verified) {
-        notificationsStore.notificationSettings.enabled = false
+        notificationsStore.notificationSettings.enabled = false // Revert the switch
+        return
       }
     }
+    await notificationsStore.saveSettings(true)
+    showSnackbar(
+      notificationsStore,
+      'Notification settings updated successfully',
+      'success',
+      '',
+      ''
+    )
   } catch (error) {
-    handleError('Error saving settings', error)
-  } finally {
-    isLoading.value = false
+    handleError('Error updating settings', error)
+    notificationsStore.notificationSettings.enabled = !enabled // Revert the switch
   }
 }
 
@@ -154,7 +142,10 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     max-width="600px"
     class="dialog dialog-notifications-settings"
   >
-    <v-card class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column">
+    <v-card
+      class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column"
+      density="comfortable"
+    >
       <v-card-title class="d-flex align-center justify-space-between text-h5">
         <span class="text-red-darken-2 font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
@@ -192,73 +183,80 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
       <v-divider class="my-4" />
 
       <v-card-text class="pa-0">
-        <v-container v-if="isLoading" class="text-center py-4">
-          <v-progress-circular indeterminate color="red-darken-2" size="24" />
-          <span class="text-caption mt-2 text-grey-darken-3">Saving settings...</span>
-        </v-container>
+        <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
+          {{ saveError }}
+        </v-alert>
 
-        <template v-else>
-          <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
-            {{ saveError }}
-          </v-alert>
+        <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
+          <template v-slot:title> Limited Browser Support </template>
+          Some notification features are not available in your current browser.
+        </v-alert>
 
-          <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
-            <template v-slot:title> Limited Browser Support </template>
-            Some notification features are not available in your current browser.
-          </v-alert>
+        <v-card-item class="pt-0">
+          <v-tooltip
+            :text="
+              notificationsStore.notificationSettings.enabled
+                ? 'Disable notifications'
+                : 'Enable notifications'
+            "
+            location="top"
+          >
+            <template v-slot:activator="{ props }">
+              <v-switch
+                v-bind="props"
+                v-model="notificationsStore.notificationSettings.enabled"
+                :label="switchLabel"
+                :color="switchColor"
+                :disabled="isDisabled"
+                inset
+                hide-details
+                @change="handleSwitchChange"
+              >
+              </v-switch>
+            </template>
+          </v-tooltip>
+        </v-card-item>
 
-          <v-card-item class="pt-0">
-            <v-switch
-              v-model="notificationsStore.notificationSettings.enabled"
-              :label="switchLabel"
-              :color="switchColor"
-              :disabled="isDisabled"
-              inset
-              hide-details
-            >
-            </v-switch>
-          </v-card-item>
+        <v-card-item class="d-flex flex-column align-stretch">
+          <v-select
+            v-model="notificationsStore.notificationSettings.time"
+            :items="notificationTimeOptions"
+            item-value="value"
+            item-title="title"
+            label="Notification Times"
+            variant="outlined"
+            :color="switchColor"
+            :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
+            multiple
+            clearable
+            chips
+            closable-chips
+            hide-details
+            rounded="pill"
+            class="mt-4"
+            density="comfortable"
+          >
+            <template v-slot:selection="{ item, index }">
+              <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
+                {{ item.title }}
+              </v-chip>
+              <span v-if="index === 2" class="text-grey text-caption ml-1">
+                +{{ notificationsStore.notificationSettings.time.length - 2 }} more
+              </span>
+            </template>
+          </v-select>
+        </v-card-item>
 
-          <v-card-item>
-            <v-select
-              v-model="notificationsStore.notificationSettings.time"
-              :items="notificationTimeOptions"
-              item-value="value"
-              item-title="title"
-              label="Notification Times"
-              variant="outlined"
-              :color="switchColor"
-              :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
-              multiple
-              clearable
-              chips
-              closable-chips
-              hide-details
-              rounded="pill"
-              class="mt-4"
-            >
-              <template v-slot:selection="{ item, index }">
-                <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
-                  {{ item.title }}
-                </v-chip>
-                <span v-if="index === 2" class="text-grey text-caption ml-1">
-                  +{{ notificationsStore.notificationSettings.time.length - 2 }} more
-                </span>
-              </template>
-            </v-select>
-          </v-card-item>
-
-          <v-card-item class="mb-2">
-            <v-row class="text-caption">
-              <v-col cols="auto" class="d-flex align-center">
-                <v-icon icon="mdi-clock-outline" class="mr-2" color="grey" />
-                <span class="text-grey">
-                  Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
-                </span>
-              </v-col>
-            </v-row>
-          </v-card-item>
-        </template>
+        <v-card-item class="mb-2">
+          <v-row class="text-caption">
+            <v-col cols="auto" class="d-flex align-center">
+              <v-icon icon="mdi-clock-outline" class="mr-2" color="grey" />
+              <span class="text-grey">
+                Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
+              </span>
+            </v-col>
+          </v-row>
+        </v-card-item>
       </v-card-text>
 
       <v-divider class="mb-4" />
@@ -280,25 +278,6 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               @click="notificationsStore.sendTestNotification()"
             >
               Test Notification
-            </v-btn>
-          </template>
-        </v-tooltip>
-        <v-tooltip text="Save notification settings" location="top">
-          <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              :disabled="isDisabled"
-              :class="xs ? '' : 'px-8'"
-              :block="xs"
-              class="text-none text-button"
-              color="red-accent-2"
-              variant="tonal"
-              rounded="pill"
-              size="large"
-              prepend-icon="mdi-content-save"
-              @click="handleSaveSettings"
-            >
-              Save Settings
             </v-btn>
           </template>
         </v-tooltip>

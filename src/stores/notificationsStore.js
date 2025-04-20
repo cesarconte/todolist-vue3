@@ -73,12 +73,6 @@ export const useNotificationsStore = defineStore('notifications', {
 
   // Business logic and async operations
   actions: {
-    updateSnackbar(message, show = true, prependIcon = '', appendIcon = '', color = 'success') {
-      this.showSnackbar = { show, message, prependIcon, appendIcon, color }
-    },
-    displaySnackbar(message, color = 'success', prependIcon = '', appendIcon = '') {
-      this.updateSnackbar(message, true, prependIcon, appendIcon, color)
-    },
     /**
      * Loads user notification settings from Firestore
      * Automatically schedules notifications if enabled
@@ -207,15 +201,17 @@ export const useNotificationsStore = defineStore('notifications', {
         })
 
         // Create system notification
+        console.log('Creating system notification...')
         new Notification('Test Notification', {
           body: 'This is a test notification from TodoList!',
-          icon: '/notification-icon.png', // Custom icon for notification ==> dónde está la imagen?
+          icon: 'mdi-bell-ring', // Using mdi icon as requested
           vibrate: [200, 100, 200] // Vibration pattern for mobile devices
         })
 
-        // Show confirmation in UI
+        console.log('System notification created successfully.')
         showSnackbar(this, 'Test notification sent successfully', 'success', 'mdi-bell-ring')
       } catch (error) {
+        console.error('Error in sendTestNotification:', error)
         handleError(this, 'Error sending test notification', error)
       }
     },
@@ -389,15 +385,6 @@ export const useNotificationsStore = defineStore('notifications', {
      */
     clearNotifications() {
       this.activeNotifications = []
-    },
-
-    /**
-     * Centralized error handling for notification operations
-     * @param {string} message - User-friendly error message
-     * @param {Error} error - Original error object
-     */
-    handleError(message, error) {
-      handleError(this, message, error)
     },
 
     unsubscribe() {

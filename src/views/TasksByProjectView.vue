@@ -17,6 +17,7 @@ import { useDisplay } from 'vuetify'
 import VCardTask from '@/components/VCardTask.vue'
 import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 const userStore = useUserStore()
 const projectStore = useProjectStore()
@@ -29,7 +30,7 @@ const { submitEditedTask } = useSubmitEditedTask()
 const { submitNewTask } = useSubmitNewTask()
 
 const props = defineProps({
-  projectName: {
+  projectId: {
     type: String,
     required: true
   },
@@ -42,16 +43,25 @@ const props = defineProps({
 // --- Espera a que los proyectos estén cargados antes de buscar y cargar tareas ---
 let stopWatch = null
 onMounted(() => {
+  // Siempre asegurar la suscripción a proyectos al montar la vista
+  if (userStore.isLoggedIn) {
+    projectStore.subscribeToCollection()
+  }
+  // Watch for the projectId prop directly
   stopWatch = watch(
-    [() => projectStore.projects, () => props.projectName],
-    ([projects, projectName]) => {
-      const selectedProject = projects.find((project) => project.title === projectName)
-      if (selectedProject) {
-        taskStore.setSelectedProject(selectedProject.id)
-        if (stopWatch) stopWatch()
+    () => props.projectId,
+    (newProjectId) => {
+      if (newProjectId) {
+        // Use the projectId directly to set the selected project in stores
+        taskStore.setSelectedProject(newProjectId)
+        projectStore.setSelectedProject(newProjectId)
+      } else {
+        // Handle case where projectId becomes null or undefined if necessary
+        taskStore.setSelectedProject(null)
+        projectStore.setSelectedProject(null)
       }
     },
-    { immediate: true, deep: true }
+    { immediate: true } // Run immediately when the component mounts
   )
 })
 
@@ -78,15 +88,13 @@ const progressPercentage = computed(() => {
 
 const handleAddTaskClick = () => {
   if (!userStore.isLoggedIn) {
-    notificationsStore.displaySnackbar('Authentication required', 'info', 'mdi-information')
+    showSnackbar(notificationsStore, 'Authentication required', 'info', 'mdi-information')
     router.push({ path: '/login' })
     return
   }
 
-  // Establecer proyecto actual por defecto y reinicializar newTask
-  const currentProject = projectStore.projects.find(
-    (p) => p.title === taskStore.selectedProjectTitle
-  )
+  // Usar el id del proyecto seleccionado
+  const currentProject = projectStore.selectedProject
   taskStore.newTask = {
     projectId: currentProject ? currentProject.id : '',
     title: '',
@@ -127,10 +135,10 @@ const submitEditedProject = async () => {
     await projectStore.saveEditedProject(projectStore.editedProject.id, projectStore.editedProject)
     // Close the dialog
     dialogEditProject.value = false
-    notificationsStore.displaySnackbar('Project updated', 'success', 'mdi-check')
+    showSnackbar(notificationsStore, 'Project updated', 'success', 'mdi-check')
   } catch (error) {
     console.error(error)
-    notificationsStore.displaySnackbar('Error updating project', 'error', 'mdi-alert-circle')
+    showSnackbar(notificationsStore, 'Error updating project', 'error', 'mdi-alert-circle')
   }
 }
 
@@ -214,14 +222,11 @@ const btnsProject = [
     text: 'Edit project',
     icon: 'mdi-pencil',
     function: () => {
-      const projectId = projectStore.projects.find(
-        (project) => project.title === taskStore.selectedProjectTitle
-      )?.id
+      const projectId = projectStore.selectedProjectId
       if (projectId) {
         editProject(projectId)
       } else {
-        // Handle the case where the project is not found
-        console.error('Project not found:', taskStore.selectedProjectTitle)
+        console.error('Project not found:', projectStore.selectedProjectTitle)
       }
     }
   },
@@ -230,14 +235,11 @@ const btnsProject = [
     label: 'Delete project',
     icon: 'mdi-delete',
     function: () => {
-      const projectId = projectStore.projects.find(
-        (project) => project.title === taskStore.selectedProjectTitle
-      )?.id
+      const projectId = projectStore.selectedProjectId
       if (projectId) {
         projectStore.deleteProject(projectId)
       } else {
-        // Handle the case where the project is not found
-        console.error('Project not found:', taskStore.selectedProjectTitle)
+        console.error('Project not found:', projectStore.selectedProjectTitle)
       }
     }
   }
@@ -349,7 +351,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             <h2
               class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center"
             >
-              {{ taskStore.selectedProjectTitle }} project tasks
+              {{ projectStore.selectedProjectTitle }} project tasks
             </h2>
             <v-spacer></v-spacer>
 
@@ -573,7 +575,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         >
           <v-card class="card card-edit-project pa-4">
             <v-card-title class="card-title card-title-edit-project">
-              <span class="text-h5">Edit Project {{ taskStore.selectedProject }} </span>
+              <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
             </v-card-title>
             <v-card-text>
               <v-form
@@ -596,7 +598,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 <v-text-field
                   v-model="projectStore.editedProject.icon"
                   placeholder="Icon"
-                  prepend-inner-icon="mdi-symbol"
+                  prepend-inner-icon="mdi-shape-outline"
                   type="text"
                   variant="plain"
                   color="red-darken-2"

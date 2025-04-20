@@ -3,7 +3,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { requiredRule } from '@/composables/useFieldRules'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const props = defineProps({
   modelValue: {
@@ -63,14 +62,12 @@ defineExpose({
   resetValidation: () => formProject.value?.resetValidation()
 })
 
-const { initializeData, cleanup } = useDataInitialization()
-
 onMounted(() => {
-  initializeData()
+  // Keep other onMounted logic if present
 })
 
 onUnmounted(() => {
-  cleanup()
+  // Keep other onUnmounted logic if present
 })
 </script>
 
@@ -82,27 +79,37 @@ onUnmounted(() => {
 
 <template>
   <v-form class="form" ref="formProject" @submit.prevent="$emit('submit')">
-    <v-text-field
+    <v-select
       v-model="formData.title"
       label="Title"
       prepend-inner-icon="mdi-format-title"
       variant="plain"
       color="red-darken-2"
+      :items="projectTemplates"
       :rules="titleRules"
       clearable
       required
-    ></v-text-field>
+    ></v-select>
     <v-divider class="mb-4"></v-divider>
-    <v-text-field
+    <v-select
       v-model="formData.icon"
       label="Icon"
-      prepend-inner-icon="mdi-symbol"
+      prepend-inner-icon="mdi-shape-outline"
       variant="plain"
       color="red-darken-2"
+      :items="icons"
       :rules="iconRules"
       clearable
       required
-    ></v-text-field>
+    >
+      <template v-slot:item="{ props, item }">
+        <v-list-item v-bind="props" :prepend-icon="item.value" :title="item.value"></v-list-item>
+      </template>
+      <template v-slot:selection="{ item }">
+        <v-icon :icon="item.value" class="mr-2"></v-icon>
+        {{ item.value }}
+      </template>
+    </v-select>
     <v-divider class="mb-4"></v-divider>
     <v-select
       v-model="formData.color"
@@ -118,9 +125,16 @@ onUnmounted(() => {
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props">
           <template v-slot:prepend>
-            <v-icon :color="item.value">mdi-invert-colors</v-icon>
+            <v-icon :color="item.value">mdi-circle</v-icon>
+          </template>
+          <template v-slot:title>
+            <span :style="{ color: item.value }">{{ item.title }}</span>
           </template>
         </v-list-item>
+      </template>
+      <template v-slot:selection="{ item }">
+        <v-icon :color="item.value" class="mr-2">mdi-circle</v-icon>
+        <span :style="{ color: item.value }">{{ item.title }}</span>
       </template>
     </v-select>
     <v-divider class="mb-4"></v-divider>

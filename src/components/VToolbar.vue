@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, watch, computed, onMounted, reactive } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -15,7 +15,6 @@ import { getEmptyTask } from '@/composables/useTaskHelpers'
 import { useDialogCleanup } from '@/composables/useDialogCleanup'
 import { useAddNewProject } from '@/composables/useAddNewProject'
 import { useToolbarNav } from '@/composables/useToolbarNav'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 import VActionButtons from './VActionButtons.vue'
 import VNotificationSettings from './VNotificationSettings.vue'
 import VNotificationsList from './VNotificationsList.vue'
@@ -44,8 +43,6 @@ const router = useRouter() // Accesses the Vue Router
  ************************************/
 const rules = useMaxLengthRule() // Accesses validation rules
 
-const { initializeData, cleanup } = useDataInitialization()
-
 /************************************
  * Refs
  ************************************/
@@ -57,8 +54,8 @@ const dialogNotificationsList = ref(false)
 const dialogNotificationsSettings = ref(false)
 
 const forms = reactive({
-  addTask: null,
-  addProject: null
+  addTask: ref(null),
+  addProject: ref(null)
 })
 const menus = reactive({
   drawer: false,
@@ -79,15 +76,11 @@ const snackbarGroup = reactive({
 const unreadNotificationsCount = computed(() => notificationsStore.unreadCount) // Calculates unread notifications count
 
 const notificationTooltipText = computed(() => {
-  // Generates tooltip text for notifications
   if (!userStore.isLoggedIn) return 'Sign in to view notifications'
-
-  if (!notificationsStore.notificationSettings.enabled)
-    return 'Notifications are disabled in settings'
-
-  return unreadNotificationsCount.value === 0
-    ? 'No unread notifications'
-    : `${unreadNotificationsCount.value} unread notification${unreadNotificationsCount.value !== 1 ? 's' : ''}`
+  if (!notificationsStore.notificationSettings.enabled) return 'Notifications are disabled'
+  if (unreadNotificationsCount.value > 0)
+    return `${unreadNotificationsCount.value} unread notification${unreadNotificationsCount.value !== 1 ? 's' : ''}`
+  return 'Notifications enabled'
 })
 
 const tooltipText = computed(() => {
@@ -142,11 +135,11 @@ watch(
 )
 
 watch(
-  () => projectStore.selectedProject, // Esto es un string: el título del proyecto seleccionado
-  (newProjectTitle) => {
+  () => projectStore.selectedProjectId, // Ahora observamos el id del proyecto seleccionado
+  (newProjectId) => {
     if (dialogAddTask.value) {
-      // Buscar el objeto de proyecto por título
-      const newProject = projectStore.projects.find((p) => p.title === newProjectTitle)
+      // Buscar el objeto de proyecto por id
+      const newProject = projectStore.projects.find((p) => p.id === newProjectId)
       // 1. Si el proyecto ya no existe, cierra el diálogo y muestra mensaje
       if (!newProject) {
         dialogAddTask.value = false
@@ -230,15 +223,19 @@ const { reset: resetAddProjectFormFn } = useResetForm(
   'mdi-refresh'
 )
 
-const { addNewProject } = useAddNewProject(resetAddProjectFormFn, dialogAddProject, menus.drawer)
+// Pass a function to close the drawer instead of the ref itself
+const { addNewProject } = useAddNewProject(resetAddProjectFormFn, dialogAddProject, () => {
+  menus.drawer = false
+})
 
-const handleProjectClick = async (project) => {
-  // Selecciona el proyecto en el store de tareas
-  taskStore.setSelectedProject(project.id)
-  // Carga la primera página de tareas filtradas por ese proyecto
+// Changed parameter from project object to projectId string
+const handleProjectClick = async (projectId) => {
+  // Selecciona el proyecto en el store de tareas usando el ID
+  taskStore.setSelectedProject(projectId)
+  // Carga la primera página de tareas filtradas por ese proyecto (si es necesario, descomentar)
   // taskStore.fetchTasks('first')
-  // Navega a la vista de tareas por proyecto (ajusta el nombre de la ruta si es necesario)
-  router.push({ name: 'task-by-project', params: { projectName: project.title } })
+  // Navega a la vista de tareas por proyecto usando projectId
+  router.push({ name: 'task-by-project', params: { projectId: projectId } })
   // Cierra el drawer
   menus.drawer = false
 }
@@ -346,15 +343,10 @@ const { navItems, dotsItems } = useToolbarNav({
  * Lifecycle Hooks
  ************************************/
 onMounted(() => {
-  initializeData()
   // Loads notification settings on mount
   if (userStore.isLoggedIn) {
     notificationsStore.loadSettings()
   }
-})
-
-onUnmounted(() => {
-  cleanup()
 })
 
 // Corrige: pasar el ref directamente, no una función
@@ -430,16 +422,22 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
               icon
               aria-label="Open notifications"
               @click="handleNotificationsClick"
-              :disabled="!userStore.isLoggedIn"
+              :disabled="!userStore.isLoggedIn || !notificationsStore.notificationSettings.enabled"
               class="notifications-btn"
             >
-              <v-icon icon="mdi-bell-outline"></v-icon>
-              <v-badge
-                v-if="unreadNotificationsCount > 0"
-                :content="unreadNotificationsCount"
-                color="blue-accent-4"
-                class="badge"
-              />
+              <template v-if="notificationsStore.notificationSettings.enabled">
+                <v-badge
+                  :dot="unreadNotificationsCount === 0"
+                  :content="unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined"
+                  color="blue"
+                  overlap
+                >
+                  <v-icon icon="mdi-bell-outline" color="white"></v-icon>
+                </v-badge>
+              </template>
+              <template v-else>
+                <v-icon icon="mdi-bell-off-outline" color="grey-lighten-2"></v-icon>
+              </template>
             </v-btn>
           </div>
         </template>
@@ -550,14 +548,16 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           <v-list-item
             v-for="(project, i) in projectStore.projects"
             :key="i"
+            :value="project.id"
             :prepend-icon="project.icon"
-            :value="project.title"
-            :title="project.title"
-            @click="handleProjectClick(project)"
+            @click="handleProjectClick(project.id)"
+            link
+            class="item project-item"
           >
             <template v-slot:prepend>
-              <v-icon :color="project.color">{{ project.icon }}</v-icon>
+              <v-icon :icon="project.icon" :color="project.color"></v-icon>
             </template>
+            <v-list-item-title>{{ project.title }}</v-list-item-title>
           </v-list-item>
           <v-list-item v-if="!projectStore.projects.length">
             <v-list-item-title>No projects yet</v-list-item-title>
@@ -566,7 +566,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             <template v-slot:activator="{ props }">
               <v-list-item v-bind="props" title="Actions">
                 <template v-slot:prepend>
-                  <v-icon icon="mdi-cogs" color="amber-accent-3" class="icon"></v-icon>
+                  <v-icon icon="mdi-cogs" class="icon"></v-icon>
                 </template>
               </v-list-item>
             </template>

@@ -10,6 +10,7 @@ import { useTaskStore } from './taskStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { getDocument, updateDocument } from '@/utils/firestoreCrud.js'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 export const useUserStore = defineStore('user', () => {
   // State
@@ -109,7 +110,7 @@ export const useUserStore = defineStore('user', () => {
           await createUserDocument(currentUser)
         } catch (error) {
           const { message, icon, level } = getErrorConfiguration(error, 'full')
-          notificationsStore.displaySnackbar(message, level, icon)
+          showSnackbar(notificationsStore, message, level, icon)
           console.error('Sync error:', error)
         }
       } else {
@@ -143,7 +144,7 @@ export const useUserStore = defineStore('user', () => {
   // Error Handling
   const handleAuthError = (error) => {
     const { message, icon, level } = getErrorConfiguration(error, 'full')
-    notificationsStore.displaySnackbar(message, level, icon)
+    showSnackbar(notificationsStore, message, level, icon)
     console.error('Auth Error:', {
       code: error.code,
       message: error.message,
@@ -165,7 +166,8 @@ export const useUserStore = defineStore('user', () => {
       const { user: firebaseUser } = await signInWithPopup(auth, provider)
       const { isNewUser } = await createUserDocument(firebaseUser)
 
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         generateWelcomeMessage(firebaseUser, actionType, isNewUser),
         'success',
         isNewUser ? 'mdi-account-star' : 'mdi-account-check'
@@ -229,7 +231,8 @@ export const useUserStore = defineStore('user', () => {
       // Limpia los filtros de proyectos seleccionados
       taskStore.state.selectedProjects = []
 
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         generateFarewellMessage(userName),
         'success',
         'mdi-account-arrow-left'
@@ -238,7 +241,8 @@ export const useUserStore = defineStore('user', () => {
       handlePostLogoutNavigation()
     } catch (error) {
       const simpleMessage = getErrorConfiguration(error, 'simple')
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         `Logout failed: ${simpleMessage}`,
         'error',
         'mdi-account-alert'

@@ -4,6 +4,14 @@ import VToolbar from '@/components/VToolbar.vue'
 import VFooter from '@/components/VFooter.vue'
 import VNotifications from '@/components/VNotifications.vue'
 import VBaseSnackbar from './components/VBaseSnackbar.vue'
+import { onMounted } from 'vue'
+import { useDataInitialization } from '@/composables/useDataInitialization'
+
+const { initializeData } = useDataInitialization()
+
+onMounted(() => {
+  initializeData()
+})
 </script>
 
 <template>

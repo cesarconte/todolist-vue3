@@ -1,13 +1,14 @@
 // src/composables/useSubmitNewTask.js
 import { useTaskStore } from '@/stores/taskStore'
 import { formatDate } from '@/utils/dateFormat'
-import { useProjectStore } from '@/stores/projectStore'
+// import { useProjectStore } from '@/stores/projectStore'
 import { validTaskForm } from '@/composables/validationFormRules' // Importar la función de validación
 import { useNotificationsStore } from '@/stores/notificationsStore' // Importar para mostrar errores
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 export function useSubmitNewTask() {
   const taskStore = useTaskStore()
-  const projectStore = useProjectStore()
+  // const projectStore = useProjectStore()
   const notificationsStore = useNotificationsStore() // Instanciar el store de notificaciones
 
   const submitNewTask = async () => {
@@ -18,7 +19,9 @@ export function useSubmitNewTask() {
 
       // Validar el formulario antes de continuar
       if (!validTaskForm(taskStore.newTask)) {
-        notificationsStore.displaySnackbar(
+        // Use the centralized helper function
+        showSnackbar(
+          notificationsStore,
           'Please fill all required fields correctly.',
           'warning',
           'mdi-alert-circle'
@@ -36,12 +39,10 @@ export function useSubmitNewTask() {
       }
 
       await taskStore.createTask(newTaskData)
-      // Actualiza el proyecto seleccionado al del formulario si es diferente
-      const project = projectStore.projects.find((p) => p.id === newTaskData.projectId)
-      if (project) {
-        taskStore.setSelectedProject(project.title)
-      }
-      await taskStore.loadAllUserTasks()
+      // Selecciona el proyecto correcto tras crear la tarea
+      taskStore.setSelectedProject(newTaskData.projectId)
+      // Recarga la lista filtrada y paginada
+      await taskStore.fetchTasks('first')
       // Reset the newTask object in the store directamente
       taskStore.newTask = {
         projectId: '',
@@ -57,8 +58,6 @@ export function useSubmitNewTask() {
         completed: false,
         color: null
       }
-      // Remove the form reset call, as the store reset handles it via v-model
-      // taskFormRef.value?.reset()
     } catch (error) {
       console.error('Error creating task:', error)
       throw error

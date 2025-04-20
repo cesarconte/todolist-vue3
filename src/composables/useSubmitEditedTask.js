@@ -3,6 +3,7 @@ import { useTaskStore } from '@/stores/taskStore'
 import { formatDate } from '@/utils/dateFormat'
 import { validTaskForm } from '@/composables/validationFormRules' // Importar la función de validación
 import { useNotificationsStore } from '@/stores/notificationsStore' // Importar para mostrar errores
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 export function useSubmitEditedTask() {
   const taskStore = useTaskStore()
@@ -16,7 +17,9 @@ export function useSubmitEditedTask() {
 
       // Validar el formulario antes de continuar
       if (!validTaskForm(taskStore.editedTask)) {
-        notificationsStore.displaySnackbar(
+        // Use the centralized helper function
+        showSnackbar(
+          notificationsStore,
           'Please fill all required fields correctly.',
           'warning',
           'mdi-alert-circle'

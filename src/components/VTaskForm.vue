@@ -1,7 +1,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const { xs } = useDisplay()
 
@@ -85,14 +84,12 @@ const statusRules = requiredRule('Status')
 const startDateRules = requiredRule('Start Date')
 const endDateRules = requiredRule('Due Date')
 
-const { initializeData, cleanup } = useDataInitialization()
-
 onMounted(() => {
-  initializeData()
+  // Keep other onMounted logic if present
 })
 
 onUnmounted(() => {
-  cleanup()
+  // Keep other onUnmounted logic if present
 })
 </script>
 
@@ -313,7 +310,7 @@ onUnmounted(() => {
           required
           class="time-create-task justify-center w-100"
           :class="xs ? 'px-0' : ''"
-          @click:minute="$nextTick(() => (menuStart = false))"
+          @update:modelValue="menuStart = false"
         ></v-time-picker>
       </v-menu>
     </v-text-field>
@@ -335,6 +332,7 @@ onUnmounted(() => {
         labels.length === 0 ||
         statuses.length === 0
       "
+      color="red-darken-2"
     >
       <v-menu
         v-model="menuEnd"
@@ -354,7 +352,7 @@ onUnmounted(() => {
           required
           class="time-create-task justify-center w-100"
           :class="xs ? 'px-0' : ''"
-          @click:minute="$nextTick(() => (menuEnd = false))"
+          @update:modelValue="menuEnd = false"
         ></v-time-picker>
       </v-menu>
     </v-text-field>

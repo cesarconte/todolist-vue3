@@ -1,20 +1,34 @@
 // utils/notificationHelpers.js
 
+const ICONS = {
+  success: 'mdi-check-circle',
+  error: 'mdi-alert-circle',
+  info: 'mdi-information',
+  warning: 'mdi-alert'
+}
+
 /**
  * Muestra un snackbar o notificación en la store.
  * @param {object} store - La store de notificaciones (o cualquier objeto con showSnackbar).
  * @param {string} message - Mensaje a mostrar.
  * @param {string} color - Color del snackbar ('success', 'error', etc).
- * @param {string} prependIcon - Icono opcional.
+ * @param {string|null} prependIcon - Icono opcional. Si es null, se usa el estándar según el color.
  * @param {string} appendIcon - Icono opcional.
  */
-export function showSnackbar(store, message, color = 'success', prependIcon = '', appendIcon = '') {
+export function showSnackbar(
+  store,
+  message,
+  color = 'success',
+  prependIcon = null,
+  appendIcon = ''
+) {
+  const icon = prependIcon !== null ? prependIcon : ICONS[color] || ''
   if (store && typeof store.updateSnackbar === 'function') {
-    store.updateSnackbar(message, true, prependIcon, appendIcon, color)
+    store.updateSnackbar(message, true, icon, appendIcon, color)
   } else if (store && typeof store.displaySnackbar === 'function') {
-    store.displaySnackbar(message, color, prependIcon, appendIcon)
+    store.displaySnackbar(message, color, icon, appendIcon)
   } else if (store && store.showSnackbar) {
-    store.showSnackbar = { show: true, message, prependIcon, appendIcon, color }
+    store.showSnackbar = { show: true, message, prependIcon: icon, appendIcon, color }
   }
 }
 

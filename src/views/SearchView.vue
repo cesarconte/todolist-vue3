@@ -10,7 +10,6 @@ import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import { useResetForm } from '@/composables/useResetForm'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
@@ -64,15 +63,9 @@ const rules = useMaxLengthRule()
 
 const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
 
-const { initializeData, cleanup } = useDataInitialization()
+onMounted(() => {})
 
-onMounted(() => {
-  initializeData()
-})
-
-onUnmounted(() => {
-  cleanup()
-})
+onUnmounted(() => {})
 </script>
 
 <template>

@@ -1,5 +1,6 @@
 // src/composables/useResetForm.js
 import { useNotificationsStore } from '@/stores/notificationsStore'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 export function useResetForm(
   formRef,
@@ -11,12 +12,12 @@ export function useResetForm(
   const notificationsStore = useNotificationsStore()
 
   const reset = () => {
-    if (formRef.value) {
+    if (formRef && formRef.value && typeof formRef.value.reset === 'function') {
       formRef.value.reset()
       if (customResetCallback) {
         customResetCallback()
       }
-      notificationsStore.displaySnackbar(successMessage, notificationType, notificationIcon)
+      showSnackbar(notificationsStore, successMessage, notificationType, notificationIcon) // Use the centralized helper function
     }
   }
 

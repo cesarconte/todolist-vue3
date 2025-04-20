@@ -5,7 +5,7 @@ import { ref, computed, watch, reactive } from 'vue'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
-// import { getCollection } from '@/utils/firestoreCrud.js'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 // Puedes usar getCollection en fetchCollection si en algún momento necesitas obtener los datos de una colección de forma puntual (sin suscripción en tiempo real)
 // Por ahora, la lógica principal de dataStore.js usa onSnapshot para suscripción en tiempo real, que es lo más eficiente para colecciones de datos de referencia.
@@ -145,7 +145,7 @@ export const useDataStore = defineStore('data', () => {
         })
       } catch (error) {
         console.error('Error fetching data:', error)
-        notificationsStore.displaySnackbar('Error fetching data', 'error', 'mdi-close-circle')
+        showSnackbar(notificationsStore, 'Error fetching data', 'error', 'mdi-close-circle') // Use the centralized helper function
       }
     })
   }

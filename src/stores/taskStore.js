@@ -29,6 +29,8 @@ import {
   deleteDocument
 } from '@/utils/firestoreCrud.js'
 import { combineDateTime } from '@/utils/taskUtils.js'
+import { toISODate } from '@/utils/dateFormat.js'
+import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 // 2. Store principal
 export const useTaskStore = defineStore('tasks', () => {
@@ -125,12 +127,13 @@ export const useTaskStore = defineStore('tasks', () => {
   // --- Mejor solución: Getters reactivos para tareas del proyecto seleccionado ---
   const selectedProjectId = computed(() => state.selectedProjects[0] || null)
 
-  const selectedProjectTitle = computed(() => {
-    const id = selectedProjectId.value
-    if (!id) return ''
-    const project = projectStore.projects.find((p) => p.id === id)
-    return project ? project.title : ''
+  const selectedProject = computed(() => {
+    return projectStore.projects.find((p) => p.id === selectedProjectId.value) || null
   })
+
+  const selectedProjectTitle = computed(() =>
+    selectedProject.value ? selectedProject.value.title : ''
+  )
 
   // Todas las tareas filtradas (no paginadas)
   const allFilteredTasks = computed(() => state.allFilteredTasks)
@@ -274,7 +277,7 @@ export const useTaskStore = defineStore('tasks', () => {
       console.log('[Paginación] currentPage después de cambio:', state.currentPage)
     } catch (error) {
       state.error = error.message
-      notificationsStore.displaySnackbar('Error loading tasks', 'error')
+      showSnackbar(notificationsStore, 'Error loading tasks', 'error')
     } finally {
       state.isLoading = false
     }
@@ -361,9 +364,9 @@ export const useTaskStore = defineStore('tasks', () => {
       await fetchTasks('first')
 
       state.dialogEditTask = false
-      notificationsStore.displaySnackbar('Task updated!', 'success', 'mdi-check-circle')
+      showSnackbar(notificationsStore, 'Task updated!', 'success', 'mdi-check-circle')
     } catch (error) {
-      notificationsStore.displaySnackbar(error.message, 'error', 'mdi-alert-circle')
+      showSnackbar(notificationsStore, error.message, 'error', 'mdi-alert-circle')
     }
   }
 
@@ -381,6 +384,23 @@ export const useTaskStore = defineStore('tasks', () => {
       if (!userStore.userId) throw new Error('Usuario no autenticado')
       if (!newTaskData.projectId) throw new Error('projectId es obligatorio')
 
+      setSelectedProject(newTaskData.projectId)
+
+      const project = projectStore.getProjectById(newTaskData.projectId)
+      const color = project && project.color ? project.color : 'default'
+
+      // Usa serverTimestamp() para Firestore
+      const task = {
+        ...newTaskData,
+        color,
+        startDate: toISODate(newTaskData.startDate),
+        endDate: toISODate(newTaskData.endDate),
+        completed: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: userStore.userId
+      }
+
       const tasksRef = collection(
         db,
         'users',
@@ -390,21 +410,12 @@ export const useTaskStore = defineStore('tasks', () => {
         'tasks'
       )
 
-      const task = {
-        ...newTaskData,
-        completed: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        createdBy: userStore.userId
-      }
-
       const docRef = await addDocument(tasksRef, task)
-      notificationsStore.displaySnackbar('Task created!', 'success', 'mdi-check-circle')
-      // --- REFRESCAR LISTA FILTRADA TRAS CREAR ---
+      showSnackbar(notificationsStore, 'Task created!', 'success', 'mdi-check-circle')
       await fetchTasks('first')
       return docRef.id
     } catch (error) {
-      notificationsStore.displaySnackbar(error.message, 'error', 'mdi-alert-circle')
+      showSnackbar(notificationsStore, error.message, 'error', 'mdi-alert-circle')
       throw error
     }
   }
@@ -431,7 +442,7 @@ export const useTaskStore = defineStore('tasks', () => {
       console.log('[loadAllUserTasks] state.tasks:', state.tasks)
     } catch (error) {
       state.error = error.message
-      notificationsStore.displaySnackbar('Error loading all tasks', 'error')
+      showSnackbar(notificationsStore, 'Error loading all tasks', 'error')
       console.error('[loadAllUserTasks] error:', error)
     } finally {
       state.isLoading = false
@@ -465,7 +476,8 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       if (!projectId || !taskId) {
         console.error('Project ID or Task ID is undefined')
-        notificationsStore.displaySnackbar(
+        showSnackbar(
+          notificationsStore,
           'Project ID or Task ID is undefined',
           'error',
           'mdi-alert-circle'
@@ -489,7 +501,8 @@ export const useTaskStore = defineStore('tasks', () => {
         updatedAt: serverTimestamp()
       })
 
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         `Task marked as ${newStatus ? 'completed' : 'in progress'}`,
         'success',
         newStatus ? 'mdi-check-circle' : 'mdi-progress-clock'
@@ -505,7 +518,8 @@ export const useTaskStore = defineStore('tasks', () => {
       await fetchTasks('first')
     } catch (error) {
       console.error('Error updating task status:', error)
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         error.message || 'Status update failed',
         'error',
         'mdi-close-circle'
@@ -518,7 +532,8 @@ export const useTaskStore = defineStore('tasks', () => {
     try {
       if (!projectId || !taskId) {
         console.error('Project ID or Task ID is undefined')
-        notificationsStore.displaySnackbar(
+        showSnackbar(
+          notificationsStore,
           'Project ID or Task ID is undefined',
           'error',
           'mdi-alert-circle'
@@ -540,12 +555,13 @@ export const useTaskStore = defineStore('tasks', () => {
       // Eliminar la tarea del array reactivo
       state.tasks = state.tasks.filter((task) => task.id !== taskId)
 
-      notificationsStore.displaySnackbar('Task deleted successfully', 'success', 'mdi-check-circle')
+      showSnackbar(notificationsStore, 'Task deleted successfully', 'success', 'mdi-check-circle')
       // --- REFRESCAR LISTA FILTRADA TRAS ELIMINAR ---
       await fetchTasks('first')
     } catch (error) {
       console.error('Error deleting task:', error)
-      notificationsStore.displaySnackbar(
+      showSnackbar(
+        notificationsStore,
         error.message || 'Error deleting task',
         'error',
         'mdi-close-circle'
@@ -639,6 +655,7 @@ export const useTaskStore = defineStore('tasks', () => {
     remainingFilteredTasksInProject,
     paginatedTasksInSelectedProject,
     selectedProjectId,
+    selectedProject,
     selectedProjectTitle,
     isLastPageMode,
     listeners,

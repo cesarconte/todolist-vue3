@@ -17,7 +17,7 @@ const router = createRouter({
       props: true
     },
     {
-      path: '/project/:projectName',
+      path: '/project/:projectId',
       name: 'task-by-project',
       component: () => import('../views/TasksByProjectView.vue'),
       props: true
@@ -46,11 +46,11 @@ const router = createRouter({
       meta: { requiresAuth: true },
       props: true
     },
-    /* {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      component: () => import('../views/NotFoundView.vue')
-    } */
+    // {
+    //   path: '/:pathMatch(.*)*',
+    //   name: 'not-found',
+    //   component: () => import('../views/NotFoundView.vue')
+    // }
   ]
 })
 

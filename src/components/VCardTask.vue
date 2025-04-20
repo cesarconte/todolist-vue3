@@ -1,16 +1,14 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref } from 'vue' // Remove onMounted, onUnmounted imports
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/useLabelIcons.js'
 import { formatDate } from '@/utils/dateFormat'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 
 /************************************
  * Composables
  ************************************/
 const { labelIcons } = useLabelIcons() // Accesses label icons from the composable
-const { initializeData, cleanup } = useDataInitialization()
 
 /************************************
  * Props
@@ -175,17 +173,6 @@ const navigateToTaskDetail = () => {
  * Vuetify Display
  ************************************/
 const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
-
-/************************************
- * Lifecycle Hooks
- ************************************/
-onMounted(() => {
-  initializeData()
-})
-
-onUnmounted(() => {
-  cleanup()
-})
 </script>
 
 <template>

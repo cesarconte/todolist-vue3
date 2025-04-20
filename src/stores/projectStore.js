@@ -45,57 +45,52 @@ export const useProjectStore = defineStore('projects', () => {
   const listeners = reactive({
     projects: null
   })
-  const selectedProject = ref(null) // Mejor opción: ref reactivo, inicia en null
+  const selectedProjectId = ref(null) // Ahora el id es el valor principal
 
   // Getters
   const projects = computed(() => projectsData.value)
   const projectItems = computed(() =>
     projectsData.value.map((project) => ({ value: project.id, title: project.title }))
   )
-  const selectedProjectTitle = computed(() => selectedProject.value) // computed string
-  const selectedProjectId = computed(() => {
-    const project = projects.value.find((project) => project.title === selectedProject.value)
-    return project?.id || ''
+  const selectedProject = computed(() => {
+    // Devuelve el objeto proyecto seleccionado o null
+    return projects.value.find((project) => project.id === selectedProjectId.value) || null
   })
+  const selectedProjectTitle = computed(() =>
+    selectedProject.value ? selectedProject.value.title : ''
+  )
   const newProjectData = computed(() => newProject)
   const editedProjectData = computed(() => editedProject)
 
   // Actions
   const clearProjectsData = () => {
-    // Limpia los datos reactivos
+    console.log('[clearProjectsData] Clearing projectsData')
     projectsData.value = []
     Object.assign(newProject, getEmptyProject())
     Object.assign(editedProject, getEmptyEditedProject())
+    selectedProjectId.value = null
   }
 
   const subscribeToCollection = () => {
     if (!userStore.userId) {
-      console.warn('Not subscribed to projects. User ID not available')
+      console.warn('[subscribeToCollection] Not subscribed: userId not available')
       return
     }
-
+    if (listeners.projects) {
+      console.log('[subscribeToCollection] Listener already active')
+      return
+    }
+    console.log('[subscribeToCollection] Subscribing to projects...')
     const collectionRef = query(
       collection(db, 'users', userStore.userId, 'projects'),
       orderBy('title', 'asc')
     )
-
     listeners.projects = onSnapshot(
       collectionRef,
       (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          const index = projectsData.value.findIndex((item) => item.id === change.doc.id)
-          switch (change.type) {
-            case 'added':
-              if (index === -1) projectsData.value.push(mapFirestoreProject(change.doc))
-              break
-            case 'modified':
-              if (index !== -1) projectsData.value.splice(index, 1, mapFirestoreProject(change.doc))
-              break
-            case 'removed':
-              if (index !== -1) projectsData.value.splice(index, 1)
-              break
-          }
-        })
+        console.log('[onSnapshot] Projects snapshot size:', snapshot.size)
+        projectsData.value = snapshot.docs.map((doc) => mapFirestoreProject(doc))
+        console.log('[onSnapshot] Current projectsData:', projectsData.value)
       },
       (error) => {
         console.error('Error subscribing to projects:', error)
@@ -105,10 +100,11 @@ export const useProjectStore = defineStore('projects', () => {
   }
 
   const unsubscribeAll = () => {
-    Object.values(listeners).forEach((unsubscribe) => {
-      if (typeof unsubscribe === 'function') unsubscribe()
-    })
-    Object.keys(listeners).forEach((key) => (listeners[key] = null))
+    if (listeners.projects) {
+      console.log('[unsubscribeAll] Removing projects listener')
+      listeners.projects()
+      listeners.projects = null
+    }
   }
 
   const createProject = async (newProject) => {
@@ -268,22 +264,36 @@ export const useProjectStore = defineStore('projects', () => {
       const tasksQuery = query(collection(db, 'users', userId, 'projects', projectId, 'tasks'))
       const tasksSnapshot = await getDocs(tasksQuery)
       const batch = writeBatch(db)
-      tasksSnapshot.forEach((doc) => {
-        batch.delete(doc.ref)
-      })
+      const notificationsToDeleteRefs = []
+
+      for (const taskDoc of tasksSnapshot.docs) {
+        const taskId = taskDoc.id
+        batch.delete(taskDoc.ref)
+
+        const notificationsQuery = query(
+          collection(db, 'users', userId, 'notifications'),
+          where('taskId', '==', taskId)
+        )
+        const notificationsSnapshot = await getDocs(notificationsQuery)
+        notificationsSnapshot.forEach((notificationDoc) => {
+          notificationsToDeleteRefs.push(notificationDoc.ref)
+        })
+      }
+
+      await batchDeleteDocuments(db, notificationsToDeleteRefs)
       await batch.commit()
 
       await deleteDocument(projectRef)
 
       showSnackbar(
         notificationsStore,
-        'Project and its tasks deleted successfully',
+        'Project, its tasks, and related notifications deleted successfully',
         'success',
         'mdi-check-circle'
       )
 
-      if (selectedProject.value === projectId) {
-        selectedProject.value = null
+      if (selectedProjectId.value === projectId) {
+        selectedProjectId.value = null
       }
       router.push('/')
     } catch (error) {
@@ -295,15 +305,15 @@ export const useProjectStore = defineStore('projects', () => {
     return projectsData.value.find((project) => project.id === id) || null
   }
 
-  // Cuando cambias de proyecto, siempre asigna un string (título) o null
-  function setSelectedProject(title) {
-    selectedProject.value = title || null
+  const setSelectedProject = (projectId) => {
+    selectedProjectId.value = projectId || null
   }
 
   // Watchers
   watch(
     () => userStore.userId,
     (newUserId) => {
+      console.log('[watch userId] newUserId:', newUserId)
       if (newUserId) {
         subscribeToCollection()
       } else {
@@ -323,9 +333,8 @@ export const useProjectStore = defineStore('projects', () => {
     selectedProjectId,
     newProjectData,
     editedProjectData,
-    selectedProject, // ref reactivo
+    selectedProject, // computed objeto
     selectedProjectTitle, // computed string
-    setSelectedProject, // función para cambiar el proyecto seleccionado
     isSaving,
     listeners,
     subscribeToCollection,
@@ -336,6 +345,18 @@ export const useProjectStore = defineStore('projects', () => {
     saveEditedProject,
     deleteProject,
     deleteAllTasksInProject,
-    getProjectById
+    getProjectById,
+    setSelectedProject,
+    showSnackbar,
+    handleError,
+    requireUserId,
+    getDocument,
+    addDocument,
+    updateDocument,
+    deleteDocument,
+    batchDeleteDocuments,
+    getEmptyProject,
+    getEmptyEditedProject,
+    mapFirestoreProject
   }
 })

@@ -15,7 +15,6 @@ import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -40,15 +39,12 @@ const hasActiveFilters = () => {
   )
 }
 
-const { initializeData, cleanup } = useDataInitialization()
-
 onMounted(() => {
-  initializeData()
+  // No se realiza inicialización de datos aquí
 })
 
 // Cleanup al desmontar el componente
 onUnmounted(() => {
-  cleanup()
   taskStore.resetFilters()
 })
 

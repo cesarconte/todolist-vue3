@@ -10,8 +10,10 @@ export function mapFirestoreTask(doc, getProjectById) {
   return {
     id: doc.id || data.id,
     ...data,
-    endDate: convertTimestamp(data.endDate),
     startDate: convertTimestamp(data.startDate),
+    endDate: convertTimestamp(data.endDate),
+    createdAt: convertTimestamp(data.createdAt),
+    updatedAt: convertTimestamp(data.updatedAt),
     project
   }
 }

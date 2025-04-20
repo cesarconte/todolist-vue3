@@ -7,7 +7,6 @@ import { useNotificationsStore } from '@/stores/notificationsStore'
 import useLabelIcons from '@/composables/useLabelIcons.js'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import { useDataInitialization } from '@/composables/useDataInitialization'
 
 const router = useRouter()
 const projectStore = useProjectStore()
@@ -15,7 +14,6 @@ const taskStore = useTaskStore()
 const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
 const { labelIcons } = useLabelIcons()
-const { initializeData, cleanup } = useDataInitialization()
 
 // Ref variables for the calendar
 const type = ref('month')
@@ -48,11 +46,15 @@ const calendarEvents = computed(() => {
 })
 
 onMounted(() => {
-  initializeData()
+  // Activar suscripción en tiempo real a las tareas del usuario
+  if (userStore.isLoggedIn) {
+    taskStore.subscribeToTasks()
+  }
 })
 
 onUnmounted(() => {
-  cleanup()
+  // Limpiar la suscripción en tiempo real al salir de la vista
+  taskStore.unsubscribeAll()
 })
 
 watch(
