@@ -51,6 +51,7 @@ onMounted(() => {
   stopWatch = watch(
     () => props.projectId,
     (newProjectId) => {
+      // Can keep async or remove if not needed elsewhere
       if (newProjectId) {
         // Use the projectId directly to set the selected project in stores
         taskStore.setSelectedProject(newProjectId)
@@ -59,6 +60,10 @@ onMounted(() => {
         // Handle case where projectId becomes null or undefined if necessary
         taskStore.setSelectedProject(null)
         projectStore.setSelectedProject(null)
+        // Optionally clear tasks or handle appropriately
+        taskStore.state.filteredTasks = []
+        taskStore.state.allFilteredTasks = []
+        taskStore.state.totalTasks = 0
       }
     },
     { immediate: true } // Run immediately when the component mounts
@@ -74,7 +79,7 @@ const taskFormRef = ref(null)
 const dialogEditProject = ref(false)
 const dialogAddTask = ref(false)
 
-const isLoading = computed(() => taskStore.state.isLoading)
+// const isLoading = computed(() => taskStore.state.isLoading)
 
 const progressPercentage = computed(() => {
   const total = taskStore.totalFilteredTasksInProject
@@ -298,8 +303,237 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
       :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
     >
+      <v-dialog
+        v-model="dialogAddTask"
+        :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
+        class="dialog dialog-create-task"
+      >
+        <v-card class="card card-create-task pa-4">
+          <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
+            <span class="text-h6">Add new task</span>
+          </v-card-title>
+          <v-card-text :class="mobile ? 'px-0' : ''">
+            <VTaskForm
+              v-model="taskStore.newTask"
+              :projects="projectStore.projects"
+              :labels="dataStore.labels"
+              :priorities="dataStore.priorities"
+              :statuses="dataStore.statuses"
+              :rules="rules"
+              ref="taskFormRef"
+              @submit="submitNewTask"
+            >
+            </VTaskForm>
+          </v-card-text>
+          <v-card-actions class="justify-center">
+            <VActionButtons :buttons="btnsNewTaskForm" />
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog
+        v-model="dialogEditProject"
+        :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+        class="dialog dialog-edit-project"
+      >
+        <v-card class="card card-edit-project pa-4">
+          <v-card-title class="card-title card-title-edit-project">
+            <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
+          </v-card-title>
+          <v-card-text>
+            <v-form class="form form-edit-project" ref="form" @submit.prevent="submitEditedProject">
+              <v-text-field
+                v-model="projectStore.editedProject.title"
+                placeholder="Enter project title"
+                prepend-inner-icon="mdi-format-title"
+                type="text"
+                variant="plain"
+                color="red-darken-2"
+                :rules="titleRules"
+                clearable
+                required
+              ></v-text-field>
+              <v-divider class="mb-4"></v-divider>
+              <v-text-field
+                v-model="projectStore.editedProject.icon"
+                placeholder="Icon"
+                prepend-inner-icon="mdi-shape-outline"
+                type="text"
+                variant="plain"
+                color="red-darken-2"
+                :rules="iconRules"
+                clearable
+                required
+              ></v-text-field>
+              <v-divider class="mb-4"></v-divider>
+              <v-select
+                v-model="projectStore.editedProject.color"
+                label="Color"
+                prepend-inner-icon="mdi-palette"
+                variant="plain"
+                color="red-darken-2"
+                :rules="colorRules"
+                clearable
+                required
+                :items="dataStore.colors"
+              ></v-select>
+              <v-divider class="mb-4"></v-divider>
+            </v-form>
+          </v-card-text>
+          <v-card-actions
+            :class="
+              smAndDown
+                ? 'd-flex flex-column align-center'
+                : 'd-flex flex-wrap justify-space-around'
+            "
+          >
+            <VActionButtons :buttons="btnsFormProject" />
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-dialog
+        v-model="taskStore.dialogEditTask"
+        :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+        class="dialog dialog-edit-task"
+      >
+        <v-card class="card card-edit-task pa-4">
+          <v-card-title class="card-title card-title-edit-task">
+            <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
+          </v-card-title>
+          <v-card-text>
+            <VTaskForm
+              v-model="taskStore.editedTask"
+              :projects="projectStore.projects"
+              :labels="dataStore.labels"
+              :priorities="dataStore.priorities"
+              :statuses="dataStore.statuses"
+              :rules="rules"
+              ref="form"
+              @submit="submitEditedTask"
+            ></VTaskForm>
+          </v-card-text>
+          <v-card-actions
+            :class="
+              smAndDown
+                ? 'd-flex flex-column align-center'
+                : 'd-flex flex-wrap justify-space-around'
+            "
+          >
+            <VActionButtons :buttons="btnsForm" />
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <v-row>
+        <v-col cols="12" class="d-flex justify-content-between align-items-center">
+          <h2 class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center">
+            {{ projectStore.selectedProjectTitle }} project tasks
+          </h2>
+          <v-spacer></v-spacer>
+          <v-btn
+            icon
+            variant="flat"
+            class="delete-project-btn"
+            @click="projectStore.deleteAllTasksInProject"
+          >
+            <v-icon>mdi-delete</v-icon>
+            <v-tooltip activator="parent" location="bottom" class="delete-all-tasks-tooltip"
+              >Delete all tasks in project</v-tooltip
+            >
+          </v-btn>
+          <v-menu>
+            <template v-slot:activator="{ props }">
+              <v-btn icon v-bind="props" class="menu-project-btn" variant="text">
+                <v-icon>mdi-dots-vertical</v-icon>
+                <v-tooltip activator="parent" location="bottom" class="menu-project-tooltip"
+                  >Project options</v-tooltip
+                >
+              </v-btn>
+            </template>
+            <v-list class="menu-list">
+              <v-list-item
+                v-for="(btn, i) in btnsProject"
+                :key="i"
+                :value="btn"
+                class="menu-item d-flex align-items-center justify-content-between"
+                @click="btn.function"
+              >
+                <v-list-item-title class="d-flex align-items-center">
+                  <v-icon class="me-2">{{ btn.icon }}</v-icon>
+                  {{ btn.text }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-menu>
+        </v-col>
+      </v-row>
+      <v-row class="d-flex align-items-center align-content-center">
+        <v-col
+          cols="12"
+          class="d-flex align-items-center mb-4"
+          :class="{
+            'col-xs-12': xs,
+            'col-sm-11': sm,
+            'col-md-9': md,
+            'col-lg-8': lg,
+            'col-xl-7': xl
+          }"
+        >
+          <div class="container-project-info pa-3">
+            <v-divider></v-divider>
+            <v-row class="d-flex align-items-center align-content-center py-4">
+              <v-col cols="auto" class="d-flex align-items-center align-content-center">
+                <v-icon
+                  class="me-3 d-flex align-self-center"
+                  color="red-darken-2"
+                  :icon="totalTasksIcon"
+                >
+                </v-icon>
+                <strong class="text-red-darken-2 text-h6">
+                  Total: {{ taskStore.totalFilteredTasksInProject }}
+                </strong>
+              </v-col>
+            </v-row>
+            <v-divider class="my-3"></v-divider>
+            <v-row class="d-flex align-items-center align-content-center">
+              <v-col cols="auto" class="d-flex align-items-center">
+                <v-icon
+                  icon="mdi-calendar-clock-outline"
+                  class="me-3 d-flex align-self-center"
+                ></v-icon>
+                <strong class="d-flex align-self-center">
+                  Remaining: {{ taskStore.remainingFilteredTasksInProject }}
+                </strong>
+              </v-col>
+              <v-divider class="mx-4 my-2" vertical></v-divider>
+              <v-col cols="auto" class="d-flex align-items-center">
+                <v-icon class="me-3 d-flex align-self-center" :icon="completedTasksIcon"> </v-icon>
+                <strong class="d-flex align-self-center">
+                  Completed: {{ taskStore.completedFilteredTasksInProject }}
+                </strong>
+              </v-col>
+              <v-col cols="auto" class="d-flex align-items-center ml-8">
+                <v-fade-transition>
+                  <v-progress-circular
+                    v-model="progressPercentage"
+                    :size="64"
+                    :width="7"
+                    :value="progressPercentage"
+                    color="red-darken-2"
+                  >
+                    <v-fade-transition>
+                      <p class="text-overline">{{ progressPercentage }}%</p>
+                    </v-fade-transition>
+                  </v-progress-circular>
+                </v-fade-transition>
+              </v-col>
+              <v-divider></v-divider>
+            </v-row>
+          </div>
+        </v-col>
+      </v-row>
+
       <v-row
-        v-if="isLoading"
+        v-if="taskStore.state.isLoading || taskStore.state.initialLoadPending"
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
       >
         <v-divider
@@ -309,7 +543,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         ></v-divider>
         <v-col
           v-for="n in taskStore.state.pageSize"
-          :key="n"
+          :key="`skel-${n}`"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
           lg="6"
           class="py-0"
@@ -318,353 +552,124 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           <v-skeleton-loader type="card" />
         </v-col>
       </v-row>
-      <template v-else>
-        <v-dialog
-          v-model="dialogAddTask"
-          :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
-          class="dialog dialog-create-task"
-        >
-          <v-card class="card card-create-task pa-4">
-            <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
-              <span class="text-h6">Add new task</span>
-            </v-card-title>
-            <v-card-text :class="mobile ? 'px-0' : ''">
-              <VTaskForm
-                v-model="taskStore.newTask"
-                :projects="projectStore.projects"
-                :labels="dataStore.labels"
-                :priorities="dataStore.priorities"
-                :statuses="dataStore.statuses"
-                :rules="rules"
-                ref="taskFormRef"
-                @submit="submitNewTask"
-              >
-              </VTaskForm>
-            </v-card-text>
-            <v-card-actions class="justify-center">
-              <VActionButtons :buttons="btnsNewTaskForm" />
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-row>
-          <v-col cols="12" class="d-flex justify-content-between align-items-center">
-            <h2
-              class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center"
-            >
-              {{ projectStore.selectedProjectTitle }} project tasks
-            </h2>
-            <v-spacer></v-spacer>
 
-            <v-btn
-              icon
-              variant="flat"
-              class="delete-project-btn"
-              @click="projectStore.deleteAllTasksInProject"
-            >
-              <v-icon>mdi-delete</v-icon>
-              <v-tooltip activator="parent" location="bottom" class="delete-all-tasks-tooltip"
-                >Delete all tasks in project</v-tooltip
-              >
-            </v-btn>
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn icon v-bind="props" class="menu-project-btn" variant="text">
-                  <v-icon>mdi-dots-vertical</v-icon>
-                  <v-tooltip activator="parent" location="bottom" class="menu-project-tooltip"
-                    >Project options</v-tooltip
-                  >
-                </v-btn>
-              </template>
-              <v-list class="menu-list">
-                <v-list-item
-                  v-for="(btn, i) in btnsProject"
-                  :key="i"
-                  :value="btn"
-                  class="menu-item d-flex align-items-center justify-content-between"
-                  @click="btn.function"
-                >
-                  <v-list-item-title class="d-flex align-items-center">
-                    <v-icon class="me-2">{{ btn.icon }}</v-icon>
-                    {{ btn.text }}
-                  </v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
-        <v-row class="d-flex align-items-center align-content-center">
-          <v-col
-            cols="12"
-            class="d-flex align-items-center mb-4"
-            :class="{
-              'col-xs-12': xs,
-              'col-sm-11': sm,
-              'col-md-9': md,
-              'col-lg-8': lg,
-              'col-xl-7': xl
-            }"
-          >
-            <div class="container-project-info pa-3">
-              <v-divider></v-divider>
-              <v-row class="d-flex align-items-center align-content-center py-4">
-                <v-col cols="auto" class="d-flex align-items-center align-content-center">
-                  <v-icon
-                    class="me-3 d-flex align-self-center"
-                    color="red-darken-2"
-                    :icon="totalTasksIcon"
-                  >
-                  </v-icon>
-                  <strong class="text-red-darken-2 text-h6">
-                    Total: {{ taskStore.totalFilteredTasksInProject }}
-                  </strong>
-                </v-col>
-              </v-row>
-              <v-divider class="my-3"></v-divider>
-              <v-row class="d-flex align-items-center align-content-center">
-                <v-col cols="auto" class="d-flex align-items-center">
-                  <v-icon
-                    icon="mdi-calendar-clock-outline"
-                    class="me-3 d-flex align-self-center"
-                  ></v-icon>
-                  <strong class="d-flex align-self-center">
-                    Remaining: {{ taskStore.remainingFilteredTasksInProject }}
-                  </strong>
-                </v-col>
-                <v-divider class="mx-4 my-2" vertical></v-divider>
-                <v-col cols="auto" class="d-flex align-items-center">
-                  <v-icon class="me-3 d-flex align-self-center" :icon="completedTasksIcon">
-                  </v-icon>
-                  <strong class="d-flex align-self-center">
-                    Completed: {{ taskStore.completedFilteredTasksInProject }}
-                  </strong>
-                </v-col>
-                <v-col cols="auto" class="d-flex align-items-center ml-8">
-                  <v-fade-transition>
-                    <v-progress-circular
-                      v-model="progressPercentage"
-                      :size="64"
-                      :width="7"
-                      :value="progressPercentage"
-                      color="red-darken-2"
-                    >
-                      <v-fade-transition>
-                        <p class="text-overline">{{ progressPercentage }}%</p>
-                      </v-fade-transition>
-                    </v-progress-circular>
-                  </v-fade-transition>
-                </v-col>
-                <v-divider></v-divider>
-              </v-row>
-            </div>
-          </v-col>
-        </v-row>
-        <v-row
-          v-if="
-            Array.isArray(taskStore.tasksInSelectedProject) &&
-            taskStore.tasksInSelectedProject.length > 0
-          "
-          class="tasks d-flex flex-wrap align-items-center justify-content-center"
+      <v-row
+        v-else-if="
+          !taskStore.state.isLoading &&
+          !taskStore.state.initialLoadPending &&
+          taskStore.paginatedTasksInSelectedProject.length > 0
+        "
+        class="tasks d-flex flex-wrap align-items-center justify-content-center"
+      >
+        <v-divider
+          color="red-darken-2"
+          :thickness="1"
+          class="mx-auto border-opacity-50 mb-4"
+        ></v-divider>
+        <v-col
+          v-for="task in taskStore.paginatedTasksInSelectedProject"
+          :key="task.id"
+          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
+          lg="6"
+          class="py-0"
+          :class="mdAndDown ? 'mx-auto' : ''"
         >
-          <v-divider
-            color="red-darken-2"
-            :thickness="1"
-            class="mx-auto border-opacity-50 mb-4"
-          ></v-divider>
-          <v-col
-            v-for="(task, i) in taskStore.paginatedTasksInSelectedProject"
-            :key="i"
-            :task="task"
-            :value="task"
-            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-            lg="6"
-            class="py-0"
-            :class="mdAndDown ? 'mx-auto' : ''"
-          >
-            <Suspense>
-              <template #default>
-                <VCardTask
-                  v-if="task"
-                  :key="task.id"
-                  :title="task.title"
-                  :id="task.id"
-                  :description="task.description"
-                  :label="task.label"
-                  :project="task.project"
-                  :priority="task.priority"
-                  :status="task.status"
-                  :startDate="task.startDate"
-                  :endDate="task.endDate"
-                  :createdAt="task.createdAt"
-                  :completed="task.completed"
-                  :color="task.color ? task.color : 'default'"
-                  :projectId="task.projectId"
-                  :startDateHour="task.startDateHour"
-                  :endDateHour="task.endDateHour"
-                  @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
-                  @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
-                  @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
-                >
-                </VCardTask>
-              </template>
-              <template #fallback>
-                <div class="fallback">Loading...</div>
-              </template>
-            </Suspense>
-          </v-col>
-        </v-row>
-        <template v-else>
-          <v-container class="empty-state-container">
-            <v-row class="d-flex flex-column align-center justify-center text-center pa-8">
-              <v-col cols="auto" class="py-8">
-                <v-icon
-                  icon="mdi-clipboard-text-off"
-                  size="128"
-                  color="grey-lighten-1"
-                  class="mb-6 empty-icon"
-                />
-                <v-list-item-title class="text-h5 font-weight-medium text-grey-lighten-1 mb-2">
-                  No tasks in this project
-                </v-list-item-title>
-                <v-list-item-subtitle class="text-subtitle-1 text-grey-lighten-1">
-                  Start by creating your first task!
-                </v-list-item-subtitle>
-              </v-col>
-
-              <v-col cols="auto">
-                <v-btn
-                  :class="xs ? '' : 'px-8'"
-                  :block="xs"
-                  class="text-none text-button"
-                  color="red-accent-2"
-                  variant="tonal"
-                  rounded="pill"
-                  size="large"
-                  prepend-icon="mdi-plus-circle-outline"
-                  @click="handleAddTaskClick"
-                >
-                  New Task
-                  <v-tooltip activator="parent" location="bottom" class="add-task-tooltip"
-                    >Create a new task in this project</v-tooltip
-                  >
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-container>
-        </template>
-        <v-row class="pa-3">
-          <VPagination
-            :currentPage="taskStore.state.currentPage"
-            :totalPages="taskStore.totalPages"
-            :hasPrevPage="taskStore.state.currentPage > 1"
-            :hasNextPage="taskStore.state.currentPage < taskStore.totalPages"
-            @prev-page="taskStore.prevPage"
-            @next-page="taskStore.nextPage"
-            @first-page="taskStore.firstPage"
-            @last-page="taskStore.lastPage"
-          >
+          <Suspense>
             <template #default>
-              Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
-            </template>
-          </VPagination>
-        </v-row>
-
-        <v-dialog
-          v-model="dialogEditProject"
-          :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
-          class="dialog dialog-edit-project"
-        >
-          <v-card class="card card-edit-project pa-4">
-            <v-card-title class="card-title card-title-edit-project">
-              <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
-            </v-card-title>
-            <v-card-text>
-              <v-form
-                class="form form-edit-project"
-                ref="form"
-                @submit.prevent="submitEditedProject"
+              <VCardTask
+                v-if="task"
+                :key="task.id"
+                :title="task.title"
+                :id="task.id"
+                :description="task.description"
+                :label="task.label"
+                :project="task.project"
+                :priority="task.priority"
+                :status="task.status"
+                :startDate="task.startDate"
+                :endDate="task.endDate"
+                :createdAt="task.createdAt"
+                :completed="task.completed"
+                :color="task.color ? task.color : 'default'"
+                :projectId="task.projectId"
+                :startDateHour="task.startDateHour"
+                :endDateHour="task.endDateHour"
+                @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
+                @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+                @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
               >
-                <v-text-field
-                  v-model="projectStore.editedProject.title"
-                  placeholder="Enter project title"
-                  prepend-inner-icon="mdi-format-title"
-                  type="text"
-                  variant="plain"
-                  color="red-darken-2"
-                  :rules="titleRules"
-                  clearable
-                  required
-                ></v-text-field>
-                <v-divider class="mb-4"></v-divider>
-                <v-text-field
-                  v-model="projectStore.editedProject.icon"
-                  placeholder="Icon"
-                  prepend-inner-icon="mdi-shape-outline"
-                  type="text"
-                  variant="plain"
-                  color="red-darken-2"
-                  :rules="iconRules"
-                  clearable
-                  required
-                ></v-text-field>
-                <v-divider class="mb-4"></v-divider>
-                <v-select
-                  v-model="projectStore.editedProject.color"
-                  label="Color"
-                  prepend-inner-icon="mdi-palette"
-                  variant="plain"
-                  color="red-darken-2"
-                  :rules="colorRules"
-                  clearable
-                  required
-                  :items="dataStore.colors"
-                ></v-select>
-                <v-divider class="mb-4"></v-divider>
-              </v-form>
-            </v-card-text>
-            <v-card-actions
-              :class="
-                smAndDown
-                  ? 'd-flex flex-column align-center'
-                  : 'd-flex flex-wrap justify-space-around'
-              "
-            >
-              <VActionButtons :buttons="btnsFormProject" />
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
-        <v-dialog
-          v-model="taskStore.dialogEditTask"
-          :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
-          class="dialog dialog-edit-task"
-        >
-          <v-card class="card card-edit-task pa-4">
-            <v-card-title class="card-title card-title-edit-task">
-              <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
-            </v-card-title>
-            <v-card-text>
-              <VTaskForm
-                v-model="taskStore.editedTask"
-                :projects="projectStore.projects"
-                :labels="dataStore.labels"
-                :priorities="dataStore.priorities"
-                :statuses="dataStore.statuses"
-                :rules="rules"
-                ref="form"
-                @submit="submitEditedTask"
-              ></VTaskForm>
-            </v-card-text>
-            <v-card-actions
-              :class="
-                smAndDown
-                  ? 'd-flex flex-column align-center'
-                  : 'd-flex flex-wrap justify-space-around'
-              "
-            >
-              <VActionButtons :buttons="btnsForm" />
-            </v-card-actions>
-          </v-card>
-        </v-dialog>
+              </VCardTask>
+            </template>
+            <template #fallback>
+              <div class="fallback">Loading Task...</div>
+            </template>
+          </Suspense>
+        </v-col>
+      </v-row>
+
+      <template v-else>
+        <v-container class="empty-state-container">
+          <v-row class="d-flex flex-column align-center justify-center text-center pa-8">
+            <v-col cols="auto" class="py-8">
+              <v-icon
+                icon="mdi-clipboard-text-off"
+                size="128"
+                color="grey-lighten-1"
+                class="mb-6 empty-icon"
+              />
+              <v-list-item-title class="text-h5 font-weight-medium text-grey-lighten-1 mb-2">
+                No tasks in this project
+              </v-list-item-title>
+              <v-list-item-subtitle class="text-subtitle-1 text-grey-lighten-1">
+                Start by creating your first task!
+              </v-list-item-subtitle>
+            </v-col>
+
+            <v-col cols="auto">
+              <v-btn
+                :class="xs ? '' : 'px-8'"
+                :block="xs"
+                class="text-none text-button"
+                color="red-accent-2"
+                variant="tonal"
+                rounded="pill"
+                size="large"
+                prepend-icon="mdi-plus-circle-outline"
+                @click="handleAddTaskClick"
+              >
+                New Task
+                <v-tooltip activator="parent" location="bottom" class="add-task-tooltip"
+                  >Create a new task in this project</v-tooltip
+                >
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-container>
       </template>
+
+      <v-row
+        v-if="
+          !taskStore.state.isLoading &&
+          !taskStore.state.initialLoadPending &&
+          taskStore.totalPages > 1
+        "
+        class="pa-3"
+      >
+        <VPagination
+          :currentPage="taskStore.state.currentPage"
+          :totalPages="taskStore.totalPages"
+          :hasPrevPage="taskStore.state.currentPage > 1"
+          :hasNextPage="taskStore.state.currentPage < taskStore.totalPages"
+          @prev-page="taskStore.prevPage"
+          @next-page="taskStore.nextPage"
+          @first-page="taskStore.firstPage"
+          @last-page="taskStore.lastPage"
+        >
+          <template #default>
+            Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+          </template>
+        </VPagination>
+      </v-row>
     </v-responsive>
   </v-container>
 </template>

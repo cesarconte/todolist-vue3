@@ -53,6 +53,7 @@ export const useTaskStore = defineStore('tasks', () => {
     hasPrevPage: false,
     isLoading: false,
     error: null,
+    initialLoadPending: true, // <--- ADDED STATE
     // Filtros
     searchTerm: '',
     selectedProjects: [],
@@ -192,6 +193,21 @@ export const useTaskStore = defineStore('tasks', () => {
   }
 
   const fetchTasks = async (direction = 'first') => {
+    if (!userStore.userId) {
+      console.warn('[fetchTasks] No userId available, skipping fetch.')
+      state.tasks = []
+      state.allFilteredTasks = []
+      state.filteredTasks = []
+      state.totalTasks = 0
+      state.currentPage = 1
+      state.hasNextPage = false
+      state.hasPrevPage = false
+      state.isLoading = false
+      return // Exit if no user is logged in
+    }
+
+    const wasInitialLoadPending = state.initialLoadPending && direction === 'first' // Check before starting
+
     try {
       state.isLoading = true
       state.error = null
@@ -280,6 +296,11 @@ export const useTaskStore = defineStore('tasks', () => {
       showSnackbar(notificationsStore, 'Error loading tasks', 'error')
     } finally {
       state.isLoading = false
+      if (wasInitialLoadPending) {
+        // Set pending to false only after the initial 'first' fetch completes
+        state.initialLoadPending = false
+        console.log('[fetchTasks] Initial load marked as complete.') // Add log
+      }
     }
   }
 
@@ -461,6 +482,7 @@ export const useTaskStore = defineStore('tasks', () => {
     state.hasPrevPage = false
     state.isLoading = false
     state.error = null
+    state.initialLoadPending = true // <--- RESET HERE
     state.searchTerm = ''
     state.selectedProjects = []
     state.selectedPriorities = []
@@ -573,10 +595,19 @@ export const useTaskStore = defineStore('tasks', () => {
   const setSelectedProject = (projectId) => {
     if (!projectId) {
       console.warn('No projectId provided to setSelectedProject')
-      state.selectedProjects = []
+      if (state.selectedProjects.length > 0) {
+        // Only reset if it actually changes to empty
+        state.selectedProjects = []
+        state.initialLoadPending = true // <--- RESET HERE
+      }
       return
     }
-    state.selectedProjects = [projectId]
+    if (!state.selectedProjects.includes(projectId)) {
+      // Only reset if the project ID actually changes
+      state.selectedProjects = [projectId]
+      state.initialLoadPending = true // <--- RESET HERE
+      console.log('[setSelectedProject] New project selected, initialLoadPending reset.') // Add log
+    }
   }
 
   // Suscribirse a los cambios en tiempo real de las tareas del usuario
@@ -584,52 +615,102 @@ export const useTaskStore = defineStore('tasks', () => {
     if (!userStore.userId) return
     // Limpiar listener anterior si existe
     if (listeners.tasks) listeners.tasks()
+
+    console.log(`[subscribeToTasks] Subscribing for userId: ${userStore.userId}`) // Add log
+
     const q = query(collectionGroup(db, 'tasks'), where('createdBy', '==', userStore.userId))
-    listeners.tasks = onSnapshot(q, (snapshot) => {
-      state.tasks = snapshot.docs.map((doc) => {
-        // Si doc.data existe, es un documento Firestore; si no, es un objeto plano
-        const data = typeof doc.data === 'function' ? doc.data() : doc
-        return mapFirestoreTask(
-          { data: () => data, id: doc.id || data.id },
-          projectStore.getProjectById
-        )
-      })
-    })
+    listeners.tasks = onSnapshot(
+      q,
+      (snapshot) => {
+        console.log(`[onSnapshot tasks] Received ${snapshot.docs.length} task docs.`) // Add log
+        // Use a Map to prevent duplicates based on ID during mapping
+        const taskMap = new Map()
+        snapshot.docs.forEach((doc) => {
+          const mappedTask = mapFirestoreTask(
+            { data: () => (typeof doc.data === 'function' ? doc.data() : doc), id: doc.id },
+            projectStore.getProjectById
+          )
+          if (mappedTask && mappedTask.id) {
+            // Ensure task and id exist
+            taskMap.set(mappedTask.id, mappedTask)
+          } else {
+            console.warn('[onSnapshot tasks] Skipping doc with missing data or id:', doc)
+          }
+        })
+        state.tasks = Array.from(taskMap.values())
+        console.log(`[onSnapshot tasks] Updated state.tasks count: ${state.tasks.length}`) // Add log
+        // Maybe trigger a fetch here if needed? No, fetchTasks handles filtered view.
+      },
+      (error) => {
+        // Add error handling for snapshot
+        console.error('[onSnapshot tasks] Error:', error)
+        state.error = 'Error listening to task updates.'
+        showSnackbar(notificationsStore, 'Error listening to task updates', 'error')
+      }
+    )
   }
 
   // Limpiar todos los listeners activos
   const unsubscribeAll = () => {
+    console.log('[unsubscribeAll] Unsubscribing task listener.') // Add log
     Object.values(listeners).forEach((unsubscribe) => {
       if (typeof unsubscribe === 'function') unsubscribe()
     })
     listeners.tasks = null
   }
 
-  // Watcher para cambios en filtros
+  // Watcher para cambios en filtros Y userId
   watch(
-    () => ({ ...currentFilters.value }),
-    async () => {
-      // Detecta si hay algún filtro activo
-      const hasAnyFilter =
-        state.selectedProjects.length > 0 ||
-        state.selectedPriorities.length > 0 ||
-        state.selectedStatuses.length > 0 ||
-        state.selectedLabels.length > 0 ||
-        !!state.selectedEndDate ||
-        !!state.searchTerm
+    () => ({ filters: { ...currentFilters.value }, userId: userStore.userId }),
+    async (newValue, oldValue) => {
+      console.log('[Filter/User Watcher] Triggered. New:', newValue, 'Old:', oldValue)
 
-      if (hasAnyFilter) {
-        await fetchTasks('first')
-      } else {
-        // Resetear paginación y tareas si no hay filtros activos
+      const filtersChanged = JSON.stringify(newValue.filters) !== JSON.stringify(oldValue?.filters)
+      const userChanged = newValue.userId !== oldValue?.userId
+      const hasSelectedProject = newValue.filters.projects.length > 0 // Check specifically for selected project
+
+      // Condition 1: User is logged in AND a project is selected
+      if (newValue.userId && hasSelectedProject) {
+        // Trigger fetch if user just logged in (with a project selected) OR if filters changed while logged in (and project still selected)
+        if (userChanged || filtersChanged) {
+          console.log(
+            '[Filter/User Watcher] User valid and project selected. User changed:',
+            userChanged,
+            'Filters changed:',
+            filtersChanged
+          )
+          console.log('[Filter/User Watcher] Calling fetchTasks.')
+          await fetchTasks('first')
+        } else {
+          console.log(
+            '[Filter/User Watcher] User valid and project selected, but no relevant change detected.'
+          )
+        }
+      }
+      // Condition 2: User logged in BUT no project selected (or filters cleared)
+      else if (newValue.userId && !hasSelectedProject && filtersChanged) {
+        console.log(
+          '[Filter/User Watcher] User valid but no project selected (or filters cleared). Resetting filtered tasks.'
+        )
+        // Reset only filtered/paginated state if no project filter is active
         state.filteredTasks = []
+        state.allFilteredTasks = []
         state.totalTasks = 0
         state.currentPage = 1
         state.hasNextPage = false
         state.hasPrevPage = false
       }
+      // Condition 3: User logged out (or became null)
+      else if (userChanged && !newValue.userId) {
+        console.log('[Filter/User Watcher] User logged out or became null. Clearing task state.')
+        // Clear all task-related state on logout
+        clearTaskStore() // Use the existing clear function
+        unsubscribeAll() // Ensure listener is cleaned up
+      } else {
+        console.log('[Filter/User Watcher] No conditions met for action.')
+      }
     },
-    { deep: true }
+    { deep: true, immediate: true } // Run immediately on store setup
   )
 
   // 6. Return
