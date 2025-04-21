@@ -22,7 +22,36 @@ const router = useRouter()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
-const { reset } = useResetForm(form)
+
+// Callback para restaurar el modelo reactivo de la tarea editada
+const resetEditTaskFormState = () => {
+  const originalTask = taskStore.tasksData.find((t) => t.id === taskStore.editedTask.id)
+  if (originalTask) {
+    Object.assign(taskStore.editedTask, { ...originalTask })
+  } else {
+    Object.assign(taskStore.editedTask, {
+      projectId: '',
+      title: '',
+      description: '',
+      label: '',
+      priority: '',
+      status: '',
+      startDate: null,
+      endDate: null,
+      completed: false,
+      color: null
+    })
+  }
+}
+
+// Reset personalizado y notificación coherente
+const { reset } = useResetForm(
+  form,
+  'Edit Task Form has been reset',
+  'info',
+  'mdi-information',
+  resetEditTaskFormState
+)
 
 // Campo de búsqueda local (ahora almacena el objeto seleccionado)
 const selectedTask = ref(null)

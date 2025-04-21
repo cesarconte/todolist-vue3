@@ -20,7 +20,37 @@ const router = useRouter()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
-const { reset } = useResetForm(form)
+
+// Callback para restaurar el modelo reactivo de la tarea editada
+const resetEditTaskFormState = () => {
+  const originalTask = taskStore.tasksData.find((t) => t.id === taskStore.editedTask.id)
+  if (originalTask) {
+    Object.assign(taskStore.editedTask, { ...originalTask })
+  } else {
+    // Si no se encuentra, limpia el modelo
+    Object.assign(taskStore.editedTask, {
+      projectId: '',
+      title: '',
+      description: '',
+      label: '',
+      priority: '',
+      status: '',
+      startDate: null,
+      endDate: null,
+      completed: false,
+      color: null
+    })
+  }
+}
+
+// Reset personalizado y notificación coherente
+const { reset } = useResetForm(
+  form,
+  'Edit Task Form has been reset',
+  'info',
+  'mdi-information',
+  resetEditTaskFormState
+)
 
 const props = defineProps({
   taskId: {
@@ -29,26 +59,18 @@ const props = defineProps({
   }
 })
 
-// Get the task from Firestore
-/* ==> El computed en TaskDetailView.vue asegura que la vista se actualice en tiempo real
-cuando se producen cambios en la base de datos de Firebase.
-La reactividad de computed permite que las ediciones en Firebase se reflejen en la vista.
-* ==> Importante: la reactividad de computed funciona porque dataStore.tasks es un array reactivo.
-Si dataStore.tasks no fuera reactivo, computed no se recalcularía y la vista no se actualizaría. */
 const task = computed(() => {
   return taskStore.tasksData.find((task) => task.id === props.taskId)
 })
 
-// Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
   submitEditedTask,
   reset,
   () => (taskStore.dialogEditTask = false)
 )
 
-// Configure the submit button for editing a task
-btnsForm[0].text = 'Update Task' // Set the text for the submit button
-btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
+btnsForm[0].text = 'Update Task'
+btnsForm[0].icon = 'mdi-pencil'
 
 const goBack = () => {
   router.back()

@@ -17,11 +17,15 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
           closeFn()
         } catch (error) {
           console.error('Error during submit:', error)
-          notificationsStore.showSnackbar = {
-            show: true,
-            message: 'An error occurred while processing the request.',
-            color: 'error'
-          }
+          // Usar el helper centralizado para mostrar la notificación
+          const { showSnackbar } = await import('@/utils/notificationHelpers.js')
+          showSnackbar(
+            notificationsStore,
+            'An error occurred while processing the request.',
+            'error',
+            'mdi-alert-circle',
+            ''
+          )
         }
       }
     },

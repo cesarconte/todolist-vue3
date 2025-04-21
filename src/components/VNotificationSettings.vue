@@ -80,10 +80,7 @@ const handleError = (message, error) => {
   // Handles errors and displays snackbar messages
   saveError.value = message
   console.error('Notification Settings Error:', error)
-  notificationsStore.showSnackbar = {
-    show: true,
-    message: message
-  }
+  showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle', '')
 }
 
 const closeDialog = () => {

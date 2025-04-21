@@ -11,7 +11,7 @@ import { useSubmitNewTask } from '@/composables/useSubmitNewTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import { useResetForm } from '@/composables/useResetForm'
-import { getEmptyTask } from '@/composables/useTaskHelpers'
+import { getEmptyTask, getEmptyProject } from '@/composables/useTaskHelpers'
 import { useDialogCleanup } from '@/composables/useDialogCleanup'
 import { useAddNewProject } from '@/composables/useAddNewProject'
 import { useToolbarNav } from '@/composables/useToolbarNav'
@@ -120,10 +120,7 @@ watch(
         await notificationsStore.loadSettings() // Ya incluye la suscripción
       } catch (error) {
         console.error('Error loading notifications:', error)
-        notificationsStore.showSnackbar = {
-          show: true,
-          message: 'Failed to load notifications'
-        }
+        showSnackbar('Failed to load notifications', 'error', 'mdi-alert')
       }
     } else {
       notificationsStore.unsubscribe()
@@ -209,22 +206,31 @@ const openDialog = (value) => {
   }
 }
 
+const resetNewTaskFormState = () => {
+  // Limpia el modelo reactivo de la nueva tarea
+  Object.assign(taskStore.newTask, getEmptyTask())
+}
+
 const { reset: resetAddTaskForm } = useResetForm(
   forms.addTask,
   'Add Task Form has been reset',
-  'success',
-  'mdi-refresh'
+  'info',
+  'mdi-information',
+  resetNewTaskFormState
 )
 
-const { reset: resetAddProjectFormFn } = useResetForm(
+const { reset: resetAddProjectFormUnified } = useResetForm(
   forms.addProject,
   'Add Project Form has been reset',
-  'success',
-  'mdi-refresh'
+  'info',
+  'mdi-information',
+  () => {
+    projectStore.newProject = getEmptyProject()
+  }
 )
 
 // Pass a function to close the drawer instead of the ref itself
-const { addNewProject } = useAddNewProject(resetAddProjectFormFn, dialogAddProject, () => {
+const { addNewProject } = useAddNewProject(resetAddProjectFormUnified, dialogAddProject, () => {
   menus.drawer = false
 })
 
@@ -248,10 +254,7 @@ const handleNotificationsClick = async () => {
     dialogNotificationsList.value = !dialogNotificationsList.value
   } catch (error) {
     console.error('Error loading notifications:', error)
-    notificationsStore.showSnackbar = {
-      show: true,
-      message: 'Failed to load notifications'
-    }
+    showSnackbar('Failed to load notifications', 'error', 'mdi-alert')
   }
 }
 
@@ -316,7 +319,7 @@ const btnsFormAddProject = [
     height: '3rem',
     text: 'Reset Form',
     icon: 'mdi-refresh',
-    function: resetAddProjectFormFn
+    function: resetAddProjectFormUnified
   },
   {
     type: 'button',

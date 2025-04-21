@@ -56,8 +56,12 @@ const colorRules = requiredRule('Color')
 defineExpose({
   validate: () => formProject.value?.validate(),
   reset: () => {
-    Object.assign(formData, props.modelValue)
-    formProject.value?.reset()
+    // Limpia los campos del formulario visualmente
+    if (formProject.value && typeof formProject.value.reset === 'function') {
+      formProject.value.reset()
+    }
+    // Limpia el modelo reactivo
+    Object.assign(formData, { title: '', icon: '', color: '' })
   },
   resetValidation: () => formProject.value?.resetValidation()
 })

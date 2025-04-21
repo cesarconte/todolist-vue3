@@ -23,7 +23,36 @@ const userStore = useUserStore()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
-const { reset } = useResetForm(form)
+
+// Callback para restaurar el modelo reactivo de la tarea editada
+const resetEditTaskFormState = () => {
+  const originalTask = taskStore.tasksData.find((t) => t.id === taskStore.editedTask.id)
+  if (originalTask) {
+    Object.assign(taskStore.editedTask, { ...originalTask })
+  } else {
+    Object.assign(taskStore.editedTask, {
+      projectId: '',
+      title: '',
+      description: '',
+      label: '',
+      priority: '',
+      status: '',
+      startDate: null,
+      endDate: null,
+      completed: false,
+      color: null
+    })
+  }
+}
+
+// Reset personalizado y notificación coherente
+const { reset } = useResetForm(
+  form,
+  'Edit Task Form has been reset',
+  'info',
+  'mdi-information',
+  resetEditTaskFormState
+)
 
 const showCards = ref(false)
 const showAlert = ref(false)
@@ -118,21 +147,21 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.state.selectedProjects"
-            :items="userStore.isLoggedIn ? projectStore.projectItems : []"
-            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
-            item-value="value"
-            item-title="title"
             label="Filter by project..."
+            :items="userStore.isLoggedIn ? projectStore.projectItems : []"
+            item-title="title"
+            item-value="value"
+            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            dense
             clearable
             hide-details
-            dense
-            auto-select-first
             multiple
             chips
             closable-chips
-            color="red-accent-2"
+            auto-select-first
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -143,23 +172,23 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.state.selectedPriorities"
-            :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
-            item-value="value"
-            item-title="title"
             label="Filter by priority"
+            :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
+            item-title="title"
+            item-value="value"
             :placeholder="
               userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
             "
             variant="outlined"
+            color="red-accent-2"
             rounded
+            dense
             clearable
             hide-details
-            dense
-            auto-select-first
+            multiple
             chips
             closable-chips
-            multiple
-            color="red-accent-2"
+            auto-select-first
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -173,21 +202,21 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.state.selectedLabels"
-            :items="userStore.isLoggedIn ? dataStore.labelItems : []"
-            item-value="value"
-            item-title="title"
             label="Filter by label"
+            :items="userStore.isLoggedIn ? dataStore.labelItems : []"
+            item-title="title"
+            item-value="value"
             :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            dense
             clearable
             hide-details
-            dense
-            auto-select-first
             multiple
             chips
             closable-chips
-            color="red-accent-2"
+            auto-select-first
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -198,21 +227,21 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         <v-col cols="12" sm="6">
           <v-autocomplete
             v-model="taskStore.state.selectedStatuses"
-            :items="userStore.isLoggedIn ? dataStore.statusItems : []"
-            item-value="value"
-            item-text="text"
             label="Filter by status"
+            :items="userStore.isLoggedIn ? dataStore.statusItems : []"
+            item-title="title"
+            item-value="value"
             :placeholder="userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            dense
             clearable
             hide-details
-            dense
-            auto-select-first
+            multiple
             chips
             closable-chips
-            multiple
-            color="red-accent-2"
+            auto-select-first
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">
@@ -227,31 +256,29 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           <v-date-input
             v-model="taskStore.state.selectedStartDate"
             label="Filter by start date"
-            clearable
+            class="date-create-task"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            clearable
             prepend-icon=""
             prepend-inner-icon="mdi-calendar"
-            color="red-accent-2"
-            class="date-create-task"
             @click:clear="handleClearStartDate"
-          >
-          </v-date-input>
+          ></v-date-input>
         </v-col>
         <v-col cols="12" sm="6">
           <v-date-input
             v-model="taskStore.state.selectedEndDate"
             label="Filter by end date"
-            clearable
+            class="date-create-task"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            clearable
             prepend-icon=""
             prepend-inner-icon="mdi-calendar"
-            color="red-accent-2"
-            class="date-create-task"
             @click:clear="handleClearDate"
-          >
-          </v-date-input>
+          ></v-date-input>
         </v-col>
       </v-row>
 
@@ -259,17 +286,19 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
           <v-select
             v-model="taskStore.state.selectedCompletionStatus"
+            label="Filter by completion status"
             :items="completionStatusItems"
             item-title="title"
             item-value="value"
-            label="Filter by completion status"
-            placeholder="Completion status..."
+            :placeholder="'Completion status...'"
             variant="outlined"
+            color="red-accent-2"
             rounded
+            dense
             clearable
             hide-details
-            dense
-            color="red-accent-2"
+            chips
+            closable-chips
             @click="handleFilterClick"
           >
             <template v-slot:item="{ props, item }">

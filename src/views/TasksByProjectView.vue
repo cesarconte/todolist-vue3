@@ -10,13 +10,13 @@ import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/validationFormRules.js'
 import { useResetForm } from '@/composables/useResetForm'
-import { requiredRule } from '@/composables/useFieldRules'
 import VActionButtons from '@/components/VActionButtons.vue'
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
 import VCardTask from '@/components/VCardTask.vue'
 import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
+import VProjectForm from '@/components/VProjectForm.vue'
 import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
 
 const userStore = useUserStore()
@@ -74,6 +74,7 @@ onUnmounted(() => {
 
 const form = ref(null)
 const taskFormRef = ref(null)
+const projectFormRef = ref(null)
 const dialogEditProject = ref(false)
 const dialogAddTask = ref(false)
 
@@ -146,56 +147,68 @@ const submitEditedProject = async () => {
 }
 
 // Reseteo para el formulario de edición de proyecto
+// Callback para restaurar el modelo reactivo del proyecto editado
+// Este callback se usa para restaurar el modelo reactivo del proyecto editado
+// y se pasa como argumento a useResetForm
 const resetProjectFormState = () => {
+  // Restaura el modelo reactivo al original (si existe) o lo deja vacío
   const projectId = projectStore.editedProject.id
   const originalProject = projectStore.projects.find((project) => project.id === projectId)
   if (originalProject) {
-    projectStore.editedProject = { ...originalProject }
+    Object.assign(projectStore.editedProject, { ...originalProject })
   } else {
-    projectStore.editedProject = { id: '', title: '', icon: '', color: '' }
+    Object.assign(projectStore.editedProject, { id: '', title: '', icon: '', color: '' })
   }
 }
-const { reset: resetProject } = useResetForm(
-  form,
+// Reset personalizado y notificación coherente
+// Este callback se usa para restaurar el modelo reactivo del proyecto editado
+// y se pasa como argumento a useResetForm
+const { reset: resetEditProject } = useResetForm(
+  projectFormRef,
   'Project edit form reset',
   'info',
   'mdi-information',
   resetProjectFormState
 )
-
 // Reseteo para el formulario de edición de tarea
-const resetTaskFormState = () => {
-  taskStore.editedTask = {
-    projectId: '',
-    title: '',
-    description: '',
-    label: '',
-    priority: '',
-    status: '',
-    startDate: null,
-    endDate: null,
-    completed: false,
-    color: null
+// Callback para restaurar el modelo reactivo de la tarea editada
+// Este callback se usa para restaurar el modelo reactivo de la tarea editada
+// y se pasa como argumento a useResetForm
+const resetEditTaskFormState = () => {
+  const originalTask = taskStore.tasksData.find((t) => t.id === taskStore.editedTask.id)
+  if (originalTask) {
+    Object.assign(taskStore.editedTask, { ...originalTask })
+  } else {
+    Object.assign(taskStore.editedTask, {
+      projectId: '',
+      title: '',
+      description: '',
+      label: '',
+      priority: '',
+      status: '',
+      startDate: null,
+      endDate: null,
+      completed: false,
+      color: null
+    })
   }
 }
-const { reset: resetTask } = useResetForm(
+
+// Reset personalizado y notificación coherente
+const { reset: resetEditTask } = useResetForm(
   form,
-  'Task edit form reset',
+  'Edit Task Form has been reset',
   'info',
   'mdi-information',
-  resetTaskFormState
+  resetEditTaskFormState
 )
 
-// Reseteo por defecto
-const { reset: resetDefault } = useResetForm(form, 'Form reset', 'info', 'mdi-information')
-
+// Reseteo de formularios
 const reset = () => {
   if (dialogEditProject.value) {
-    resetProject()
+    resetEditProject()
   } else if (taskStore.dialogEditTask) {
-    resetTask()
-  } else {
-    resetDefault()
+    resetEditTask()
   }
 }
 
@@ -275,10 +288,6 @@ const btnsFormProject = [
 
 const rules = useMaxLengthRule()
 
-const titleRules = requiredRule('Title')
-const iconRules = requiredRule('Icon')
-const colorRules = requiredRule('Color')
-
 const totalTasksIcon = computed(() => {
   return taskStore.tasksInSelectedProject.length > 1
     ? 'mdi-clipboard-text-multiple-outline'
@@ -338,44 +347,14 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
           </v-card-title>
           <v-card-text>
-            <v-form class="form form-edit-project" ref="form" @submit.prevent="submitEditedProject">
-              <v-text-field
-                v-model="projectStore.editedProject.title"
-                placeholder="Enter project title"
-                prepend-inner-icon="mdi-format-title"
-                type="text"
-                variant="plain"
-                color="red-darken-2"
-                :rules="titleRules"
-                clearable
-                required
-              ></v-text-field>
-              <v-divider class="mb-4"></v-divider>
-              <v-text-field
-                v-model="projectStore.editedProject.icon"
-                placeholder="Icon"
-                prepend-inner-icon="mdi-shape-outline"
-                type="text"
-                variant="plain"
-                color="red-darken-2"
-                :rules="iconRules"
-                clearable
-                required
-              ></v-text-field>
-              <v-divider class="mb-4"></v-divider>
-              <v-select
-                v-model="projectStore.editedProject.color"
-                label="Color"
-                prepend-inner-icon="mdi-palette"
-                variant="plain"
-                color="red-darken-2"
-                :rules="colorRules"
-                clearable
-                required
-                :items="dataStore.colors"
-              ></v-select>
-              <v-divider class="mb-4"></v-divider>
-            </v-form>
+            <VProjectForm
+              v-model="projectStore.editedProject"
+              :project-templates="dataStore.projectTemplates"
+              :icons="dataStore.icons"
+              :colors="dataStore.colors"
+              ref="projectFormRef"
+              @submit="submitEditedProject"
+            />
           </v-card-text>
           <v-card-actions
             :class="
