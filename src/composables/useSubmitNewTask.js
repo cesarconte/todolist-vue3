@@ -39,8 +39,6 @@ export function useSubmitNewTask() {
       }
 
       await taskStore.createTask(newTaskData)
-      // Selecciona el proyecto correcto tras crear la tarea
-      taskStore.setSelectedProject(newTaskData.projectId)
       // Recarga la lista filtrada y paginada
       await taskStore.fetchTasks('first')
       // Reset the newTask object in the store directamente

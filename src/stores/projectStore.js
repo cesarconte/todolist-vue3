@@ -229,9 +229,6 @@ export const useProjectStore = defineStore('projects', () => {
 
       // Limpia las tareas del store relacionadas con el proyecto eliminado
       taskStore.state.tasks = taskStore.state.tasks.filter((task) => task.projectId !== projectId)
-      taskStore.state.filteredTasks = taskStore.state.filteredTasks.filter(
-        (task) => task.projectId !== projectId
-      )
 
       showSnackbar(
         notificationsStore,

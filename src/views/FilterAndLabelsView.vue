@@ -28,6 +28,11 @@ const { reset } = useResetForm(form)
 const showCards = ref(false)
 const showAlert = ref(false)
 
+const completionStatusItems = [
+  { title: 'Completed', value: true },
+  { title: 'Not Completed', value: false }
+]
+
 const hasActiveFilters = () => {
   return (
     taskStore.state.selectedProjects.length > 0 ||
@@ -35,6 +40,8 @@ const hasActiveFilters = () => {
     taskStore.state.selectedStatuses.length > 0 ||
     taskStore.state.selectedLabels.length > 0 ||
     !!taskStore.state.selectedEndDate ||
+    !!taskStore.state.selectedStartDate || // <-- Add check for start date
+    taskStore.state.selectedCompletionStatus !== null || // Keep this check: null means inactive
     !!taskStore.state.searchTerm
   )
 }
@@ -51,16 +58,19 @@ onUnmounted(() => {
 // Manejar cambios en filtros
 watch(
   [
-    () => taskStore.state.filteredTasks,
+    () => taskStore.tasksPage,
     () => taskStore.state.selectedProjects,
     () => taskStore.state.selectedPriorities,
     () => taskStore.state.selectedStatuses,
     () => taskStore.state.selectedLabels,
     () => taskStore.state.selectedEndDate,
+    () => taskStore.state.selectedStartDate, // <-- Watch the new filter
+    () => taskStore.state.selectedCompletionStatus,
     () => taskStore.state.searchTerm
   ],
   () => {
-    showCards.value = hasActiveFilters() && taskStore.state.filteredTasks.length > 0
+    // Check the length of the paginated tasks for the current view
+    showCards.value = hasActiveFilters() && taskStore.tasksPage.length > 0
   },
   { immediate: true }
 )
@@ -71,6 +81,10 @@ const handleFilterClick = () => {
 
 const handleClearDate = () => {
   taskStore.state.selectedEndDate = null
+}
+
+const handleClearStartDate = () => {
+  taskStore.state.selectedStartDate = null
 }
 
 const { btnsForm } = useFormBtnActions(
@@ -209,10 +223,24 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-row>
 
       <v-row>
-        <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
+        <v-col cols="12" sm="6">
+          <v-date-input
+            v-model="taskStore.state.selectedStartDate"
+            label="Filter by start date"
+            clearable
+            variant="outlined"
+            rounded
+            prepend-icon=""
+            prepend-inner-icon="mdi-calendar"
+            color="red-accent-2"
+            class="date-create-task"
+            @click:clear="handleClearStartDate"
+          >
+          </v-date-input>
+        </v-col>
+        <v-col cols="12" sm="6">
           <v-date-input
             v-model="taskStore.state.selectedEndDate"
-            :items="userStore.isLoggedIn ? dataStore.endDate : []"
             label="Filter by end date"
             clearable
             variant="outlined"
@@ -224,6 +252,30 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
             @click:clear="handleClearDate"
           >
           </v-date-input>
+        </v-col>
+      </v-row>
+
+      <v-row>
+        <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
+          <v-select
+            v-model="taskStore.state.selectedCompletionStatus"
+            :items="completionStatusItems"
+            item-title="title"
+            item-value="value"
+            label="Filter by completion status"
+            placeholder="Completion status..."
+            variant="outlined"
+            rounded
+            clearable
+            hide-details
+            dense
+            color="red-accent-2"
+            @click="handleFilterClick"
+          >
+            <template v-slot:item="{ props, item }">
+              <v-list-item v-bind="props" :title="item.raw.title" />
+            </template>
+          </v-select>
         </v-col>
       </v-row>
 
@@ -279,7 +331,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         </template>
         <template v-else-if="showCards">
           <v-col
-            v-for="task in taskStore.state.filteredTasks"
+            v-for="task in taskStore.tasksPage"
             :key="task.id"
             :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
             lg="6"
@@ -318,9 +370,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-row>
       <v-row
         v-else-if="
-          hasActiveFilters() &&
-          !taskStore.state.isLoading &&
-          taskStore.state.filteredTasks.length === 0
+          hasActiveFilters() && !taskStore.state.isLoading && taskStore.totalFilteredTasks === 0
         "
       >
         <v-col class="text-center py-8 d-flex flex-column align-center">

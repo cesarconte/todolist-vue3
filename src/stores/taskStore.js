@@ -42,8 +42,6 @@ export const useTaskStore = defineStore('tasks', () => {
   // 3. Estado reactivo
   const state = reactive({
     tasks: [],
-    allFilteredTasks: [], // Nuevo: todas las tareas filtradas (no paginadas)
-    filteredTasks: [], // Solo la página actual
     currentPage: 1,
     pageSize: 6,
     totalTasks: 0,
@@ -53,7 +51,7 @@ export const useTaskStore = defineStore('tasks', () => {
     hasPrevPage: false,
     isLoading: false,
     error: null,
-    initialLoadPending: true, // <--- ADDED STATE
+    initialLoadPending: true,
     // Filtros
     searchTerm: '',
     selectedProjects: [],
@@ -61,6 +59,8 @@ export const useTaskStore = defineStore('tasks', () => {
     selectedStatuses: [],
     selectedLabels: [],
     selectedEndDate: null,
+    selectedStartDate: null, // <-- Add new state for start date filter
+    selectedCompletionStatus: null, // <-- Add new state for completion filter
     // Edición
     editingTask: null,
     isEditing: false,
@@ -91,19 +91,28 @@ export const useTaskStore = defineStore('tasks', () => {
   })
 
   // Computadas
-  const totalPages = computed(() => Math.max(1, Math.ceil(state.totalTasks / state.pageSize)))
+  const totalPages = computed(() =>
+    Math.max(1, Math.ceil(totalFilteredTasks.value / state.pageSize))
+  )
 
+  // Computada para exponer los filtros de forma reactiva
+  // --- Mejor solución: Computada para exponer filtros ---
   const currentFilters = computed(() => ({
     projects: state.selectedProjects,
     priorities: state.selectedPriorities,
     statuses: state.selectedStatuses,
     labels: state.selectedLabels,
     endDate: state.selectedEndDate,
-    searchTerm: state.searchTerm
+    startDate: state.selectedStartDate,
+    completionStatus: state.selectedCompletionStatus
   }))
 
+  // Computada para exponer las tareas de forma reactiva
+  // --- Mejor solución: Computada para exponer tareas ---
   const tasksData = computed(() => state.tasks)
 
+  // Computed para exponer dialogEditTask, editedTask y newTask de forma reactiva
+  // --- Mejor solución: Computadas para dialogEditTask, editedTask y newTask ---
   const dialogEditTask = computed({
     get: () => state.dialogEditTask,
     set: (val) => {
@@ -116,8 +125,6 @@ export const useTaskStore = defineStore('tasks', () => {
       state.editedTask = val
     }
   })
-
-  // Getter y setter reactivo para newTask
   const newTask = computed({
     get: () => state.newTask,
     set: (val) => {
@@ -136,32 +143,78 @@ export const useTaskStore = defineStore('tasks', () => {
     selectedProject.value ? selectedProject.value.title : ''
   )
 
+  // --- Helpers para filtrar y paginar tareas ---
+  function filterTasks(tasks, filters) {
+    return tasks.filter((task) => {
+      if (filters.projects.length && !filters.projects.includes(task.projectId)) return false
+      if (filters.priorities.length && !filters.priorities.includes(task.priority)) return false
+      if (filters.statuses.length && !filters.statuses.includes(task.status)) return false
+      if (filters.labels.length && !filters.labels.includes(task.label)) return false
+      if (filters.endDate && task.endDate) {
+        // Comparar solo la fecha (sin hora)
+        const taskDate = new Date(task.endDate)
+        const filterDate = new Date(filters.endDate)
+        if (
+          taskDate.getFullYear() !== filterDate.getFullYear() ||
+          taskDate.getMonth() !== filterDate.getMonth() ||
+          taskDate.getDate() !== filterDate.getDate()
+        ) {
+          return false
+        }
+      }
+      // Add client-side filtering for start date
+      if (filters.startDate && task.startDate) {
+        const taskDate = new Date(task.startDate)
+        const filterDate = new Date(filters.startDate)
+        if (
+          taskDate.getFullYear() !== filterDate.getFullYear() ||
+          taskDate.getMonth() !== filterDate.getMonth() ||
+          taskDate.getDate() !== filterDate.getDate()
+        ) {
+          return false
+        }
+      }
+      // Add client-side filtering for completion status
+      if (filters.completionStatus !== null && task.completed !== filters.completionStatus) {
+        return false
+      }
+      return true
+    })
+  }
+
+  function paginateTasks(tasks, page, pageSize) {
+    const start = (page - 1) * pageSize
+    return tasks.slice(start, start + pageSize)
+  }
+
   // Todas las tareas filtradas (no paginadas)
-  const allFilteredTasks = computed(() => state.allFilteredTasks)
+  const allFilteredTasks = computed(() => filterTasks(state.tasks, currentFilters.value))
 
   // Tareas de la página actual (paginadas)
-  const tasksPage = computed(() => state.filteredTasks)
+  const tasksPage = computed(() =>
+    paginateTasks(allFilteredTasks.value, state.currentPage, state.pageSize)
+  )
 
   // Tareas filtradas del proyecto seleccionado (no paginadas)
   const tasksInSelectedProject = computed(() => {
     if (!selectedProjectId.value) return []
-    return state.allFilteredTasks.filter((task) => task.projectId === selectedProjectId.value)
+    return allFilteredTasks.value.filter((task) => task.projectId === selectedProjectId.value)
   })
 
   // Tareas de la página actual y del proyecto seleccionado (paginadas)
   const paginatedTasksInSelectedProject = computed(() => {
     if (!selectedProjectId.value) return []
-    return state.filteredTasks.filter((task) => task.projectId === selectedProjectId.value)
+    return paginateTasks(tasksInSelectedProject.value, state.currentPage, state.pageSize)
   })
 
   // Totales globales filtrados (no paginados)
-  const totalFilteredTasks = computed(() => state.allFilteredTasks.length)
+  const totalFilteredTasks = computed(() => allFilteredTasks.value.length)
 
   const completedFilteredTasks = computed(
-    () => state.allFilteredTasks.filter((task) => task.completed).length
+    () => allFilteredTasks.value.filter((task) => task.completed).length
   )
   const remainingFilteredTasks = computed(
-    () => state.allFilteredTasks.filter((task) => !task.completed).length
+    () => allFilteredTasks.value.filter((task) => !task.completed).length
   )
 
   // Totales filtrados por proyecto seleccionado (no paginados)
@@ -196,8 +249,6 @@ export const useTaskStore = defineStore('tasks', () => {
     if (!userStore.userId) {
       console.warn('[fetchTasks] No userId available, skipping fetch.')
       state.tasks = []
-      state.allFilteredTasks = []
-      state.filteredTasks = []
       state.totalTasks = 0
       state.currentPage = 1
       state.hasNextPage = false
@@ -220,10 +271,8 @@ export const useTaskStore = defineStore('tasks', () => {
       // Obtener todas las tareas filtradas (no paginadas)
       const countQuery = buildQuery('first', true)
       const countSnapshot = await getCollection(countQuery)
-      state.allFilteredTasks = countSnapshot.map((doc) =>
-        mapFirestoreTask(doc, projectStore.getProjectById)
-      )
-      state.totalTasks = state.allFilteredTasks.length
+      state.tasks = countSnapshot.map((doc) => mapFirestoreTask(doc, projectStore.getProjectById))
+      state.totalTasks = state.tasks.length
 
       // Calcular totalPages después de actualizar totalTasks
       const totalPagesValue = Math.ceil(state.totalTasks / state.pageSize)
@@ -242,7 +291,6 @@ export const useTaskStore = defineStore('tasks', () => {
       const snapshot = await getDocs(tasksQuery)
 
       if (snapshot.empty) {
-        state.filteredTasks = []
         // Actualiza flags de paginación
         state.hasNextPage = false
         state.hasPrevPage = false
@@ -259,8 +307,6 @@ export const useTaskStore = defineStore('tasks', () => {
       } else {
         isLastPageMode.value = false
       }
-
-      state.filteredTasks = docs.map((doc) => mapFirestoreTask(doc, projectStore.getProjectById))
 
       // Después de cargar las tareas (por ejemplo, tras loadAllUserTasks o fetchTasks)
       console.log(
@@ -281,7 +327,7 @@ export const useTaskStore = defineStore('tasks', () => {
       // Mostrar los IDs de las tareas que se muestran en la página actual (después de actualizar currentPage)
       console.log(
         `[Paginación] Mostrando tareas en página ${state.currentPage}:`,
-        state.filteredTasks.map((t) => t.id)
+        tasksPage.value.map((t) => t.id)
       )
 
       // Actualizar estado de paginación con el valor actualizado
@@ -289,7 +335,7 @@ export const useTaskStore = defineStore('tasks', () => {
       state.hasNextPage = flags.hasNextPage
       state.hasPrevPage = flags.hasPrevPage
       console.log('[Paginación] hasNextPage:', state.hasNextPage, 'hasPrevPage:', state.hasPrevPage)
-      console.log('[Paginación] filteredTasks.length:', state.filteredTasks.length)
+      console.log('[Paginación] filteredTasks.length:', tasksPage.value.length)
       console.log('[Paginación] currentPage después de cambio:', state.currentPage)
     } catch (error) {
       state.error = error.message
@@ -397,6 +443,8 @@ export const useTaskStore = defineStore('tasks', () => {
     state.selectedStatuses = []
     state.selectedLabels = []
     state.selectedEndDate = null
+    state.selectedStartDate = null // <-- Reset the new filter
+    state.selectedCompletionStatus = null // <-- Reset the new filter
     state.searchTerm = ''
   }
 
@@ -405,7 +453,7 @@ export const useTaskStore = defineStore('tasks', () => {
       if (!userStore.userId) throw new Error('Usuario no autenticado')
       if (!newTaskData.projectId) throw new Error('projectId es obligatorio')
 
-      setSelectedProject(newTaskData.projectId)
+      // setSelectedProject(newTaskData.projectId)
 
       const project = projectStore.getProjectById(newTaskData.projectId)
       const color = project && project.color ? project.color : 'default'
@@ -472,8 +520,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
   const clearTaskStore = () => {
     state.tasks = []
-    state.allFilteredTasks = []
-    state.filteredTasks = []
     state.currentPage = 1
     state.totalTasks = 0
     state.lastVisible = null
@@ -489,6 +535,7 @@ export const useTaskStore = defineStore('tasks', () => {
     state.selectedStatuses = []
     state.selectedLabels = []
     state.selectedEndDate = null
+    state.selectedStartDate = null // <--- RESET HERE
     state.editingTask = null
     state.isEditing = false
   }
@@ -690,15 +737,10 @@ export const useTaskStore = defineStore('tasks', () => {
       // Condition 2: User logged in BUT no project selected (or filters cleared)
       else if (newValue.userId && !hasSelectedProject && filtersChanged) {
         console.log(
-          '[Filter/User Watcher] User valid but no project selected (or filters cleared). Resetting filtered tasks.'
+          '[Filter/User Watcher] User valid but no project selected (or filters cleared). Refetching filtered tasks.'
         )
-        // Reset only filtered/paginated state if no project filter is active
-        state.filteredTasks = []
-        state.allFilteredTasks = []
-        state.totalTasks = 0
-        state.currentPage = 1
-        state.hasNextPage = false
-        state.hasPrevPage = false
+        // Recarga la lista filtrada y paginada aunque no haya proyecto seleccionado
+        await fetchTasks('first')
       }
       // Condition 3: User logged out (or became null)
       else if (userChanged && !newValue.userId) {

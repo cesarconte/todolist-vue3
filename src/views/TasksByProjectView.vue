@@ -61,8 +61,6 @@ onMounted(() => {
         taskStore.setSelectedProject(null)
         projectStore.setSelectedProject(null)
         // Optionally clear tasks or handle appropriately
-        taskStore.state.filteredTasks = []
-        taskStore.state.allFilteredTasks = []
         taskStore.state.totalTasks = 0
       }
     },
