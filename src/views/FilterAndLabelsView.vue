@@ -13,13 +13,15 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { onUnmounted, ref, watch, computed } from 'vue'
 import { useDisplay } from 'vuetify'
+import { useRouter } from 'vue-router'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+const router = useRouter()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
@@ -69,15 +71,11 @@ const hasActiveFilters = () => {
     taskStore.state.selectedStatuses.length > 0 ||
     taskStore.state.selectedLabels.length > 0 ||
     !!taskStore.state.selectedEndDate ||
-    !!taskStore.state.selectedStartDate || // <-- Add check for start date
+    !!taskStore.state.selectedStartDate ||
     taskStore.state.selectedCompletionStatus !== null || // Keep this check: null means inactive
     !!taskStore.state.searchTerm
   )
 }
-
-onMounted(() => {
-  // No se realiza inicialización de datos aquí
-})
 
 // Cleanup al desmontar el componente
 onUnmounted(() => {
@@ -93,7 +91,7 @@ watch(
     () => taskStore.state.selectedStatuses,
     () => taskStore.state.selectedLabels,
     () => taskStore.state.selectedEndDate,
-    () => taskStore.state.selectedStartDate, // <-- Watch the new filter
+    () => taskStore.state.selectedStartDate,
     () => taskStore.state.selectedCompletionStatus,
     () => taskStore.state.searchTerm
   ],
@@ -124,7 +122,28 @@ const { btnsForm } = useFormBtnActions(
 btnsForm[0].text = 'Update Task'
 btnsForm[0].icon = 'mdi-pencil'
 
+// Añadir la función goBack para el botón de regreso
+const goBack = () => {
+  router.back()
+}
+
 const rules = useMaxLengthRule()
+
+// Computed property para texto dinámico del chip
+const filterAppliedText = computed(() => {
+  let count = 0
+  if (taskStore.state.selectedProjects.length > 0) count++
+  if (taskStore.state.selectedPriorities.length > 0) count++
+  if (taskStore.state.selectedStatuses.length > 0) count++
+  if (taskStore.state.selectedLabels.length > 0) count++
+  if (taskStore.state.selectedEndDate) count++
+  if (taskStore.state.selectedStartDate) count++
+  if (taskStore.state.selectedCompletionStatus !== null) count++
+  if (taskStore.state.searchTerm) count++
+
+  return count === 1 ? 'Filter applied' : 'Filters applied'
+})
+
 const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
 </script>
 
@@ -142,171 +161,304 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           </h2>
         </v-col>
       </v-row>
+
       <!-- Filtros -->
-      <v-row>
-        <v-col cols="12" sm="6">
-          <v-autocomplete
-            v-model="taskStore.state.selectedProjects"
-            label="Filter by project..."
-            :items="userStore.isLoggedIn ? projectStore.projectItems : []"
-            item-title="title"
-            item-value="value"
-            :placeholder="userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'"
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            dense
-            clearable
-            hide-details
-            multiple
-            chips
-            closable-chips
-            auto-select-first
-            @click="handleFilterClick"
+      <v-card class="my-4 mx-1 pa-2" variant="outlined" rounded="lg" elevation="2">
+        <v-card-title class="d-flex align-center justify-space-between pb-2">
+          <div class="d-flex align-center">
+            <v-icon icon="mdi-filter-variant" class="mr-2" color="red-darken-2"></v-icon>
+            <span class="text-subtitle-1 font-weight-medium">Filter Options</span>
+          </div>
+          <v-chip
+            v-if="hasActiveFilters()"
+            color="red-darken-2"
+            size="small"
+            label
+            rounded="pill"
+            prepend-icon="mdi-filter-outline"
+            class="font-weight-medium"
           >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.title" />
-            </template>
-          </v-autocomplete>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-autocomplete
-            v-model="taskStore.state.selectedPriorities"
-            label="Filter by priority"
-            :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
-            item-title="title"
-            item-value="value"
-            :placeholder="
-              userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
-            "
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            dense
-            clearable
-            hide-details
-            multiple
-            chips
-            closable-chips
-            auto-select-first
-            @click="handleFilterClick"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.title" />
-            </template>
-          </v-autocomplete>
-        </v-col>
-      </v-row>
+            {{ filterAppliedText }}
+          </v-chip>
+        </v-card-title>
+        <v-card-subtitle
+          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-2 text-center"
+        >
+          <v-icon icon="mdi-tune" class="mr-2" color="red-accent-2"></v-icon>
+          Choose your filters
+        </v-card-subtitle>
 
-      <v-row>
-        <v-col cols="12" sm="6">
-          <v-autocomplete
-            v-model="taskStore.state.selectedLabels"
-            label="Filter by label"
-            :items="userStore.isLoggedIn ? dataStore.labelItems : []"
-            item-title="title"
-            item-value="value"
-            :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            dense
-            clearable
-            hide-details
-            multiple
-            chips
-            closable-chips
-            auto-select-first
-            @click="handleFilterClick"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.title" />
-            </template>
-          </v-autocomplete>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-autocomplete
-            v-model="taskStore.state.selectedStatuses"
-            label="Filter by status"
-            :items="userStore.isLoggedIn ? dataStore.statusItems : []"
-            item-title="title"
-            item-value="value"
-            :placeholder="userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'"
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            dense
-            clearable
-            hide-details
-            multiple
-            chips
-            closable-chips
-            auto-select-first
-            @click="handleFilterClick"
-          >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.title" />
-            </template>
-          </v-autocomplete>
-        </v-col>
-      </v-row>
+        <v-divider class="mb-3"></v-divider>
 
-      <v-row>
-        <v-col cols="12" sm="6">
-          <v-date-input
-            v-model="taskStore.state.selectedStartDate"
-            label="Filter by start date"
-            class="date-create-task"
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            clearable
-            prepend-icon=""
-            prepend-inner-icon="mdi-calendar"
-            @click:clear="handleClearStartDate"
-          ></v-date-input>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-date-input
-            v-model="taskStore.state.selectedEndDate"
-            label="Filter by end date"
-            class="date-create-task"
-            variant="outlined"
-            color="red-accent-2"
-            rounded
-            clearable
-            prepend-icon=""
-            prepend-inner-icon="mdi-calendar"
-            @click:clear="handleClearDate"
-          ></v-date-input>
-        </v-col>
-      </v-row>
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" sm="6">
+              <v-autocomplete
+                v-model="taskStore.state.selectedProjects"
+                label="Filter by project"
+                :items="userStore.isLoggedIn ? projectStore.projectItems : []"
+                item-title="title"
+                item-value="value"
+                :placeholder="
+                  userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'
+                "
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                multiple
+                chips
+                closable-chips
+                auto-select-first
+                @click="handleFilterClick"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.title" />
+                </template>
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-folder-outline"></v-icon>
+                    </template>
+                    <span>Filter tasks by project. You can select multiple projects.</span>
+                  </v-tooltip>
+                </template>
+              </v-autocomplete>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-autocomplete
+                v-model="taskStore.state.selectedPriorities"
+                label="Filter by priority"
+                :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
+                item-title="title"
+                item-value="value"
+                :placeholder="
+                  userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
+                "
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                multiple
+                chips
+                closable-chips
+                auto-select-first
+                @click="handleFilterClick"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.title" />
+                </template>
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-flag-outline"></v-icon>
+                    </template>
+                    <span>Filter tasks by priority level. You can select multiple priorities.</span>
+                  </v-tooltip>
+                </template>
+              </v-autocomplete>
+            </v-col>
+          </v-row>
 
-      <v-row>
-        <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
-          <v-select
-            v-model="taskStore.state.selectedCompletionStatus"
-            label="Filter by completion status"
-            :items="completionStatusItems"
-            item-title="title"
-            item-value="value"
-            :placeholder="'Completion status...'"
-            variant="outlined"
+          <v-row>
+            <v-col cols="12" sm="6">
+              <v-autocomplete
+                v-model="taskStore.state.selectedLabels"
+                label="Filter by label"
+                :items="userStore.isLoggedIn ? dataStore.labelItems : []"
+                item-title="title"
+                item-value="value"
+                :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                multiple
+                chips
+                closable-chips
+                auto-select-first
+                @click="handleFilterClick"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.title" />
+                </template>
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-label-outline"></v-icon>
+                    </template>
+                    <span>Filter tasks by label category. You can select multiple labels.</span>
+                  </v-tooltip>
+                </template>
+              </v-autocomplete>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-autocomplete
+                v-model="taskStore.state.selectedStatuses"
+                label="Filter by status"
+                :items="userStore.isLoggedIn ? dataStore.statusItems : []"
+                item-title="title"
+                item-value="value"
+                :placeholder="
+                  userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'
+                "
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                multiple
+                chips
+                closable-chips
+                auto-select-first
+                @click="handleFilterClick"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.title" />
+                </template>
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-format-list-checks"></v-icon>
+                    </template>
+                    <span>Filter tasks by current status. You can select multiple statuses.</span>
+                  </v-tooltip>
+                </template>
+              </v-autocomplete>
+            </v-col>
+          </v-row>
+
+          <v-row>
+            <v-col cols="12" sm="6">
+              <v-date-input
+                v-model="taskStore.state.selectedStartDate"
+                label="Filter by start date"
+                class="date-picker"
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                prepend-icon=""
+                @click:clear="handleClearStartDate"
+              >
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-calendar"></v-icon>
+                    </template>
+                    <span>Filter tasks by start date. Click to open calendar.</span>
+                  </v-tooltip>
+                </template>
+              </v-date-input>
+            </v-col>
+            <v-col cols="12" sm="6">
+              <v-date-input
+                v-model="taskStore.state.selectedEndDate"
+                label="Filter by end date"
+                class="date-picker"
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                prepend-icon=""
+                @click:clear="handleClearDate"
+              >
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-calendar"></v-icon>
+                    </template>
+                    <span>Filter tasks by due date. Click to open calendar.</span>
+                  </v-tooltip>
+                </template>
+              </v-date-input>
+            </v-col>
+          </v-row>
+
+          <v-row class="mt-2">
+            <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
+              <v-select
+                v-model="taskStore.state.selectedCompletionStatus"
+                label="Filter by completion status"
+                :items="completionStatusItems"
+                item-title="title"
+                item-value="value"
+                :placeholder="'Completion status...'"
+                variant="outlined"
+                color="red-accent-2"
+                rounded
+                density="comfortable"
+                clearable
+                hide-details
+                chips
+                closable-chips
+                @click="handleFilterClick"
+              >
+                <template v-slot:item="{ props, item }">
+                  <v-list-item v-bind="props" :title="item.raw.title" />
+                </template>
+                <template v-slot:prepend-inner>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-icon v-bind="props" icon="mdi-checkbox-marked-circle-outline"></v-icon>
+                    </template>
+                    <span>Filter tasks by completion status (completed or not completed).</span>
+                  </v-tooltip>
+                </template>
+              </v-select>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-row v-if="!hasActiveFilters()">
+          <v-col class="text-center py-8 d-flex flex-column align-center">
+            <v-icon size="64" color="grey-lighten-1" class="empty-icon">mdi-filter-outline</v-icon>
+            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-3">
+              Use the filters above to search for tasks
+            </p>
+          </v-col>
+        </v-row>
+        <v-row
+          v-else-if="
+            hasActiveFilters() && !taskStore.state.isLoading && taskStore.totalFilteredTasks === 0
+          "
+        >
+          <v-col class="text-center py-8 d-flex flex-column align-center">
+            <v-icon size="64" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
+            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-3">
+              No tasks found with current filters
+            </p>
+          </v-col>
+        </v-row>
+
+        <v-card-actions class="justify-center pt-2 pb-4 mt-4">
+          <v-btn
             color="red-accent-2"
-            rounded
-            dense
-            clearable
-            hide-details
-            chips
-            closable-chips
-            @click="handleFilterClick"
+            variant="tonal"
+            rounded="pill"
+            size="large"
+            prepend-icon="mdi-refresh"
+            :class="xs ? '' : 'px-8'"
+            :block="xs"
+            class="text-none text-button"
+            @click="taskStore.resetFilters()"
+            :disabled="!hasActiveFilters()"
           >
-            <template v-slot:item="{ props, item }">
-              <v-list-item v-bind="props" :title="item.raw.title" />
-            </template>
-          </v-select>
-        </v-col>
-      </v-row>
+            Clear All Filters
+          </v-btn>
+        </v-card-actions>
+      </v-card>
 
       <!-- Alertas -->
       <v-alert
@@ -343,16 +495,38 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         </v-btn>
       </v-alert>
 
+      <!-- Resultados de filtros -->
+      <v-row v-if="showCards && taskStore.tasksPage.length > 0" class="d-flex align-center my-4">
+        <v-col cols="12">
+          <div class="d-flex align-center">
+            <v-divider class="mr-4"></v-divider>
+            <span class="text-h6 font-weight-medium text-red-darken-2">Filtered Tasks</span>
+            <v-divider class="ml-4"></v-divider>
+          </div>
+          <div class="d-flex align-center justify-end">
+            <v-chip
+              color="green"
+              size="small"
+              label
+              rounded="pill"
+              prepend-icon="mdi-check"
+              class="font-weight-medium"
+            >
+              {{
+                taskStore.totalFilteredTasks === 1
+                  ? '1 Task Found'
+                  : `${taskStore.totalFilteredTasks} Tasks Found`
+              }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
+
       <!-- Lista de tareas y mensajes -->
       <v-row
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
         v-if="showCards"
       >
-        <v-divider
-          color="red-darken-2"
-          :thickness="1"
-          class="mx-auto border-opacity-50 mb-4"
-        ></v-divider>
         <template v-if="taskStore.state.isLoading">
           <v-col v-for="n in taskStore.state.pageSize" :key="n" cols="12" md="6" lg="4">
             <v-skeleton-loader type="card" />
@@ -389,26 +563,6 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           </v-col>
         </template>
       </v-row>
-      <v-row v-if="!hasActiveFilters()">
-        <v-col class="text-center py-8 d-flex flex-column align-center">
-          <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-filter-outline</v-icon>
-          <span class="text-h6 font-weight-medium text-grey-lighten-1 mt-2">
-            Use the filters above to search for tasks
-          </span>
-        </v-col>
-      </v-row>
-      <v-row
-        v-else-if="
-          hasActiveFilters() && !taskStore.state.isLoading && taskStore.totalFilteredTasks === 0
-        "
-      >
-        <v-col class="text-center py-8 d-flex flex-column align-center">
-          <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
-          <span class="text-h6 font-weight-medium text-grey-lighten-1 mt-2">
-            No tasks found with current filters
-          </span>
-        </v-col>
-      </v-row>
 
       <!-- Paginación -->
       <v-row v-if="taskStore.totalPages >= 1" class="pa-3">
@@ -426,6 +580,27 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
             Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
           </template>
         </VPagination>
+      </v-row>
+
+      <!-- Botón para regresar -->
+      <v-row v-if="showCards && taskStore.tasksPage.length > 0" class="mt-4">
+        <v-col cols="12">
+          <div class="d-flex justify-space-between">
+            <v-spacer></v-spacer>
+            <v-btn
+              @click="goBack"
+              color="red-darken-2"
+              variant="flat"
+              rounded="pill"
+              size="large"
+              prepend-icon="mdi-chevron-left"
+              :class="xs ? '' : 'px-8'"
+              class="text-none text-button"
+            >
+              Back
+            </v-btn>
+          </div>
+        </v-col>
       </v-row>
 
       <!-- Diálogo de edición -->
@@ -500,9 +675,8 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
   width: 100%;
 }
 
-.date-create-task {
-  max-width: 300px;
-  margin: 0 auto;
+.date-picker {
+  width: 100%;
 }
 
 .empty-icon {

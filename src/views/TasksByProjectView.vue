@@ -647,6 +647,27 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           </template>
         </VPagination>
       </v-row>
+
+      <!-- Botón para regresar -->
+      <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-4">
+        <v-col cols="12">
+          <div class="d-flex justify-space-between">
+            <v-spacer></v-spacer>
+            <v-btn
+              @click="router.back()"
+              color="red-darken-2"
+              variant="flat"
+              rounded="pill"
+              size="large"
+              prepend-icon="mdi-chevron-left"
+              :class="xs ? '' : 'px-8'"
+              class="text-none text-button"
+            >
+              Back
+            </v-btn>
+          </div>
+        </v-col>
+      </v-row>
     </v-responsive>
   </v-container>
 </template>

@@ -136,10 +136,16 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
             <v-spacer></v-spacer>
             <v-btn
               @click="goBack"
-              class="btn-back rounded-pill bg-red-darken-2 text-white text-none"
+              color="red-darken-2"
               variant="flat"
-              ><v-icon>mdi-chevron-left</v-icon>Back</v-btn
+              rounded="pill"
+              size="large"
+              prepend-icon="mdi-chevron-left"
+              :class="xs ? '' : 'px-8'"
+              class="text-none text-button"
             >
+              Back
+            </v-btn>
           </div>
         </v-col>
       </v-row>
