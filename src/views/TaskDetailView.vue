@@ -138,11 +138,12 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
               @click="goBack"
               color="red-darken-2"
               variant="flat"
-              rounded="pill"
+              rounded
               size="large"
               prepend-icon="mdi-chevron-left"
               :class="xs ? '' : 'px-8'"
-              class="text-none text-button"
+              class="text-none text-button mb-8 mt-8"
+              aria-label="Go back to previous page"
             >
               Back
             </v-btn>
@@ -156,7 +157,7 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
     :max-width="xs ? '100%' : smAndUp ? '600px' : ''"
     class="dialog dialog-create-task"
   >
-    <v-card class="card card-create-task pa-4">
+    <v-card class="card card-task-view pa-8 ma-8 rounded-xl" variant="elevated">
       <v-card-title class="card-title card-title-edit-task" :class="mobile ? 'px-1' : ''">
         <span class="text-h6">Edit task {{ task.taskId }}</span>
       </v-card-title>

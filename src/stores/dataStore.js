@@ -57,37 +57,37 @@ export const useDataStore = defineStore('data', () => {
   })
   const projectTemplateItems = computed(() => {
     return projectTemplatesData.value.map((projectTemplate) => ({
-      value: projectTemplate.title,
+      value: projectTemplate.id, // Cambiado a id
       title: projectTemplate.title
     }))
   })
   const labelItems = computed(() => {
     return labelsData.value.map((label) => ({
-      value: label.title,
+      value: label.id, // Cambiado a id
       title: label.title
     }))
   })
   const priorityItems = computed(() => {
     return prioritiesData.value.map((priority) => ({
-      value: priority.title,
+      value: priority.id, // Cambiado a id
       title: priority.title
     }))
   })
   const statusItems = computed(() => {
     return statusesData.value.map((status) => ({
-      value: status.title,
+      value: status.id, // Cambiado a id
       title: status.title
     }))
   })
   const colorItems = computed(() => {
     return colorsData.value.map((color) => ({
-      value: color.title,
+      value: color.id, // Cambiado a id
       title: color.title
     }))
   })
   const iconItems = computed(() => {
     return iconsData.value.map((icon) => ({
-      value: icon.title,
+      value: icon.id, // Cambiado a id
       title: icon.displayName
     }))
   })

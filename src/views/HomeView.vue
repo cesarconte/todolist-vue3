@@ -148,7 +148,7 @@ const formatDisplayDate = (date) => {
 // Función para garantizar colores accesibles con contraste adecuado según WCAG 2.1
 // Respetando los colores originales de Firestore
 const getAccessibleColor = (color, isCompleted) => {
-  if (isCompleted) return 'grey-darken-3' // Mantener gris para tareas completadas
+  if (isCompleted) return 'grey-darken-1' // Mantener gris para tareas completadas
 
   // Todos los proyectos y tareas tienen un color asignado desde Firestore
   return color // Mantener el color original de la tarea/proyecto
@@ -255,8 +255,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
       class="mx-auto"
       :max-width="xs ? '100%' : sm ? '95%' : md ? '85%' : lg ? '80%' : xl ? '75%' : '70%'"
     >
-      <v-card flat :elevation="4" class="rounded-lg pa-4" color="background">
-        <v-card-title class="text-center font-weight-bold mb-4">
+      <v-card flat :elevation="4" class="rounded-lg pa-8" color="background">
+        <v-card-title class="text-center font-weight-bold mb-8">
           <span class="text-red-darken-2" :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
             Vuetify Todolist
           </span>
@@ -268,12 +268,12 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
             <v-sheet
               v-if="userStore.isLoggedIn && totalTasks > 0"
               rounded="lg"
-              class="mb-6 pa-2 bg-grey-lighten-4"
+              class="mb-8 pa-4 bg-grey-lighten-4"
               border
             >
               <v-row align="center" class="px-2">
                 <!-- Upcoming Deadlines: izquierda -->
-                <v-col :cols="xs ? 12 : sm ? 4 : 4">
+                <v-col :cols="xs ? 12 : sm ? 4 : 4" class="mb-8">
                   <v-card
                     flat
                     rounded="lg"
@@ -427,13 +427,15 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
 
                 <!-- Porcentaje de completadas: centro -->
                 <v-col
-                  :cols="xs ? 12 : sm ? 4 : 4"
-                  class="d-flex flex-column align-center justify-center"
+                  cols="12"
+                  sm="4"
+                  md="4"
+                  class="d-flex flex-column align-center justify-center mb-8"
                 >
                   <v-card
                     flat
                     rounded="lg"
-                    class="border bg-white stat-panel-card"
+                    class="stat-panel-card"
                     :class="completionPercentage === 100 ? 'bg-green-lighten-5' : ''"
                   >
                     <v-card-text class="d-flex flex-column align-center justify-center pa-6">
@@ -506,7 +508,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                 </v-col>
 
                 <!-- Overdue Tasks: derecha -->
-                <v-col :cols="xs ? 12 : sm ? 4 : 4">
+                <v-col cols="12" sm="4" md="4" class="mb-8">
                   <v-card
                     flat
                     rounded="lg"
@@ -645,8 +647,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
             </v-sheet>
           </v-expand-transition>
 
-          <v-row align="center" justify="center" class="mb-4">
-            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3">
+          <v-row align="center" justify="center" class="mb-8">
+            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3" class="mb-8">
               <v-select
                 v-model="type"
                 :items="types"
@@ -666,7 +668,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
               ></v-select>
             </v-col>
 
-            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3">
+            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3" class="mb-8">
               <v-select
                 v-model="weekday"
                 :items="weekdays"
@@ -687,8 +689,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
             </v-col>
           </v-row>
 
-          <v-row justify="center">
-            <v-col cols="12">
+          <v-row justify="center" class="mb-8">
+            <v-col cols="12" class="mb-8">
               <Suspense>
                 <template #default>
                   <v-calendar
@@ -706,9 +708,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       <v-card
                         :key="event.id"
                         flat
-                        :color="event.completed ? 'grey-lighten-4' : 'grey-lighten-3'"
+                        :color="event.completed ? 'grey-lighten-5' : 'grey-lighten-3'"
                         :class="[
-                          event.completed ? 'text-grey-darken-3' : '',
                           'ma-1 pa-2 rounded cursor-pointer transition-swing focus-visible-outline'
                         ]"
                         :ripple="true"
@@ -723,15 +724,17 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                         "
                         tabindex="0"
                         :aria-label="
-                          'Tarea: ' +
-                          event.title +
-                          (event.completed ? ', Completada' : ', Pendiente')
+                          'Task: ' + event.title + (event.completed ? ', Completed' : ', Pending')
                         "
                         role="button"
                       >
                         <v-row no-gutters align="center">
                           <v-col cols="9" class="text-truncate">
-                            <span :class="{ 'text-decoration-line-through': event.completed }">
+                            <span
+                              :class="{
+                                'text-decoration-line-through text-grey-lighten-1': event.completed
+                              }"
+                            >
                               {{ event.title }}
                             </span>
                           </v-col>
@@ -744,9 +747,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                   : labelIcons[event.label] || 'mdi-question'
                               "
                               size="20"
-                              :aria-label="
-                                event.completed ? 'Completado' : 'Etiqueta ' + event.label
-                              "
+                              :aria-label="event.completed ? 'Completed' : 'Label: ' + event.label"
                             >
                             </v-icon>
                             <v-tooltip

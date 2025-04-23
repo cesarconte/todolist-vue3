@@ -130,6 +130,7 @@ watch(show, (newValue) => {
     v-bind="$attrs"
     @show="$emit('show')"
     @hide="$emit('hide')"
+    class="mb-8 pa-8"
   >
     <v-icon v-if="prependIcon" class="mr-2" :icon="prependIcon"></v-icon>
     {{ message }}

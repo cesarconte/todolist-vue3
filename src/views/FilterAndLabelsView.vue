@@ -135,15 +135,15 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
     >
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center">
+          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center mb-8">
             Filter and Label Tasks
           </h2>
         </v-col>
       </v-row>
 
       <!-- Filtros -->
-      <v-card class="my-4 mx-1 pa-2" variant="outlined" rounded="lg" elevation="2">
-        <v-card-title class="d-flex align-center justify-space-between pb-2">
+      <v-card class="my-8 mx-2 pa-4" variant="outlined" rounded elevation="2">
+        <v-card-title class="d-flex align-center justify-space-between pb-2 mb-2">
           <div class="d-flex align-center">
             <v-icon icon="mdi-filter-variant" class="mr-2" color="red-darken-2"></v-icon>
             <span class="text-subtitle-1 font-weight-medium">Filter Options</span>
@@ -161,13 +161,13 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-2 text-center"
+          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-2 text-center mb-2"
         >
           <v-icon icon="mdi-tune" class="mr-2" color="red-accent-2"></v-icon>
           Choose your filters
         </v-card-subtitle>
 
-        <v-divider class="mb-3"></v-divider>
+        <v-divider class="mb-4"></v-divider>
 
         <v-card-text>
           <v-row>
@@ -402,8 +402,10 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
 
         <v-row v-if="!hasActiveFilters()">
           <v-col class="text-center py-8 d-flex flex-column align-center">
-            <v-icon size="64" color="grey-lighten-1" class="empty-icon">mdi-filter-outline</v-icon>
-            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-3">
+            <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4"
+              >mdi-filter-outline</v-icon
+            >
+            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
               Use the filters above to search for tasks
             </p>
           </v-col>
@@ -414,14 +416,14 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           "
         >
           <v-col class="text-center py-8 d-flex flex-column align-center">
-            <v-icon size="64" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
-            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-3">
+            <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4">mdi-magnify</v-icon>
+            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
               No tasks found with current filters
             </p>
           </v-col>
         </v-row>
 
-        <v-card-actions class="justify-center pt-2 pb-4 mt-4">
+        <v-card-actions class="justify-center pt-4 pb-8 mt-8">
           <v-btn
             color="red-accent-2"
             variant="tonal"
@@ -477,7 +479,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       <!-- Resultados de filtros -->
       <v-row
         v-if="hasActiveFilters() && taskStore.tasksPage.length > 0"
-        class="d-flex align-center my-4"
+        class="d-flex align-center my-8"
       >
         <v-col cols="12">
           <div class="d-flex align-center">
@@ -510,7 +512,14 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         v-if="hasActiveFilters() && taskStore.tasksPage.length > 0"
       >
         <template v-if="taskStore.state.isLoading">
-          <v-col v-for="n in taskStore.state.pageSize" :key="n" cols="12" md="6" lg="4">
+          <v-col
+            v-for="n in taskStore.state.pageSize"
+            :key="n"
+            cols="12"
+            md="6"
+            lg="4"
+            class="mb-8"
+          >
             <v-skeleton-loader type="card" />
           </v-col>
         </template>
@@ -518,9 +527,13 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           <v-col
             v-for="task in taskStore.tasksPage"
             :key="task.id"
-            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-            lg="6"
+            cols="12"
+            sm="11"
+            md="10"
+            lg="12"
+            xl="12"
             :class="mdAndDown ? 'mx-auto' : ''"
+            class="mb-8"
           >
             <VCardTask
               :title="task.title"
@@ -568,7 +581,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-row>
 
       <!-- Botón para regresar -->
-      <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-4">
+      <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-8">
         <v-col cols="12">
           <div class="d-flex justify-space-between">
             <v-spacer></v-spacer>
@@ -576,11 +589,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
               @click="goBack"
               color="red-darken-2"
               variant="flat"
-              rounded="pill"
+              rounded
               size="large"
               prepend-icon="mdi-chevron-left"
               :class="xs ? '' : 'px-8'"
               class="text-none text-button"
+              aria-label="Go back to previous page"
             >
               Back
             </v-btn>

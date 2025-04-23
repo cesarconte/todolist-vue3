@@ -106,12 +106,12 @@ onUnmounted(() => {})
     >
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center mb-6">Search Tasks</h2>
+          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center mb-8">Search Tasks</h2>
         </v-col>
       </v-row>
 
       <!-- Búsqueda -->
-      <v-card class="mb-8 pa-4" variant="outlined" rounded="lg" elevation="2">
+      <v-card class="mb-8 pa-4" variant="outlined" rounded elevation="2">
         <v-card-title class="d-flex align-center justify-space-between pb-2">
           <div class="d-flex align-center">
             <v-icon icon="mdi-clipboard-search-outline" class="mr-2" color="red-darken-2"></v-icon>
@@ -122,20 +122,18 @@ onUnmounted(() => {})
             color="red-darken-2"
             size="small"
             prepend-icon="mdi-text-search-variant"
-            class="font-weight-medium"
+            class="font-weight-medium mx-2"
           >
             Search Active
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-2 text-center"
+          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-4 text-center mb-2"
         >
-          <v-icon icon="mdi-magnify" class="mr-2" color="red-accent-2"></v-icon>
+          <v-icon icon="mdi-magnify" class="mr-2" color="red-accent-4"></v-icon>
           Search your task by title
         </v-card-subtitle>
-
         <v-divider class="mb-3"></v-divider>
-
         <v-card-text>
           <v-row>
             <v-col cols="12" md="9" lg="8" class="mx-auto">
@@ -146,7 +144,7 @@ onUnmounted(() => {})
                 clearable
                 density="comfortable"
                 rounded
-                color="red-accent-2"
+                color="red-accent-4"
                 hide-details
                 variant="outlined"
                 :disabled="!userStore.isLoggedIn"
@@ -159,8 +157,10 @@ onUnmounted(() => {})
           <!-- Estado sin búsqueda activa -->
           <v-row v-if="!hasActiveSearch && userStore.isLoggedIn">
             <v-col class="text-center py-8 d-flex flex-column align-center">
-              <v-icon size="64" color="grey-lighten-1" class="empty-icon">mdi-text-search</v-icon>
-              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-3">
+              <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4"
+                >mdi-text-search</v-icon
+              >
+              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
                 Type a task title in the search box above
               </p>
             </v-col>
@@ -175,19 +175,18 @@ onUnmounted(() => {})
             "
           >
             <v-col class="text-center py-8 d-flex flex-column align-center">
-              <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
-              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-2">
+              <v-icon size="128" color="grey-lighten-1" class="empty-icon mb-4">mdi-magnify</v-icon>
+              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
                 No tasks found with the current search term
               </p>
             </v-col>
           </v-row>
         </v-card-text>
-
-        <v-card-actions class="justify-center pt-2 pb-4 mt-4">
+        <v-card-actions class="justify-center pt-4 pb-8 mt-8">
           <v-btn
-            color="red-accent-2"
+            color="red-accent-4"
             variant="tonal"
-            rounded="pill"
+            rounded
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? '' : 'px-8'"
@@ -195,6 +194,7 @@ onUnmounted(() => {})
             class="text-none text-button"
             @click="searchTitle = ''"
             :disabled="!searchTitle"
+            aria-label="Clear search input"
           >
             Clear Search
           </v-btn>
@@ -210,7 +210,8 @@ onUnmounted(() => {})
         closable
         height="4rem"
         width="32rem"
-        class="mt-8 mx-auto rounded-pill d-flex flex-wrap justify-center"
+        class="mt-8 mx-auto d-flex flex-wrap justify-center"
+        aria-live="polite"
       >
         {{ error }}
       </v-alert>
@@ -223,12 +224,19 @@ onUnmounted(() => {})
         closable
         height="4rem"
         :width="xs ? '90%' : '32rem'"
-        class="alert mt-8 rounded-pill"
+        class="alert mt-8"
+        aria-live="polite"
       >
         <span>
           {{ xs ? 'Please, log in...' : 'Please, log in to use the search feature' }}
         </span>
-        <v-btn icon class="ml-2" variant="plain" @click="$router.push('/login')">
+        <v-btn
+          icon
+          class="ml-2"
+          variant="plain"
+          @click="$router.push('/login')"
+          aria-label="Log in"
+        >
           <v-icon>mdi-account-arrow-right-outline</v-icon>
           <v-tooltip activator="parent" location="bottom">
             <span>Log in to unlock search option</span>
@@ -237,7 +245,7 @@ onUnmounted(() => {})
       </v-alert>
 
       <!-- Resultados de búsqueda -->
-      <v-row v-if="showSearchResults" class="d-flex align-center">
+      <v-row v-if="showSearchResults" class="d-flex align-center mt-8">
         <v-col cols="12">
           <div class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
@@ -247,7 +255,7 @@ onUnmounted(() => {})
           <div class="d-flex align-center justify-end">
             <v-chip
               v-if="taskStore.allFilteredTasks.length > 0"
-              color="green-accent-4"
+              color="green-darken-3"
               size="small"
               label
               rounded="pill"
@@ -279,7 +287,11 @@ onUnmounted(() => {})
             :key="task.id"
             :task="task"
             :value="task"
-            :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '9' : xl ? '8' : ''"
+            cols="12"
+            sm="11"
+            md="10"
+            lg="9"
+            xl="8"
             class="mx-auto"
           >
             <Suspense>
@@ -315,8 +327,11 @@ onUnmounted(() => {})
         </template>
         <v-col
           v-if="taskStore.allFilteredTasks.length === 0 && searchTitle"
-          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-          lg="6"
+          cols="12"
+          sm="11"
+          md="10"
+          lg="12"
+          xl="12"
           class="mx-auto"
         >
           <v-alert
@@ -324,24 +339,26 @@ onUnmounted(() => {})
             dense
             outlined
             closable
-            class="rounded-pill text-center text-subtitle-1"
+            class="text-center text-subtitle-1"
             color="red-darken-2"
+            aria-live="polite"
           >
             <span>No tasks found for the search term.</span>
           </v-alert>
         </v-col>
       </v-row>
       <v-row v-if="showSearchResults">
-        <v-col cols="12" class="d-flex justify-end mt-4">
+        <v-col cols="12" class="d-flex justify-end mt-8">
           <v-btn
             @click="goBack"
             color="red-darken-2"
             variant="flat"
-            rounded="pill"
+            rounded
             size="large"
             prepend-icon="mdi-chevron-left"
             :class="xs ? '' : 'px-8'"
             class="text-none text-button"
+            aria-label="Go back to previous page"
           >
             Back
           </v-btn>

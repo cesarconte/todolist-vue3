@@ -172,7 +172,7 @@ const navigateToTaskDetail = () => {
 /************************************
  * Vuetify Display
  ************************************/
-const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
+const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
@@ -192,13 +192,13 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
     variant="elevated"
     :class="[
       { 'rounded-xl': !hover },
-      mobile ? 'card card-task-view my-4' : 'card card-task-view ma-4 pa-4'
+      mobile ? 'card card-task-view my-4' : 'card card-task-view ma-8 pa-8'
     ]"
     hover
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
-    <v-card-title class="card-title card-title-task-view d-flex align-center">
+    <v-card-title class="card-title card-title-task-view d-flex align-center mb-4">
       <span class="text-h5">{{ title }}</span>
       <v-spacer></v-spacer>
       <v-btn
@@ -213,19 +213,19 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
         <v-tooltip location="bottom" activator="parent"> View task details </v-tooltip>
       </v-btn>
     </v-card-title>
-    <v-card-subtitle>
+    <v-card-subtitle class="mb-4">
       <span class="text-subtitle1">Project: {{ project.title || project }}</span>
     </v-card-subtitle>
-    <v-divider class="mt-1"></v-divider>
+    <v-divider class="mt-2 mb-4"></v-divider>
     <v-card-text class="card-text">
       <v-list>
         <v-list-item>
-          <v-list-item-title class="font-weight-medium my-2">Description:</v-list-item-title>
-          <v-list-item-subtitle class="my-2">{{ description }}</v-list-item-subtitle>
+          <v-list-item-title class="font-weight-medium my-4">Description:</v-list-item-title>
+          <v-list-item-subtitle class="my-4">{{ description }}</v-list-item-subtitle>
         </v-list-item>
 
         <v-list-item>
-          <v-list-item-title class="font-weight-medium my-2">
+          <v-list-item-title class="font-weight-medium my-4">
             Label:
             <v-icon
               v-bind="props"
@@ -236,21 +236,21 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
               >{{ labelIcons[label] || 'mdi-question' }}</v-icon
             >
           </v-list-item-title>
-          <v-list-item-subtitle class="my-2">{{ label }}</v-list-item-subtitle>
+          <v-list-item-subtitle class="my-4">{{ label }}</v-list-item-subtitle>
         </v-list-item>
 
         <v-list-item>
-          <v-list-item-title class="font-weight-medium my-2">Priority:</v-list-item-title>
-          <v-list-item-subtitle class="my-2">{{ priority }}</v-list-item-subtitle>
+          <v-list-item-title class="font-weight-medium my-4">Priority:</v-list-item-title>
+          <v-list-item-subtitle class="my-4">{{ priority }}</v-list-item-subtitle>
         </v-list-item>
 
         <v-list-item>
-          <v-list-item-title class="font-weight-medium my-2">Status:</v-list-item-title>
-          <v-list-item-subtitle class="my-2">{{ status }}</v-list-item-subtitle>
+          <v-list-item-title class="font-weight-medium my-4">Status:</v-list-item-title>
+          <v-list-item-subtitle class="my-4">{{ status }}</v-list-item-subtitle>
         </v-list-item>
 
         <v-list-item>
-          <v-row class="d-flex justify-space-between" :class="xs ? 'mt-4 mb-1' : 'mt-4'">
+          <v-row class="d-flex justify-space-between mt-4 mb-4">
             <v-col cols="auto">
               <v-row>
                 <v-col cols="auto">
@@ -293,7 +293,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
         </v-list-item>
 
         <v-list-item>
-          <v-row class="d-flex justify-space-between">
+          <v-row class="d-flex justify-space-between mt-4 mb-4">
             <v-col cols="auto">
               <v-row>
                 <v-col cols="auto">
@@ -338,7 +338,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
       </v-list>
     </v-card-text>
 
-    <v-divider></v-divider>
+    <v-divider class="my-4"></v-divider>
     <v-card-actions class="card-actions card-actions-task-view pb-0 pr-0">
       <v-spacer></v-spacer>
       <v-btn
@@ -346,7 +346,7 @@ const { mobile, xs } = useDisplay() // Accesses display breakpoints from Vuetify
         :key="i"
         @click="btn.function"
         :aria-label="btn.label"
-        class="btn btn-task-view"
+        class="btn btn-task-view mx-2"
         icon
       >
         <template v-if="i === 2">

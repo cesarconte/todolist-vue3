@@ -401,7 +401,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
       </v-dialog>
 
       <v-row>
-        <v-col cols="12" class="d-flex justify-content-between align-items-center">
+        <v-col cols="12" class="d-flex justify-content-between align-items-center mb-8">
           <h2 class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center">
             {{ projectStore.selectedProjectTitle }} project tasks
           </h2>
@@ -443,10 +443,10 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           </v-menu>
         </v-col>
       </v-row>
-      <v-row class="d-flex align-items-center align-content-center">
+      <v-row class="d-flex align-items-center align-content-center mb-8">
         <v-col
           cols="12"
-          class="d-flex align-items-center mb-4"
+          class="d-flex align-items-center mb-8"
           :class="{
             'col-xs-12': xs,
             'col-sm-11': sm,
@@ -511,19 +511,22 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
 
       <v-row
         v-if="taskStore.state.isLoading || taskStore.state.initialLoadPending"
-        class="tasks d-flex flex-wrap align-items-center justify-content-center"
+        class="tasks d-flex flex-wrap align-items-center justify-content-center mb-8"
       >
         <v-divider
           color="red-darken-2"
           :thickness="1"
-          class="mx-auto border-opacity-50 mb-4"
+          class="mx-auto border-opacity-50 mb-8"
         ></v-divider>
         <v-col
           v-for="n in taskStore.state.pageSize"
           :key="`skel-${n}`"
-          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-          lg="6"
-          class="py-0"
+          cols="12"
+          sm="11"
+          md="10"
+          lg="12"
+          xl="12"
+          class="py-0 mb-8"
           :class="mdAndDown ? 'mx-auto' : ''"
         >
           <v-skeleton-loader type="card" />
@@ -536,19 +539,22 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           !taskStore.state.initialLoadPending &&
           taskStore.paginatedTasksInSelectedProject.length > 0
         "
-        class="tasks d-flex flex-wrap align-items-center justify-content-center"
+        class="tasks d-flex flex-wrap align-items-center justify-content-center mb-8"
       >
         <v-divider
           color="red-darken-2"
           :thickness="1"
-          class="mx-auto border-opacity-50 mb-4"
+          class="mx-auto border-opacity-50 mb-8"
         ></v-divider>
         <v-col
           v-for="task in taskStore.paginatedTasksInSelectedProject"
           :key="task.id"
-          :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
-          lg="6"
-          class="py-0"
+          cols="12"
+          sm="11"
+          md="10"
+          lg="12"
+          xl="12"
+          class="py-0 mb-8"
           :class="mdAndDown ? 'mx-auto' : ''"
         >
           <Suspense>
@@ -650,7 +656,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
       </v-row>
 
       <!-- Botón para regresar -->
-      <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-4">
+      <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-8">
         <v-col cols="12">
           <div class="d-flex justify-space-between">
             <v-spacer></v-spacer>

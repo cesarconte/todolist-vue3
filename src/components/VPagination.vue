@@ -53,7 +53,7 @@ const { mobile } = useDisplay()
 </script>
 
 <template>
-  <v-row class="pa-3 d-flex">
+  <v-row class="pa-8 d-flex">
     <div
       class="container-tasks-title d-flex mx-auto w-100"
       :class="mobile ? 'justify-center' : 'justify-space-between'"

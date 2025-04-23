@@ -1,5 +1,5 @@
 <template>
-  <v-footer class="d-flex flex-column bg-grey-lighten-4">
+  <v-footer class="d-flex flex-column bg-grey-lighten-4 pa-8">
     <v-row>
       <v-col cols="auto" class="mt-4">
         <section class="rounded-pill bg-red-darken-2 px-6 py-3">

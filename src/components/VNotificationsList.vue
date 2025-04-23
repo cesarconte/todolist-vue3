@@ -67,7 +67,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               v-for="item in notificationsStore.activeNotifications"
               :key="item.id"
               rounded="pill"
-              class="mb-2 bg-grey-lighten-4"
+              class="mb-4 bg-grey-lighten-4"
             >
               <template v-slot:prepend>
                 <v-checkbox
@@ -82,12 +82,12 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
               <template v-slot:default>
                 <v-row align="center">
-                  <v-icon :icon="item.icon" color="red-accent-2" class="ml-3" size="large" />
+                  <v-icon :icon="item.icon" color="red-accent-2" class="ml-4" size="large" />
                   <v-col>
-                    <v-list-item-title lines="one" class="text-body-1 font-weight-medium">
+                    <v-list-item-title lines="one" class="text-body-1 font-weight-medium mb-2">
                       {{ item.message }}
                     </v-list-item-title>
-                    <v-list-item-subtitle lines="one">{{
+                    <v-list-item-subtitle lines="one" class="mb-2">{{
                       formatDate(item.timestamp)
                     }}</v-list-item-subtitle>
                   </v-col>
@@ -98,20 +98,20 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           <template v-else>
             <v-container class="empty-state-container">
               <v-list-item class="d-flex justify-center">
-                <v-col class="d-flex flex-column align-center">
+                <v-col class="d-flex flex-column align-center my-8">
                   <v-icon
                     icon="mdi-checkbox-marked-circle-auto-outline"
                     size="96"
                     color="grey-lighten-1"
-                    class="mb-4 d-flex flex-center empty-icon"
+                    class="mb-8 d-flex flex-center empty-icon"
                   />
                   <v-list-item-title
-                    class="text-center text-h5 font-weight-medium text-grey-lighten-1 mb-2"
+                    class="text-center text-h5 font-weight-medium text-grey-lighten-1 mb-4"
                   >
-                    All caught up!</v-list-item-title
-                  >
+                    All caught up!
+                  </v-list-item-title>
                   <v-list-item-subtitle
-                    class="text-center text-subtitle-1 text-grey-lighten-1 mb-1"
+                    class="text-center text-subtitle-1 text-grey-lighten-1 mb-2"
                   >
                     No new notifications
                   </v-list-item-subtitle>

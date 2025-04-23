@@ -51,7 +51,7 @@ const { xs, sm, md, lg, xl } = useDisplay()
     >
       <v-row justify="center" align="center" class="card-row-profile">
         <v-col cols="12" sm="11" md="10" lg="9" xl="8" class="card-col-profile">
-          <v-card class="settings ma-3">
+          <v-card class="settings" :class="['ma-8', 'pa-8']">
             <v-card-item>
               <v-card-title class="text-h5">{{ userStore.userName }}</v-card-title>
               <v-divider></v-divider>

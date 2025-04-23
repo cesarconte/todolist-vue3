@@ -82,19 +82,28 @@ onUnmounted(() => {
 </style>
 
 <template>
-  <v-form class="form" ref="formProject" @submit.prevent="$emit('submit')">
+  <v-form class="form pa-8" ref="formProject" @submit.prevent="$emit('submit')">
     <v-select
       v-model="formData.title"
       label="Title"
       prepend-inner-icon="mdi-format-title"
       variant="plain"
       color="red-darken-2"
-      :items="projectTemplates"
       :rules="titleRules"
       clearable
       required
-    ></v-select>
-    <v-divider class="mb-4"></v-divider>
+      class="mb-8"
+      :items="projectTemplates"
+    >
+      <template v-slot:item="{ props, item }">
+        <v-list-item v-bind="props" :prepend-icon="item.value" :title="item.value"></v-list-item>
+      </template>
+      <template v-slot:selection="{ item }">
+        <v-icon :icon="item.value" class="mr-2"></v-icon>
+        {{ item.value }}
+      </template>
+    </v-select>
+    <v-divider class="mb-8"></v-divider>
     <v-select
       v-model="formData.icon"
       label="Icon"
@@ -105,6 +114,7 @@ onUnmounted(() => {
       :rules="iconRules"
       clearable
       required
+      class="mb-8"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props" :prepend-icon="item.value" :title="item.value"></v-list-item>
@@ -114,7 +124,7 @@ onUnmounted(() => {
         {{ item.value }}
       </template>
     </v-select>
-    <v-divider class="mb-4"></v-divider>
+    <v-divider class="mb-8"></v-divider>
     <v-select
       v-model="formData.color"
       label="Color"
@@ -125,6 +135,7 @@ onUnmounted(() => {
       clearable
       required
       :items="colors"
+      class="mb-8"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props">
@@ -141,7 +152,7 @@ onUnmounted(() => {
         <span :style="{ color: item.value }">{{ item.title }}</span>
       </template>
     </v-select>
-    <v-divider class="mb-4"></v-divider>
+    <v-divider class="mb-8"></v-divider>
     <slot name="actions"></slot>
   </v-form>
 </template>

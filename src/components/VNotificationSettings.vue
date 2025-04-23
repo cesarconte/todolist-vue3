@@ -265,7 +265,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
       <v-divider class="mb-4" />
 
-      <v-card-actions class="d-flex flex-column align-center justify-center">
+      <v-card-actions class="d-flex flex-column align-center justify-center pa-8">
         <v-tooltip text="Send test notification" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
