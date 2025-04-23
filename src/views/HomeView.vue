@@ -34,21 +34,29 @@ const value = ref([new Date()])
 
 // Computed variables for the calendar
 const calendarEvents = computed(() => {
-  // Usa tasksData (que siempre es un array) en vez de tasks
-  return (taskStore.tasksData || []).map((task) => ({
-    id: task.id,
-    title: task.title,
-    start: task.startDate || null,
-    end: task.endDate || null,
-    allDay: false,
-    color: task.color,
-    label: task.label,
-    completed: task.completed,
-    extendedProps: {
-      project: task.project,
-      description: task.description
-    }
-  }))
+  // Ordenar por endDate y endDateHour ascendente
+  return (taskStore.tasksData || [])
+    .slice() // Copia para no mutar el store
+    .sort((a, b) => {
+      // Combina fecha y hora para comparar correctamente
+      const aDue = combineDateTime(a.endDate, a.endDateHour)
+      const bDue = combineDateTime(b.endDate, b.endDateHour)
+      return aDue - bDue
+    })
+    .map((task) => ({
+      id: task.id,
+      title: task.title,
+      start: task.startDate || null,
+      end: task.endDate || null,
+      allDay: false,
+      color: task.color,
+      label: task.label,
+      completed: task.completed,
+      extendedProps: {
+        project: task.project,
+        description: task.description
+      }
+    }))
 })
 
 // Computed properties for dashboard statistics
@@ -83,7 +91,17 @@ const upcomingDeadlines = computed(() => {
       const bDue = combineDateTime(b.endDate, b.endDateHour)
       return aDue - bDue
     })
-    .slice(0, 5) // Mostrar solo las primeras 5 tareas
+    .slice(0, 3) // Mostrar solo las primeras 3 tareas
+})
+
+// Get total upcoming deadlines (all pending tasks with future deadlines, sin límite)
+const upcomingDeadlinesTotal = computed(() => {
+  const now = new Date()
+  return pendingTasks.value.filter((task) => {
+    if (!task.endDate) return false
+    const taskDue = combineDateTime(task.endDate, task.endDateHour)
+    return taskDue >= now
+  }).length
 })
 
 // Control the expansion state of the deadlines panel
@@ -103,10 +121,20 @@ const overdueTasks = computed(() => {
       const bDue = combineDateTime(b.endDate, b.endDateHour)
       return aDue - bDue
     })
-    .slice(0, 5) // Mostrar solo las primeras 5 tareas
+    .slice(0, 3) // Mostrar solo las primeras 3 tareas
 })
 
 const overdueTasksCount = computed(() => overdueTasks.value.length)
+
+// Get total overdue tasks (all pending tasks with past deadlines, sin límite)
+const overdueTasksTotal = computed(() => {
+  const now = new Date()
+  return pendingTasks.value.filter((task) => {
+    if (!task.endDate) return false
+    const taskDue = combineDateTime(task.endDate, task.endDateHour)
+    return taskDue < now
+  }).length
+})
 
 // Control the expansion state of the overdue tasks panel
 const isOverduePanelExpanded = ref(false)
@@ -249,8 +277,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                   <v-card
                     flat
                     rounded="lg"
-                    class="border bg-white stat-panel-card"
-                    :class="upcomingDeadlines.length > 0 ? 'bg-amber-lighten-5' : 'bg-white'"
+                    class="stat-panel-card"
+                    :class="upcomingDeadlines.length > 0 ? 'bg-yellow-lighten-5' : ''"
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
@@ -266,8 +294,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       >
                       <template v-slot:append>
                         <v-badge
-                          v-if="upcomingDeadlines.length > 0"
-                          :content="upcomingDeadlines.length"
+                          v-if="upcomingDeadlinesTotal > 0"
+                          :content="upcomingDeadlinesTotal"
                           color="yellow-darken-4"
                           floating
                           class="me-4"
@@ -278,7 +306,6 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       v-model="isDeadlinesPanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
-                      :elevation="0"
                     >
                       <v-expansion-panel value="true" class="border-0">
                         <v-expansion-panel-title class="px-3 py-2 upcoming-panel" hide-actions>
@@ -303,7 +330,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                       : 'mdi-calendar-check'
                                   }}
                                 </v-icon>
-                                <span class="text-truncate d-inline-block" style="max-width: 220px;">
+                                <span class="text-truncate d-inline-block" style="max-width: 220px">
                                   {{
                                     upcomingDeadlines.length > 0
                                       ? `Next: ${upcomingDeadlines[0]?.title}`
@@ -323,10 +350,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                 variant="text"
                                 size="small"
                                 :color="
-                                    upcomingDeadlines.length > 0
-                                      ? 'yellow-darken-4'
-                                      : 'grey-darken-3'
-                                  "
+                                  upcomingDeadlines.length > 0 ? 'yellow-darken-4' : 'grey-darken-3'
+                                "
                                 aria-label="Toggle upcoming deadlines panel"
                               >
                               </v-btn>
@@ -382,10 +407,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                 density="comfortable"
                                 variant="text"
                                 :color="
-                                    upcomingDeadlines.length > 0
-                                      ? 'yellow-darken-4'
-                                      : 'grey-darken-3'
-                                  "
+                                  upcomingDeadlines.length > 0 ? 'yellow-darken-4' : 'grey-darken-3'
+                                "
                                 rounded
                                 size="small"
                                 :to="{ name: 'filter-and-labels' }"
@@ -412,9 +435,6 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                     rounded="lg"
                     class="border bg-white stat-panel-card"
                     :class="completionPercentage === 100 ? 'bg-green-lighten-5' : ''"
-                    min-height="260"
-                    min-width="240"
-                    :elevation="3"
                   >
                     <v-card-text class="d-flex flex-column align-center justify-center pa-6">
                       <v-fade-transition>
@@ -490,8 +510,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                   <v-card
                     flat
                     rounded="lg"
-                    class="border bg-white stat-panel-card"
-                    :class="overdueTasksCount > 0 ? 'bg-red-lighten-5' : 'bg-white'"
+                    class="stat-panel-card"
+                    :class="overdueTasksCount > 0 ? 'bg-red-lighten-5' : ''"
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
@@ -505,8 +525,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       >
                       <template v-slot:append>
                         <v-badge
-                          v-if="overdueTasksCount > 0"
-                          :content="overdueTasksCount"
+                          v-if="overdueTasksTotal > 0"
+                          :content="overdueTasksTotal"
                           color="red-darken-2"
                           floating
                           class="me-4"
@@ -517,7 +537,6 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       v-model="isOverduePanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
-                      :elevation="0"
                     >
                       <v-expansion-panel value="true" class="border-0">
                         <v-expansion-panel-title class="px-3 py-2 overdue-panel" hide-actions>
@@ -536,7 +555,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                     overdueTasksCount > 0 ? 'mdi-alert-circle' : 'mdi-check-circle'
                                   }}
                                 </v-icon>
-                                <span class="text-truncate d-inline-block" style="max-width: 220px;">
+                                <span class="text-truncate d-inline-block" style="max-width: 220px">
                                   {{
                                     overdueTasksCount > 0
                                       ? `${overdueTasksCount} task${overdueTasksCount > 1 ? 's' : ''} past deadline`

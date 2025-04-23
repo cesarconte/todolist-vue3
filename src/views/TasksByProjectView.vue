@@ -628,6 +628,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         v-if="
           !taskStore.state.isLoading &&
           !taskStore.state.initialLoadPending &&
+          taskStore.paginatedTasksInSelectedProject.length > 0 &&
           taskStore.totalPages > 1
         "
         class="pa-3"

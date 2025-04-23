@@ -13,7 +13,7 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { onUnmounted, ref, watch, computed } from 'vue'
+import { onUnmounted, ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
 import { useRouter } from 'vue-router'
 
@@ -56,7 +56,6 @@ const { reset } = useResetForm(
   resetEditTaskFormState
 )
 
-const showCards = ref(false)
 const showAlert = ref(false)
 
 const completionStatusItems = [
@@ -81,26 +80,6 @@ const hasActiveFilters = () => {
 onUnmounted(() => {
   taskStore.resetFilters()
 })
-
-// Manejar cambios en filtros
-watch(
-  [
-    () => taskStore.tasksPage,
-    () => taskStore.state.selectedProjects,
-    () => taskStore.state.selectedPriorities,
-    () => taskStore.state.selectedStatuses,
-    () => taskStore.state.selectedLabels,
-    () => taskStore.state.selectedEndDate,
-    () => taskStore.state.selectedStartDate,
-    () => taskStore.state.selectedCompletionStatus,
-    () => taskStore.state.searchTerm
-  ],
-  () => {
-    // Check the length of the paginated tasks for the current view
-    showCards.value = hasActiveFilters() && taskStore.tasksPage.length > 0
-  },
-  { immediate: true }
-)
 
 const handleFilterClick = () => {
   if (!userStore.isLoggedIn) showAlert.value = true
@@ -496,7 +475,10 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-alert>
 
       <!-- Resultados de filtros -->
-      <v-row v-if="showCards && taskStore.tasksPage.length > 0" class="d-flex align-center my-4">
+      <v-row
+        v-if="hasActiveFilters() && taskStore.tasksPage.length > 0"
+        class="d-flex align-center my-4"
+      >
         <v-col cols="12">
           <div class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
@@ -525,14 +507,14 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       <!-- Lista de tareas y mensajes -->
       <v-row
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
-        v-if="showCards"
+        v-if="hasActiveFilters() && taskStore.tasksPage.length > 0"
       >
         <template v-if="taskStore.state.isLoading">
           <v-col v-for="n in taskStore.state.pageSize" :key="n" cols="12" md="6" lg="4">
             <v-skeleton-loader type="card" />
           </v-col>
         </template>
-        <template v-else-if="showCards">
+        <template v-else-if="hasActiveFilters() && taskStore.tasksPage.length > 0">
           <v-col
             v-for="task in taskStore.tasksPage"
             :key="task.id"
@@ -565,7 +547,10 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-row>
 
       <!-- Paginación -->
-      <v-row v-if="taskStore.totalPages >= 1" class="pa-3">
+      <v-row
+        v-if="taskStore.tasksPage.length > 0 && taskStore.totalPages > 1 && hasActiveFilters()"
+        class="pa-3"
+      >
         <VPagination
           :currentPage="taskStore.state.currentPage"
           :totalPages="taskStore.totalPages"
@@ -583,7 +568,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       </v-row>
 
       <!-- Botón para regresar -->
-      <v-row v-if="showCards && taskStore.tasksPage.length > 0" class="mt-4">
+      <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-4">
         <v-col cols="12">
           <div class="d-flex justify-space-between">
             <v-spacer></v-spacer>

@@ -54,6 +54,7 @@ export const useTaskStore = defineStore('tasks', () => {
     initialLoadPending: true,
     // Filtros
     searchTerm: '',
+    searchTitle: '', // Nuevo filtro para búsqueda por título
     selectedProjects: [],
     selectedPriorities: [],
     selectedStatuses: [],
@@ -104,7 +105,8 @@ export const useTaskStore = defineStore('tasks', () => {
     labels: state.selectedLabels,
     endDate: state.selectedEndDate,
     startDate: state.selectedStartDate,
-    completionStatus: state.selectedCompletionStatus
+    completionStatus: state.selectedCompletionStatus,
+    searchTitle: state.searchTitle // Añadido
   }))
 
   // Computada para exponer las tareas de forma reactiva
@@ -178,6 +180,13 @@ export const useTaskStore = defineStore('tasks', () => {
       if (filters.completionStatus !== null && task.completed !== filters.completionStatus) {
         return false
       }
+      // Filtro por título (case-insensitive, incluye substring)
+      if (filters.searchTitle && typeof filters.searchTitle === 'string') {
+        const search = filters.searchTitle.trim().toLowerCase()
+        if (!task.title?.toLowerCase().includes(search)) {
+          return false
+        }
+      }
       return true
     })
   }
@@ -201,9 +210,10 @@ export const useTaskStore = defineStore('tasks', () => {
     return allFilteredTasks.value.filter((task) => task.projectId === selectedProjectId.value)
   })
 
-  // Tareas de la página actual y del proyecto seleccionado (paginadas)
+  // Tareas de la página actual y del proyecto seleccionado (paginadas y ordenadas)
   const paginatedTasksInSelectedProject = computed(() => {
     if (!selectedProjectId.value) return []
+    // Ya no es necesario ordenar aquí, Firestore ya devuelve los datos ordenados
     return paginateTasks(tasksInSelectedProject.value, state.currentPage, state.pageSize)
   })
 
@@ -238,8 +248,8 @@ export const useTaskStore = defineStore('tasks', () => {
       q = query(q, cond)
     })
 
-    // Ordenamiento SIEMPRE ascendente para paginación correcta
-    q = query(q, orderBy('endDate', 'asc'), orderBy('title', 'asc'))
+    // Ordenamiento: endDate, endDateHour, title (todos ascendente)
+    q = query(q, orderBy('endDate', 'asc'), orderBy('endDateHour', 'asc'), orderBy('title', 'asc'))
 
     // Centraliza la query de paginación
     return buildPaginationQuery({ baseQuery: q, cursorType, state, noLimit })
@@ -247,7 +257,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
   const fetchTasks = async (direction = 'first') => {
     if (!userStore.userId) {
-      console.warn('[fetchTasks] No userId available, skipping fetch.')
       state.tasks = []
       state.totalTasks = 0
       state.currentPage = 1
@@ -276,15 +285,6 @@ export const useTaskStore = defineStore('tasks', () => {
 
       // Calcular totalPages después de actualizar totalTasks
       const totalPagesValue = Math.ceil(state.totalTasks / state.pageSize)
-      console.log(
-        '[Paginación] totalTasks:',
-        state.totalTasks,
-        'pageSize:',
-        state.pageSize,
-        'totalPages:',
-        totalPagesValue
-      )
-      console.log('[Paginación] currentPage:', state.currentPage, 'direction:', direction)
 
       // Construir query paginada
       const tasksQuery = buildQuery(direction)
@@ -294,7 +294,6 @@ export const useTaskStore = defineStore('tasks', () => {
         // Actualiza flags de paginación
         state.hasNextPage = false
         state.hasPrevPage = false
-        console.log('[Paginación] snapshot vacío, no hay tareas en esta página')
         return
       }
 
@@ -309,10 +308,6 @@ export const useTaskStore = defineStore('tasks', () => {
       }
 
       // Después de cargar las tareas (por ejemplo, tras loadAllUserTasks o fetchTasks)
-      console.log(
-        '[Paginación] projectId de las tareas:',
-        state.tasks.map((t) => t.projectId)
-      )
 
       // Actualizar cursores
       state.lastVisible = docs[docs.length - 1]
@@ -324,19 +319,10 @@ export const useTaskStore = defineStore('tasks', () => {
       if (direction === 'first') state.currentPage = 1
       if (direction === 'last') state.currentPage = totalPagesValue || 1
 
-      // Mostrar los IDs de las tareas que se muestran en la página actual (después de actualizar currentPage)
-      console.log(
-        `[Paginación] Mostrando tareas en página ${state.currentPage}:`,
-        tasksPage.value.map((t) => t.id)
-      )
-
       // Actualizar estado de paginación con el valor actualizado
       const flags = getPaginationFlags(state.currentPage, totalPagesValue)
       state.hasNextPage = flags.hasNextPage
       state.hasPrevPage = flags.hasPrevPage
-      console.log('[Paginación] hasNextPage:', state.hasNextPage, 'hasPrevPage:', state.hasPrevPage)
-      console.log('[Paginación] filteredTasks.length:', tasksPage.value.length)
-      console.log('[Paginación] currentPage después de cambio:', state.currentPage)
     } catch (error) {
       state.error = error.message
       showSnackbar(notificationsStore, 'Error loading tasks', 'error')
@@ -345,7 +331,6 @@ export const useTaskStore = defineStore('tasks', () => {
       if (wasInitialLoadPending) {
         // Set pending to false only after the initial 'first' fetch completes
         state.initialLoadPending = false
-        console.log('[fetchTasks] Initial load marked as complete.') // Add log
       }
     }
   }
@@ -446,6 +431,7 @@ export const useTaskStore = defineStore('tasks', () => {
     state.selectedStartDate = null // <-- Reset the new filter
     state.selectedCompletionStatus = null // <-- Reset the new filter
     state.searchTerm = ''
+    state.searchTitle = '' // <-- Reset the new filter
   }
 
   const createTask = async (newTaskData) => {
@@ -496,23 +482,18 @@ export const useTaskStore = defineStore('tasks', () => {
       state.tasks = []
 
       if (!userStore.userId) {
-        console.warn('[loadAllUserTasks] No userId, skipping task loading')
         return
       }
 
       const q = query(collectionGroup(db, 'tasks'), where('createdBy', '==', userStore.userId))
       const docs = await getCollection(q)
 
-      console.log('[loadAllUserTasks] docs.length:', docs.length)
       state.tasks = docs.map((doc) =>
         mapFirestoreTask({ data: () => doc, id: doc.id }, projectStore.getProjectById)
       )
-
-      console.log('[loadAllUserTasks] state.tasks:', state.tasks)
     } catch (error) {
       state.error = error.message
       showSnackbar(notificationsStore, 'Error loading all tasks', 'error')
-      console.error('[loadAllUserTasks] error:', error)
     } finally {
       state.isLoading = false
     }
@@ -530,6 +511,7 @@ export const useTaskStore = defineStore('tasks', () => {
     state.error = null
     state.initialLoadPending = true // <--- RESET HERE
     state.searchTerm = ''
+    state.searchTitle = '' // <--- RESET HERE
     state.selectedProjects = []
     state.selectedPriorities = []
     state.selectedStatuses = []
@@ -544,7 +526,6 @@ export const useTaskStore = defineStore('tasks', () => {
   const completeTask = async (projectId, taskId) => {
     try {
       if (!projectId || !taskId) {
-        console.error('Project ID or Task ID is undefined')
         showSnackbar(
           notificationsStore,
           'Project ID or Task ID is undefined',
@@ -586,7 +567,6 @@ export const useTaskStore = defineStore('tasks', () => {
       // --- REFRESCAR LISTA FILTRADA TRAS COMPLETAR ---
       await fetchTasks('first')
     } catch (error) {
-      console.error('Error updating task status:', error)
       showSnackbar(
         notificationsStore,
         error.message || 'Status update failed',
@@ -600,7 +580,6 @@ export const useTaskStore = defineStore('tasks', () => {
   const deleteTask = async (projectId, taskId) => {
     try {
       if (!projectId || !taskId) {
-        console.error('Project ID or Task ID is undefined')
         showSnackbar(
           notificationsStore,
           'Project ID or Task ID is undefined',
@@ -628,7 +607,6 @@ export const useTaskStore = defineStore('tasks', () => {
       // --- REFRESCAR LISTA FILTRADA TRAS ELIMINAR ---
       await fetchTasks('first')
     } catch (error) {
-      console.error('Error deleting task:', error)
       showSnackbar(
         notificationsStore,
         error.message || 'Error deleting task',
@@ -641,7 +619,6 @@ export const useTaskStore = defineStore('tasks', () => {
   // Añadir método para seleccionar un proyecto desde la UI
   const setSelectedProject = (projectId) => {
     if (!projectId) {
-      console.warn('No projectId provided to setSelectedProject')
       if (state.selectedProjects.length > 0) {
         // Only reset if it actually changes to empty
         state.selectedProjects = []
@@ -653,8 +630,12 @@ export const useTaskStore = defineStore('tasks', () => {
       // Only reset if the project ID actually changes
       state.selectedProjects = [projectId]
       state.initialLoadPending = true // <--- RESET HERE
-      console.log('[setSelectedProject] New project selected, initialLoadPending reset.') // Add log
     }
+  }
+
+  // Setter para búsqueda por título
+  function setSearchTitle(title) {
+    state.searchTitle = title
   }
 
   // Suscribirse a los cambios en tiempo real de las tareas del usuario
@@ -663,13 +644,10 @@ export const useTaskStore = defineStore('tasks', () => {
     // Limpiar listener anterior si existe
     if (listeners.tasks) listeners.tasks()
 
-    console.log(`[subscribeToTasks] Subscribing for userId: ${userStore.userId}`) // Add log
-
     const q = query(collectionGroup(db, 'tasks'), where('createdBy', '==', userStore.userId))
     listeners.tasks = onSnapshot(
       q,
       (snapshot) => {
-        console.log(`[onSnapshot tasks] Received ${snapshot.docs.length} task docs.`) // Add log
         // Use a Map to prevent duplicates based on ID during mapping
         const taskMap = new Map()
         snapshot.docs.forEach((doc) => {
@@ -680,26 +658,21 @@ export const useTaskStore = defineStore('tasks', () => {
           if (mappedTask && mappedTask.id) {
             // Ensure task and id exist
             taskMap.set(mappedTask.id, mappedTask)
-          } else {
-            console.warn('[onSnapshot tasks] Skipping doc with missing data or id:', doc)
           }
         })
         state.tasks = Array.from(taskMap.values())
-        console.log(`[onSnapshot tasks] Updated state.tasks count: ${state.tasks.length}`) // Add log
-        // Maybe trigger a fetch here if needed? No, fetchTasks handles filtered view.
       },
       (error) => {
-        // Add error handling for snapshot
-        console.error('[onSnapshot tasks] Error:', error)
-        state.error = 'Error listening to task updates.'
-        showSnackbar(notificationsStore, 'Error listening to task updates', 'error')
+        // Manejo correcto del error recibido
+        const msg = error && error.message ? error.message : 'Error listening to task updates.'
+        state.error = msg
+        showSnackbar(notificationsStore, msg, 'error')
       }
     )
   }
 
   // Limpiar todos los listeners activos
   const unsubscribeAll = () => {
-    console.log('[unsubscribeAll] Unsubscribing task listener.') // Add log
     Object.values(listeners).forEach((unsubscribe) => {
       if (typeof unsubscribe === 'function') unsubscribe()
     })
@@ -710,8 +683,6 @@ export const useTaskStore = defineStore('tasks', () => {
   watch(
     () => ({ filters: { ...currentFilters.value }, userId: userStore.userId }),
     async (newValue, oldValue) => {
-      console.log('[Filter/User Watcher] Triggered. New:', newValue, 'Old:', oldValue)
-
       const filtersChanged = JSON.stringify(newValue.filters) !== JSON.stringify(oldValue?.filters)
       const userChanged = newValue.userId !== oldValue?.userId
       const hasSelectedProject = newValue.filters.projects.length > 0 // Check specifically for selected project
@@ -720,36 +691,19 @@ export const useTaskStore = defineStore('tasks', () => {
       if (newValue.userId && hasSelectedProject) {
         // Trigger fetch if user just logged in (with a project selected) OR if filters changed while logged in (and project still selected)
         if (userChanged || filtersChanged) {
-          console.log(
-            '[Filter/User Watcher] User valid and project selected. User changed:',
-            userChanged,
-            'Filters changed:',
-            filtersChanged
-          )
-          console.log('[Filter/User Watcher] Calling fetchTasks.')
           await fetchTasks('first')
-        } else {
-          console.log(
-            '[Filter/User Watcher] User valid and project selected, but no relevant change detected.'
-          )
         }
       }
       // Condition 2: User logged in BUT no project selected (or filters cleared)
       else if (newValue.userId && !hasSelectedProject && filtersChanged) {
-        console.log(
-          '[Filter/User Watcher] User valid but no project selected (or filters cleared). Refetching filtered tasks.'
-        )
         // Recarga la lista filtrada y paginada aunque no haya proyecto seleccionado
         await fetchTasks('first')
       }
       // Condition 3: User logged out (or became null)
       else if (userChanged && !newValue.userId) {
-        console.log('[Filter/User Watcher] User logged out or became null. Clearing task state.')
         // Clear all task-related state on logout
         clearTaskStore() // Use the existing clear function
         unsubscribeAll() // Ensure listener is cleaned up
-      } else {
-        console.log('[Filter/User Watcher] No conditions met for action.')
       }
     },
     { deep: true, immediate: true } // Run immediately on store setup
@@ -797,6 +751,7 @@ export const useTaskStore = defineStore('tasks', () => {
     completeTask,
     deleteTask,
     setSelectedProject,
+    setSearchTitle,
     subscribeToTasks,
     unsubscribeAll
   }

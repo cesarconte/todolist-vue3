@@ -53,17 +53,10 @@ const { reset } = useResetForm(
   resetEditTaskFormState
 )
 
-// Campo de búsqueda local (ahora almacena el objeto seleccionado)
-const selectedTask = ref(null)
-
-// Computed para filtrar tareas por título (case-insensitive)
-const filteredTasks = computed(() => {
-  if (!selectedTask.value) return []
-  // Si el usuario selecciona una tarea del autocomplete, mostrar solo esa
-  return taskStore.state.tasks.filter((task) => task.id === selectedTask.value.id)
+const searchTitle = computed({
+  get: () => taskStore.state.searchTitle,
+  set: (val) => taskStore.setSearchTitle(val)
 })
-
-const showCards = computed(() => filteredTasks.value.length > 0)
 
 const showAlert = ref(false)
 
@@ -91,9 +84,11 @@ const goBack = () => {
 const rules = useMaxLengthRule()
 
 // Función para verificar si hay una búsqueda activa
-const hasActiveSearch = computed(() => {
-  return !!selectedTask.value
-})
+const hasActiveSearch = computed(() => !!taskStore.state.searchTitle)
+
+const showSearchResults = computed(
+  () => hasActiveSearch.value && taskStore.allFilteredTasks.length > 0
+)
 
 const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
 
@@ -122,8 +117,14 @@ onUnmounted(() => {})
             <v-icon icon="mdi-clipboard-search-outline" class="mr-2" color="red-darken-2"></v-icon>
             <span class="text-subtitle-1 font-weight-medium">Search Tasks</span>
           </div>
-          <v-chip v-if="selectedTask" color="red-darken-2" size="small" prepend-icon="mdi-text-search-variant" class="font-weight-medium">
-            Task Selected
+          <v-chip
+            v-if="searchTitle"
+            color="red-darken-2"
+            size="small"
+            prepend-icon="mdi-text-search-variant"
+            class="font-weight-medium"
+          >
+            Search Active
           </v-chip>
         </v-card-title>
         <v-card-subtitle
@@ -138,11 +139,8 @@ onUnmounted(() => {})
         <v-card-text>
           <v-row>
             <v-col cols="12" md="9" lg="8" class="mx-auto">
-              <v-autocomplete
-                v-model="selectedTask"
-                :items="userStore.isLoggedIn ? taskStore.state.tasks : []"
-                item-title="title"
-                return-object
+              <v-text-field
+                v-model="searchTitle"
                 :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
                 label="Search by title"
                 clearable
@@ -151,23 +149,10 @@ onUnmounted(() => {})
                 color="red-accent-2"
                 hide-details
                 variant="outlined"
-                chips
-                auto-select-first
-                :multiple="false"
+                :disabled="!userStore.isLoggedIn"
                 @click="handleSearchClick"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props" :title="item.title" />
-                </template>
-                <template v-slot:prepend-inner>
-                  <v-tooltip location="bottom">
-                    <template v-slot:activator="{ props }">
-                      <v-icon v-bind="props" icon="mdi-magnify"></v-icon>
-                    </template>
-                    <span>Type or select a task title to search. Results will display below.</span>
-                  </v-tooltip>
-                </template>
-              </v-autocomplete>
+                prepend-inner-icon="mdi-magnify"
+              />
             </v-col>
           </v-row>
 
@@ -183,7 +168,11 @@ onUnmounted(() => {})
 
           <!-- Estado sin resultados -->
           <v-row
-            v-else-if="hasActiveSearch && !taskStore.state.isLoading && filteredTasks.length === 0"
+            v-else-if="
+              hasActiveSearch &&
+              !taskStore.state.isLoading &&
+              taskStore.allFilteredTasks.length === 0
+            "
           >
             <v-col class="text-center py-8 d-flex flex-column align-center">
               <v-icon size="128" color="grey-lighten-1" class="empty-icon">mdi-magnify</v-icon>
@@ -204,8 +193,8 @@ onUnmounted(() => {})
             :class="xs ? '' : 'px-8'"
             :block="xs"
             class="text-none text-button"
-            @click="selectedTask = null"
-            :disabled="!selectedTask"
+            @click="searchTitle = ''"
+            :disabled="!searchTitle"
           >
             Clear Search
           </v-btn>
@@ -248,7 +237,7 @@ onUnmounted(() => {})
       </v-alert>
 
       <!-- Resultados de búsqueda -->
-      <v-row v-if="filteredTasks.length > 0" class="d-flex align-center">
+      <v-row v-if="showSearchResults" class="d-flex align-center">
         <v-col cols="12">
           <div class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
@@ -257,7 +246,7 @@ onUnmounted(() => {})
           </div>
           <div class="d-flex align-center justify-end">
             <v-chip
-              v-if="filteredTasks.length > 0"
+              v-if="taskStore.allFilteredTasks.length > 0"
               color="green-accent-4"
               size="small"
               label
@@ -266,15 +255,18 @@ onUnmounted(() => {})
               :class="xs ? 'mx-2' : 'mx-4'"
               class="font-weight-medium"
             >
-              1 Result Found</v-chip
-            >
+              {{ taskStore.allFilteredTasks.length }} Result{{
+                taskStore.allFilteredTasks.length === 1 ? '' : 's'
+              }}
+              Found
+            </v-chip>
           </div>
         </v-col>
       </v-row>
 
       <v-row
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
-        v-if="showCards"
+        v-if="showSearchResults"
       >
         <template v-if="taskStore.state.isLoading">
           <v-col cols="12" class="d-flex justify-center align-center" style="min-height: 200px">
@@ -283,7 +275,7 @@ onUnmounted(() => {})
         </template>
         <template v-else>
           <v-col
-            v-for="task in filteredTasks"
+            v-for="task in taskStore.allFilteredTasks"
             :key="task.id"
             :task="task"
             :value="task"
@@ -322,7 +314,7 @@ onUnmounted(() => {})
           </v-col>
         </template>
         <v-col
-          v-if="filteredTasks.length === 0 && selectedTask"
+          v-if="taskStore.allFilteredTasks.length === 0 && searchTitle"
           :cols="xs ? '12' : sm ? '11' : md ? '10' : lg ? '12' : xl ? '12' : ''"
           lg="6"
           class="mx-auto"
@@ -339,7 +331,7 @@ onUnmounted(() => {})
           </v-alert>
         </v-col>
       </v-row>
-      <v-row v-if="showCards">
+      <v-row v-if="showSearchResults">
         <v-col cols="12" class="d-flex justify-end mt-4">
           <v-btn
             @click="goBack"

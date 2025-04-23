@@ -80,7 +80,7 @@ const handleError = (message, error) => {
   // Handles errors and displays snackbar messages
   saveError.value = message
   console.error('Notification Settings Error:', error)
-  showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle', '')
+  showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle')
 }
 
 const closeDialog = () => {
@@ -90,7 +90,12 @@ const closeDialog = () => {
 
 const handleSwitchChange = async (enabled) => {
   if (!userStore.isLoggedIn) {
-    showSnackbar(notificationsStore, 'Authentication required to modify settings', 'error', '', '')
+    showSnackbar(
+      notificationsStore,
+      'Authentication required to modify settings',
+      'error',
+      'mdi-alert-circle'
+    )
     notificationsStore.notificationSettings.enabled = false // Revert the switch
     return
   }
@@ -103,17 +108,19 @@ const handleSwitchChange = async (enabled) => {
         return
       }
     }
-    await notificationsStore.saveSettings(true)
-    showSnackbar(
-      notificationsStore,
-      'Notification settings updated successfully',
-      'success',
-      '',
-      ''
-    )
+    // Explicitly set the enabled value before saving
+    notificationsStore.notificationSettings.enabled = enabled
+    await notificationsStore.saveSettings()
+    const message = enabled
+      ? 'Notifications enabled successfully'
+      : 'Notifications disabled successfully'
+    const color = enabled ? 'success' : 'info'
+    const icon = enabled ? 'mdi-check-circle' : 'mdi-bell-off-outline'
+    showSnackbar(notificationsStore, message, color, icon)
   } catch (error) {
     handleError('Error updating settings', error)
-    notificationsStore.notificationSettings.enabled = !enabled // Revert the switch
+    notificationsStore.notificationSettings.enabled = !enabled // Revert the switch on error
+    showSnackbar(notificationsStore, 'Error updating settings', 'error', 'mdi-alert-circle')
   }
 }
 
@@ -207,7 +214,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
                 :disabled="isDisabled"
                 inset
                 hide-details
-                @change="handleSwitchChange"
+                @update:model-value="handleSwitchChange"
               >
               </v-switch>
             </template>
