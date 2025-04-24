@@ -18,6 +18,7 @@ import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
 import VProjectForm from '@/components/VProjectForm.vue'
 import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import VEmptyState from '@/components/VEmptyState.vue'
 
 const userStore = useUserStore()
 const projectStore = useProjectStore()
@@ -308,7 +309,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
     <v-responsive
       class="tasksByProject-container mx-auto"
       :class="xs ? 'pa-1' : ''"
-      :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
+      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-dialog
         v-model="dialogAddTask"
@@ -443,10 +444,10 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           </v-menu>
         </v-col>
       </v-row>
-      <v-row class="d-flex align-items-center align-content-center mb-8">
+      <v-row class="d-flex align-center mb-8">
         <v-col
           cols="12"
-          class="d-flex align-items-center mb-8"
+          class="d-flex align-center mb-8"
           :class="{
             'col-xs-12': xs,
             'col-sm-11': sm,
@@ -455,19 +456,49 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             'col-xl-7': xl
           }"
         >
-          <div class="container-project-info pa-3">
+          <div class="container-project-info pa-3 w-100">
             <v-divider></v-divider>
-            <v-row class="d-flex align-items-center align-content-center py-4">
-              <v-col cols="auto" class="d-flex align-items-center align-content-center">
+            <v-row class="d-flex align-center py-4">
+              <v-col cols="auto" class="d-flex align-center">
                 <v-icon
                   class="me-3 d-flex align-self-center"
                   color="red-darken-2"
                   :icon="totalTasksIcon"
-                >
-                </v-icon>
+                />
                 <strong class="text-red-darken-2 text-h6">
                   Total: {{ taskStore.totalFilteredTasksInProject }}
                 </strong>
+              </v-col>
+              <v-spacer></v-spacer>
+              <v-col cols="auto">
+                <v-tooltip location="top" v-if="xs || sm">
+                  <template v-slot:activator="{ props: tooltipProps }">
+                    <v-btn
+                      v-bind="tooltipProps"
+                      icon="mdi-plus"
+                      elevation="6"
+                      color="red-accent-2"
+                      class="action-btn-animated"
+                      size="large"
+                      @click="handleAddTaskClick"
+                      aria-label="Add Task"
+                    >
+                    </v-btn>
+                  </template>
+                  <span>Add Task</span>
+                </v-tooltip>
+                <v-btn
+                  v-else
+                  color="red-accent-2"
+                  variant="tonal"
+                  rounded="pill"
+                  size="large"
+                  prepend-icon="mdi-plus"
+                  class="action-btn-animated text-none text-button"
+                  @click="handleAddTaskClick"
+                >
+                  Add Task
+                </v-btn>
               </v-col>
             </v-row>
             <v-divider class="my-3"></v-divider>
@@ -590,45 +621,34 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         </v-col>
       </v-row>
 
-      <template v-else>
-        <v-container class="empty-state-container">
-          <v-row class="d-flex flex-column align-center justify-center text-center pa-8">
-            <v-col cols="auto" class="py-8">
-              <v-icon
-                icon="mdi-clipboard-text-off"
-                size="128"
-                color="grey-lighten-1"
-                class="mb-6 empty-icon"
-              />
-              <v-list-item-title class="text-h5 font-weight-medium text-grey-lighten-1 mb-2">
-                No tasks in this project
-              </v-list-item-title>
-              <v-list-item-subtitle class="text-subtitle-1 text-grey-lighten-1">
-                Start by creating your first task!
-              </v-list-item-subtitle>
-            </v-col>
-
-            <v-col cols="auto">
-              <v-btn
-                :class="xs ? '' : 'px-8'"
-                :block="xs"
-                class="text-none text-button"
-                color="red-accent-2"
-                variant="tonal"
-                rounded="pill"
-                size="large"
-                prepend-icon="mdi-plus-circle-outline"
-                @click="handleAddTaskClick"
-              >
-                New Task
-                <v-tooltip activator="parent" location="bottom" class="add-task-tooltip"
-                  >Create a new task in this project</v-tooltip
-                >
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-container>
-      </template>
+      <v-row
+        v-if="
+          !taskStore.state.isLoading &&
+          !taskStore.state.initialLoadPending &&
+          taskStore.paginatedTasksInSelectedProject.length === 0
+        "
+      >
+        <v-col>
+          <VEmptyState
+            icon="mdi-clipboard-text-off"
+            :icon-size="128"
+            title="No tasks in this project"
+            subtitle="Start by creating your first task!"
+          >
+            <v-btn
+              color="red-accent-2"
+              variant="tonal"
+              rounded="pill"
+              size="large"
+              prepend-icon="mdi-plus"
+              class="mt-6 action-btn-animated"
+              @click="handleAddTaskClick"
+            >
+              Add Task
+            </v-btn>
+          </VEmptyState>
+        </v-col>
+      </v-row>
 
       <v-row
         v-if="

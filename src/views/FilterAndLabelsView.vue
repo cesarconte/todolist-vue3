@@ -5,6 +5,7 @@ import VActionButtons from '@/components/VActionButtons.vue'
 import VCardTask from '@/components/VCardTask.vue'
 import VPagination from '@/components/VPagination.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
+import VEmptyState from '@/components/VEmptyState.vue'
 import { useFormBtnActions } from '@/composables/useFormBtnActions'
 import { useResetForm } from '@/composables/useResetForm'
 import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
@@ -131,7 +132,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
     <v-responsive
       class="tasksByProject-container mx-auto"
       :class="xs ? 'pa-1' : ''"
-      :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
+      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
@@ -401,13 +402,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         </v-card-text>
 
         <v-row v-if="!hasActiveFilters()">
-          <v-col class="text-center py-8 d-flex flex-column align-center">
-            <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4"
-              >mdi-filter-outline</v-icon
-            >
-            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
-              Use the filters above to search for tasks
-            </p>
+          <v-col>
+            <VEmptyState
+              icon="mdi-filter-outline"
+              :icon-size="64"
+              title="Use the filters above to search for tasks"
+            />
           </v-col>
         </v-row>
         <v-row
@@ -415,11 +415,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
             hasActiveFilters() && !taskStore.state.isLoading && taskStore.totalFilteredTasks === 0
           "
         >
-          <v-col class="text-center py-8 d-flex flex-column align-center">
-            <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4">mdi-magnify</v-icon>
-            <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
-              No tasks found with current filters
-            </p>
+          <v-col>
+            <VEmptyState
+              icon="mdi-filter-remove"
+              :icon-size="64"
+              title="No tasks found with current filters"
+            />
           </v-col>
         </v-row>
 

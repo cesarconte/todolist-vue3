@@ -41,11 +41,15 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :size="button.size || 'large'"
       :color="button.color || 'red-accent-2'"
       :disabled="button.disabled"
-      class="text-none text-button"
+      class="text-none text-button transition-swing action-btn-animated"
       @click="button.function"
     >
       {{ button.text }}
-      <v-tooltip v-if="!button.text && (button.ariaLabel || button.icon)" activator="parent" location="bottom">
+      <v-tooltip
+        v-if="!button.text && (button.ariaLabel || button.icon)"
+        activator="parent"
+        location="bottom"
+      >
         {{ button.ariaLabel || button.text || 'Action' }}
       </v-tooltip>
     </v-btn>

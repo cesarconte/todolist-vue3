@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -13,6 +13,7 @@ import { useResetForm } from '@/composables/useResetForm'
 import VCardTask from '@/components/VCardTask.vue'
 import VActionButtons from '@/components/VActionButtons.vue'
 import VTaskForm from '@/components/VTaskForm.vue'
+import VEmptyState from '@/components/VEmptyState.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -21,6 +22,12 @@ const userStore = useUserStore()
 const router = useRouter()
 
 const form = ref(null)
+const isFocused = ref(false) // Variable para controlar el estado de foco
+const searchTitle = ref('')
+const searchItems = computed(() =>
+  userStore.isLoggedIn ? taskStore.tasksData.map((task) => ({ title: task.title })) : []
+)
+
 const { submitEditedTask } = useSubmitEditedTask()
 
 // Callback para restaurar el modelo reactivo de la tarea editada
@@ -53,11 +60,6 @@ const { reset } = useResetForm(
   resetEditTaskFormState
 )
 
-const searchTitle = computed({
-  get: () => taskStore.state.searchTitle,
-  set: (val) => taskStore.setSearchTitle(val)
-})
-
 const showAlert = ref(false)
 
 const handleSearchClick = () => {
@@ -65,6 +67,15 @@ const handleSearchClick = () => {
     showAlert.value = true
   }
 }
+
+// Watch para sincronizar el filtro del store con el input
+watch(searchTitle, (newValue) => {
+  if (typeof taskStore.setSearchTitle === 'function') {
+    taskStore.setSearchTitle(newValue)
+  } else {
+    taskStore.state.searchTitle = newValue
+  }
+})
 
 // Usa el composable para los botones
 const { btnsForm } = useFormBtnActions(
@@ -90,11 +101,25 @@ const showSearchResults = computed(
   () => hasActiveSearch.value && taskStore.allFilteredTasks.length > 0
 )
 
-const { xs, sm, smAndDown, smAndUp, md, lg, xl } = useDisplay()
+const exactTask = computed(() => {
+  if (!taskStore.state.searchTitle) return null
+  return taskStore.tasksData.find(
+    (t) => t.title.trim().toLowerCase() === taskStore.state.searchTitle.trim().toLowerCase()
+  )
+})
 
-onMounted(() => {})
+const tasksToShow = computed(() => {
+  if (exactTask.value) return [exactTask.value]
+  return taskStore.allFilteredTasks
+})
 
-onUnmounted(() => {})
+const { xs, sm, smAndDown, md, lg, xl } = useDisplay()
+
+onMounted(() => {
+  if (userStore.isLoggedIn && taskStore.tasksData.length === 0) {
+    taskStore.subscribeToTasks()
+  }
+})
 </script>
 
 <template>
@@ -102,67 +127,137 @@ onUnmounted(() => {})
     <v-responsive
       class="tasksByProject-container mx-auto"
       :class="xs ? 'pa-1' : ''"
-      :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
+      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center mb-8">Search Tasks</h2>
+          <h1
+            class="text-center font-weight-bold text-red-darken-2"
+            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h4 mb-8'"
+          >
+            Search Tasks
+          </h1>
         </v-col>
       </v-row>
 
       <!-- Búsqueda -->
-      <v-card class="mb-8 pa-4" variant="outlined" rounded elevation="2">
-        <v-card-title class="d-flex align-center justify-space-between pb-2">
-          <div class="d-flex align-center">
-            <v-icon icon="mdi-clipboard-search-outline" class="mr-2" color="red-darken-2"></v-icon>
-            <span class="text-subtitle-1 font-weight-medium">Search Tasks</span>
-          </div>
+      <v-card class="mb-8" :class="xs ? 'pa-2' : 'pa-4'" variant="outlined" rounded elevation="2">
+        <v-card-title
+          class="d-flex align-center justify-space-between pb-2 mb-2"
+          :class="xs ? 'px-2' : 'px-4'"
+        >
+          <v-sheet class="search-header" :class="xs ? 'pa-1' : 'pa-2'" rounded>
+            <div class="d-flex align-center">
+              <v-icon
+                icon="mdi-text-search"
+                color="red-darken-2"
+                :size="xs ? '28' : '40'"
+                class="mr-1"
+              ></v-icon>
+              <div class="ml-0">
+                <div class="text-h6 font-weight-medium" :class="xs ? 'text-subtitle-1' : ''">
+                  Search Tasks
+                </div>
+                <div class="text-caption text-medium-emphasis mt-1 text-wrap">
+                  {{ xs ? 'Find by title keywords' : 'Find tasks by title or keywords' }}
+                </div>
+              </div>
+            </div>
+          </v-sheet>
           <v-chip
             v-if="searchTitle"
             color="red-darken-2"
             size="small"
             prepend-icon="mdi-text-search-variant"
             class="font-weight-medium mx-2"
+            :class="xs ? 'px-2 py-1' : ''"
           >
             Search Active
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-4 text-center mb-2"
+          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-4 text-center mb-4"
+          :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-icon icon="mdi-magnify" class="mr-2" color="red-accent-4"></v-icon>
-          Search your task by title
+          <v-icon
+            icon="mdi-magnify"
+            class="mr-2"
+            color="red-accent-4"
+            :size="xs ? 18 : 24"
+          ></v-icon>
+          <span :class="xs ? 'text-body-2' : ''">Search your task by title</span>
         </v-card-subtitle>
-        <v-divider class="mb-3"></v-divider>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12" md="9" lg="8" class="mx-auto">
-              <v-text-field
+        <v-divider class="mb-4"></v-divider>
+        <v-card-text class="pb-0" :class="xs ? 'px-2' : 'px-4'">
+          <v-row class="mb-2">
+            <v-col cols="12" md="9" lg="8" class="mx-auto d-flex align-center">
+              <v-autocomplete
                 v-model="searchTitle"
-                :placeholder="userStore.isLoggedIn ? 'Enter task title...' : 'Log in to search...'"
-                label="Search by title"
-                clearable
-                density="comfortable"
-                rounded
-                color="red-accent-4"
-                hide-details
+                :items="searchItems"
+                :placeholder="userStore.isLoggedIn ? 'Search' : 'Log in to search...'"
                 variant="outlined"
+                rounded
+                :density="xs ? 'default' : 'comfortable'"
+                color="red-accent-2"
+                hide-details
                 :disabled="!userStore.isLoggedIn"
                 @click="handleSearchClick"
-                prepend-inner-icon="mdi-magnify"
-              />
+                @focus="isFocused = true"
+                @blur="isFocused = false"
+                :prepend-inner-icon="searchTitle || isFocused ? 'mdi-magnify' : undefined"
+                aria-label="Search tasks by title"
+                :aria-disabled="!userStore.isLoggedIn"
+                :class="xs ? 'text-body-2' : ''"
+                clearable
+                item-title="title"
+                auto-select-first
+                class="flex-grow-1"
+              >
+                <!-- Personalización de los items -->
+                <template #item="{ props }">
+                  <v-list-item v-bind="props" :class="xs ? 'px-2 py-1' : 'px-4 py-2'">
+                    <template #prepend>
+                      <v-icon color="black" :size="xs ? 18 : 20">mdi-magnify</v-icon>
+                    </template>
+                  </v-list-item>
+                </template>
+
+                <!-- Slot para "no hay resultados" -->
+                <template #no-data>
+                  <v-list-item class="pa-4">
+                    <div class="d-flex flex-column align-center justify-center pa-2">
+                      <v-icon
+                        icon="mdi-magnify-close"
+                        color="grey-darken-1"
+                        :size="28"
+                        class="mb-3"
+                      ></v-icon>
+                      <span class="text-subtitle-2 text-grey-darken-1 text-center">
+                        No tasks match your search
+                      </span>
+                      <span class="text-caption text-grey text-center mt-1">
+                        Try different keywords
+                      </span>
+                    </div>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
             </v-col>
           </v-row>
 
           <!-- Estado sin búsqueda activa -->
           <v-row v-if="!hasActiveSearch && userStore.isLoggedIn">
-            <v-col class="text-center py-8 d-flex flex-column align-center">
-              <v-icon size="64" color="grey-lighten-1" class="empty-icon mb-4"
-                >mdi-text-search</v-icon
-              >
-              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
-                Type a task title in the search box above
-              </p>
+            <v-col>
+              <VEmptyState
+                icon="mdi-text-search"
+                :icon-size="xs ? 60 : sm ? 70 : 80"
+                :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
+                :title="xs ? 'Search for tasks' : 'Type a task title in the search box above'"
+                :subtitle="xs ? 'Enter keywords above' : 'Use keywords to quickly find your tasks.'"
+                img-src="/src/assets/todolist.svg"
+                img-alt="Empty search illustration"
+                :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
+              />
             </v-col>
           </v-row>
 
@@ -174,29 +269,38 @@ onUnmounted(() => {})
               taskStore.allFilteredTasks.length === 0
             "
           >
-            <v-col class="text-center py-8 d-flex flex-column align-center">
-              <v-icon size="128" color="grey-lighten-1" class="empty-icon mb-4">mdi-magnify</v-icon>
-              <p class="text-h6 font-weight-medium text-grey-lighten-1 mt-4">
-                No tasks found with the current search term
-              </p>
+            <v-col>
+              <VEmptyState
+                icon="mdi-magnify"
+                :icon-size="xs ? 80 : sm ? 100 : 120"
+                :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
+                :title="xs ? 'No tasks found' : 'No tasks found with the current search term'"
+                :subtitle="
+                  xs ? 'Try different keywords' : 'Try different keywords or check your spelling.'
+                "
+                img-src="/src/assets/todolist.svg"
+                img-alt="No results illustration"
+                :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
+              />
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions class="justify-center pt-4 pb-8 mt-8">
+        <v-card-actions class="justify-center pt-4 pb-8 mt-4 mb-2" :class="xs ? 'px-2' : 'px-4'">
           <v-btn
             color="red-accent-4"
             variant="tonal"
             rounded
             size="large"
-            prepend-icon="mdi-refresh"
-            :class="xs ? '' : 'px-8'"
+            prepend-icon="mdi-close-circle"
+            :class="xs ? 'px-2' : 'px-8'"
             :block="xs"
             class="text-none text-button"
             @click="searchTitle = ''"
             :disabled="!searchTitle"
             aria-label="Clear search input"
           >
-            Clear Search
+            <span :class="xs ? 'text-body-2' : ''">Clear Search</span>
+            <v-tooltip activator="parent" location="bottom">Clear the search box</v-tooltip>
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -245,45 +349,22 @@ onUnmounted(() => {})
       </v-alert>
 
       <!-- Resultados de búsqueda -->
-      <v-row v-if="showSearchResults" class="d-flex align-center mt-8">
-        <v-col cols="12">
-          <div class="d-flex align-center">
-            <v-divider class="mr-4"></v-divider>
-            <span class="text-h6 font-weight-medium text-red-darken-2">Search Result</span>
-            <v-divider class="ml-4"></v-divider>
-          </div>
-          <div class="d-flex align-center justify-end">
-            <v-chip
-              v-if="taskStore.allFilteredTasks.length > 0"
-              color="green-darken-3"
-              size="small"
-              label
-              rounded="pill"
-              prepend-icon="mdi-check"
-              :class="xs ? 'mx-2' : 'mx-4'"
-              class="font-weight-medium"
-            >
-              {{ taskStore.allFilteredTasks.length }} Result{{
-                taskStore.allFilteredTasks.length === 1 ? '' : 's'
-              }}
-              Found
-            </v-chip>
-          </div>
-        </v-col>
-      </v-row>
-
       <v-row
         class="tasks d-flex flex-wrap align-items-center justify-content-center"
         v-if="showSearchResults"
       >
         <template v-if="taskStore.state.isLoading">
-          <v-col cols="12" class="d-flex justify-center align-center" style="min-height: 200px">
-            <v-skeleton-loader type="card" />
+          <v-col cols="12" class="d-flex justify-center align-center">
+            <v-skeleton-loader
+              type="card"
+              :class="xs ? 'my-4' : 'my-8'"
+              :width="xs ? '95%' : sm ? '90%' : '85%'"
+            />
           </v-col>
         </template>
         <template v-else>
           <v-col
-            v-for="task in taskStore.allFilteredTasks"
+            v-for="task in tasksToShow"
             :key="task.id"
             :task="task"
             :value="task"
@@ -292,7 +373,7 @@ onUnmounted(() => {})
             md="10"
             lg="9"
             xl="8"
-            class="mx-auto"
+            :class="xs ? 'mx-auto my-2' : 'mx-auto my-4'"
           >
             <Suspense>
               <template #default>
@@ -314,13 +395,23 @@ onUnmounted(() => {})
                   :projectId="task.projectId"
                   :startDateHour="task.startDateHour"
                   :endDateHour="task.endDateHour"
+                  elevation="1"
                   @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
                   @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
                   @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
+                  :aria-label="`Task card: ${task.title}`"
                 />
               </template>
               <template #fallback>
-                <div class="fallback">Loading...</div>
+                <div class="fallback" role="status" aria-live="polite">
+                  <v-progress-circular
+                    indeterminate
+                    color="red-darken-2"
+                    :size="40"
+                    class="mr-2"
+                  ></v-progress-circular>
+                  Loading...
+                </div>
               </template>
             </Suspense>
           </v-col>
@@ -336,27 +427,30 @@ onUnmounted(() => {})
         >
           <v-alert
             type="info"
-            dense
-            outlined
+            density="comfortable"
+            variant="outlined"
             closable
-            class="text-center text-subtitle-1"
+            class="text-center"
+            :class="xs ? 'text-body-2 my-3' : 'text-subtitle-1 my-4'"
             color="red-darken-2"
             aria-live="polite"
+            role="alert"
           >
             <span>No tasks found for the search term.</span>
           </v-alert>
         </v-col>
       </v-row>
       <v-row v-if="showSearchResults">
-        <v-col cols="12" class="d-flex justify-end mt-8">
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
           <v-btn
             @click="goBack"
             color="red-darken-2"
             variant="flat"
             rounded
-            size="large"
+            :size="xs ? 'default' : 'large'"
+            :block="xs ? true : false"
             prepend-icon="mdi-chevron-left"
-            :class="xs ? '' : 'px-8'"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
             class="text-none text-button"
             aria-label="Go back to previous page"
           >
@@ -364,17 +458,30 @@ onUnmounted(() => {})
           </v-btn>
         </v-col>
       </v-row>
+
       <!-- Diálogo de edición -->
       <v-dialog
         v-model="taskStore.dialogEditTask"
-        :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+        :max-width="xs ? '100%' : sm ? '90%' : md ? '600px' : '600px'"
         class="dialog dialog-edit-task"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
       >
-        <v-card class="card card-edit-task pa-4">
-          <v-card-title class="card-title card-title-edit-task">
-            <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
+        <v-card
+          class="card card-edit-task"
+          :class="xs ? 'pa-2' : 'pa-4'"
+          variant="elevated"
+          elevation="3"
+        >
+          <v-card-title
+            class="card-title card-title-edit-task"
+            :class="xs ? 'text-subtitle-1 py-2' : 'text-h6 py-3'"
+            :id="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
+          >
+            <span>Edit task: {{ taskStore.editedTask?.title }}</span>
           </v-card-title>
-          <v-card-text>
+          <v-card-text :class="xs ? 'px-1 py-2' : ''">
             <VTaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
@@ -389,8 +496,8 @@ onUnmounted(() => {})
           <v-card-actions
             :class="
               smAndDown
-                ? 'd-flex flex-column align-center'
-                : 'd-flex flex-wrap justify-space-around'
+                ? 'd-flex flex-column align-center py-2 gap-3'
+                : 'd-flex flex-wrap justify-space-around py-3'
             "
           >
             <VActionButtons :buttons="btnsForm" />
@@ -408,21 +515,26 @@ onUnmounted(() => {})
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tasks {
   position: relative;
   transition: opacity 0.3s ease;
+  min-height: 200px;
 }
 
 .fallback {
-  height: 300px;
+  min-height: 150px;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f5f5;
   border-radius: 8px;
   margin: 16px;
+  padding: 24px;
+  font-size: 16px;
 }
 
 .empty-icon {
@@ -439,12 +551,6 @@ onUnmounted(() => {})
   50% {
     transform: translateY(5px);
   }
-}
-
-/* Tooltip y estilos de iconos */
-:deep(.v-field__input) {
-  padding-top: 6px;
-  padding-bottom: 6px;
 }
 
 :deep(.v-card-title) {

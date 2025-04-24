@@ -78,14 +78,14 @@ const goBack = () => {
 
 const rules = useMaxLengthRule()
 
-const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
+const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
 </script>
 
 <template>
   <v-container fluid class="mt-6">
     <v-responsive
       class="task-detail-container mx-auto"
-      :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
+      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
@@ -154,14 +154,14 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
   </v-container>
   <v-dialog
     v-model="taskStore.dialogEditTask"
-    :max-width="xs ? '100%' : smAndUp ? '600px' : ''"
-    class="dialog dialog-create-task"
+    :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+    class="dialog dialog-edit-task"
   >
-    <v-card class="card card-task-view pa-8 ma-8 rounded-xl" variant="elevated">
-      <v-card-title class="card-title card-title-edit-task" :class="mobile ? 'px-1' : ''">
-        <span class="text-h6">Edit task {{ task.taskId }}</span>
+    <v-card class="card card-edit-task pa-4">
+      <v-card-title class="card-title card-title-edit-task">
+        <span class="text-h6">Edit task {{ taskStore.editedTask.title }}</span>
       </v-card-title>
-      <v-card-text :class="mobile ? 'px-0' : ''">
+      <v-card-text>
         <VTaskForm
           v-model="taskStore.editedTask"
           :projects="projectStore.projects"
@@ -170,10 +170,14 @@ const { xs, sm, smAndUp, md, lg, xl, mobile } = useDisplay()
           :statuses="dataStore.statuses"
           :rules="rules"
           ref="form"
-          @submit="taskStore.updateTask"
+          @submit="submitEditedTask"
         ></VTaskForm>
       </v-card-text>
-      <v-card-actions class="justify-center">
+      <v-card-actions
+        :class="
+          smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
+        "
+      >
         <VActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>

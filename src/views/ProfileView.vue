@@ -46,7 +46,7 @@ const { xs, sm, md, lg, xl } = useDisplay()
 <template>
   <v-container fluid class="profile-view my-6">
     <v-responsive
-      :max-width="xs ? '100vw' : sm ? '80vw' : md ? '70vw' : lg ? '65vw' : xl ? '60vw' : ''"
+      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
       class="card-container-profile mx-auto"
     >
       <v-row justify="center" align="center" class="card-row-profile">
