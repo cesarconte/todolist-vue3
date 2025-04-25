@@ -657,7 +657,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           taskStore.paginatedTasksInSelectedProject.length > 0 &&
           taskStore.totalPages > 1
         "
-        class="pa-3"
+        class="pa-3 mt-4 d-flex justify-center"
       >
         <VPagination
           :currentPage="taskStore.state.currentPage"
@@ -670,29 +670,30 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
           @last-page="taskStore.lastPage"
         >
           <template #default>
-            Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+            <span class="font-weight-medium">
+              Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+            </span>
           </template>
         </VPagination>
       </v-row>
 
       <!-- Botón para regresar -->
       <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-8">
-        <v-col cols="12">
-          <div class="d-flex justify-space-between">
-            <v-spacer></v-spacer>
-            <v-btn
-              @click="router.back()"
-              color="red-darken-2"
-              variant="flat"
-              rounded="pill"
-              size="large"
-              prepend-icon="mdi-chevron-left"
-              :class="xs ? '' : 'px-8'"
-              class="text-none text-button"
-            >
-              Back
-            </v-btn>
-          </div>
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
+          <v-btn
+            @click="router.back()"
+            color="red-darken-2"
+            variant="flat"
+            rounded
+            :size="xs ? 'default' : 'large'"
+            :block="xs ? true : false"
+            prepend-icon="mdi-chevron-left"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
+            class="text-none text-button"
+            aria-label="Go back to previous page"
+          >
+            Back
+          </v-btn>
         </v-col>
       </v-row>
     </v-responsive>

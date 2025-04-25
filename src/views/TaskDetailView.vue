@@ -10,7 +10,7 @@ import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
 import { useResetForm } from '@/composables/forms/useResetForm'
 import VActionButtons from '@/components/tasks/VActionButtons.vue'
-import VTaskForm from '@/components/VTaskForm.vue'
+import VTaskForm from '@/components/tasks/VTaskForm.vue'
 import { useDisplay } from 'vuetify'
 
 const dataStore = useDataStore()
@@ -131,23 +131,21 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="12">
-          <div class="d-flex justify-space-between">
-            <v-spacer></v-spacer>
-            <v-btn
-              @click="goBack"
-              color="red-darken-2"
-              variant="flat"
-              rounded
-              size="large"
-              prepend-icon="mdi-chevron-left"
-              :class="xs ? '' : 'px-8'"
-              class="text-none text-button mb-8 mt-8"
-              aria-label="Go back to previous page"
-            >
-              Back
-            </v-btn>
-          </div>
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
+          <v-btn
+            @click="goBack"
+            color="red-darken-2"
+            variant="flat"
+            rounded
+            :size="xs ? 'default' : 'large'"
+            :block="xs ? true : false"
+            prepend-icon="mdi-chevron-left"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
+            class="text-none text-button"
+            aria-label="Go back to previous page"
+          >
+            Back
+          </v-btn>
         </v-col>
       </v-row>
     </v-responsive>

@@ -292,20 +292,20 @@ onMounted(() => {
         </v-card-text>
         <v-card-actions class="justify-center pt-4 pb-8 mt-4 mb-2" :class="xs ? 'px-2' : 'px-4'">
           <v-btn
-            color="red-accent-4"
+            color="red-accent-2"
             variant="tonal"
-            rounded
+            rounded="pill"
             size="large"
-            prepend-icon="mdi-close-circle"
-            :class="xs ? 'px-2' : 'px-8'"
+            prepend-icon="mdi-refresh"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
             :block="xs"
             class="text-none text-button"
             @click="searchTitle = ''"
             :disabled="!searchTitle"
+            elevation="2"
             aria-label="Clear search input"
           >
-            <span :class="xs ? 'text-body-2' : ''">Clear Search</span>
-            <v-tooltip activator="parent" location="bottom">Clear the search box</v-tooltip>
+            Clear Search
           </v-btn>
         </v-card-actions>
       </v-card>

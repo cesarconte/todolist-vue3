@@ -124,7 +124,7 @@ const filterAppliedText = computed(() => {
   return count === 1 ? 'Filter applied' : 'Filters applied'
 })
 
-const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
+const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 </script>
 
 <template>
@@ -136,36 +136,56 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
     >
       <v-row>
         <v-col cols="12">
-          <h2 class="text-h4 font-weight-bold text-red-darken-2 text-center mb-8">
+          <h2
+            class="text-center font-weight-bold text-red-darken-2"
+            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h4 mb-8'"
+          >
             Filter and Label Tasks
           </h2>
         </v-col>
       </v-row>
 
       <!-- Filtros -->
-      <v-card class="my-8 mx-2 pa-4" variant="outlined" rounded elevation="2">
-        <v-card-title class="d-flex align-center justify-space-between pb-2 mb-2">
-          <div class="d-flex align-center">
-            <v-icon icon="mdi-filter-variant" class="mr-2" color="red-darken-2"></v-icon>
-            <span class="text-subtitle-1 font-weight-medium">Filter Options</span>
-          </div>
+      <v-card class="mb-8" :class="xs ? 'pa-2' : 'pa-4'" variant="outlined" rounded elevation="2">
+        <v-card-title
+          class="d-flex align-center justify-space-between pb-2 mb-2"
+          :class="xs ? 'px-2' : 'px-4'"
+        >
+          <v-sheet class="filter-header" :class="xs ? 'pa-1' : 'pa-2'" rounded>
+            <div class="d-flex align-center">
+              <v-icon
+                icon="mdi-filter-variant"
+                color="red-darken-2"
+                :size="xs ? '28' : '40'"
+                class="mr-1"
+              ></v-icon>
+              <div class="ml-0">
+                <div class="text-h6 font-weight-medium" :class="xs ? 'text-subtitle-1' : ''">
+                  Filter Options
+                </div>
+                <div class="text-caption text-medium-emphasis mt-1 text-wrap">
+                  {{ xs ? 'Find matching tasks' : 'Filter tasks using multiple criteria' }}
+                </div>
+              </div>
+            </div>
+          </v-sheet>
           <v-chip
             v-if="hasActiveFilters()"
             color="red-darken-2"
             size="small"
-            label
-            rounded="pill"
             prepend-icon="mdi-filter-outline"
-            class="font-weight-medium"
+            class="font-weight-medium mx-2"
+            :class="xs ? 'px-2 py-1' : ''"
           >
             {{ filterAppliedText }}
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-2 text-center mb-2"
+          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-4 text-center mb-4"
+          :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-icon icon="mdi-tune" class="mr-2" color="red-accent-2"></v-icon>
-          Choose your filters
+          <v-icon icon="mdi-tune" class="mr-2" color="red-accent-4" :size="xs ? 18 : 24"></v-icon>
+          <span :class="xs ? 'text-body-2' : ''">Choose your filters</span>
         </v-card-subtitle>
 
         <v-divider class="mb-4"></v-divider>
@@ -193,6 +213,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
+                :menu-props="{
+                  maxHeight: 300,
+                  maxWidth: '100%',
+                  contentClass: 'search-results-menu',
+                  transition: 'scale-transition'
+                }"
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -228,7 +254,22 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
+                :menu-props="{
+                  maxHeight: 300,
+                  contentClass: 'filter-menu',
+                  transition: 'scale-transition'
+                }"
               >
+                <template v-slot:selection="{ item }">
+                  <v-chip
+                    :color="item.raw?.color || 'grey'"
+                    variant="tonal"
+                    size="small"
+                    class="font-weight-medium"
+                  >
+                    {{ item.title }}
+                  </v-chip>
+                </template>
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
                 </template>
@@ -239,6 +280,21 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                     </template>
                     <span>Filter tasks by priority level. You can select multiple priorities.</span>
                   </v-tooltip>
+                </template>
+                <template v-slot:no-data>
+                  <v-list-item class="pa-4">
+                    <div class="d-flex flex-column align-center justify-center pa-2">
+                      <v-icon
+                        icon="mdi-filter-remove"
+                        color="grey-darken-1"
+                        :size="28"
+                        class="mb-3"
+                      ></v-icon>
+                      <span class="text-subtitle-2 text-grey-darken-1 text-center"
+                        >No matching priorities</span
+                      >
+                    </div>
+                  </v-list-item>
                 </template>
               </v-autocomplete>
             </v-col>
@@ -264,6 +320,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
+                :menu-props="{
+                  maxHeight: 300,
+                  maxWidth: '100%',
+                  contentClass: 'search-results-menu',
+                  transition: 'scale-transition'
+                }"
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -299,6 +361,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
+                :menu-props="{
+                  maxHeight: 300,
+                  maxWidth: '100%',
+                  contentClass: 'search-results-menu',
+                  transition: 'scale-transition'
+                }"
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -368,7 +436,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
 
           <v-row class="mt-2">
             <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
-              <v-select
+              <v-autocomplete
                 v-model="taskStore.state.selectedCompletionStatus"
                 label="Filter by completion status"
                 :items="completionStatusItems"
@@ -383,7 +451,14 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 hide-details
                 chips
                 closable-chips
+                auto-select-first
                 @click="handleFilterClick"
+                :menu-props="{
+                  maxHeight: 300,
+                  maxWidth: '100%',
+                  contentClass: 'search-results-menu',
+                  transition: 'scale-transition'
+                }"
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.raw.title" />
@@ -396,7 +471,22 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                     <span>Filter tasks by completion status (completed or not completed).</span>
                   </v-tooltip>
                 </template>
-              </v-select>
+                <template v-slot:no-data>
+                  <v-list-item class="pa-4">
+                    <div class="d-flex flex-column align-center justify-center pa-2">
+                      <v-icon
+                        icon="mdi-filter-remove"
+                        color="grey-darken-1"
+                        :size="28"
+                        class="mb-3"
+                      ></v-icon>
+                      <span class="text-subtitle-2 text-grey-darken-1 text-center">
+                        No matching completion status
+                      </span>
+                    </div>
+                  </v-list-item>
+                </template>
+              </v-autocomplete>
             </v-col>
           </v-row>
         </v-card-text>
@@ -405,8 +495,17 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           <v-col>
             <VEmptyState
               icon="mdi-filter-outline"
-              :icon-size="64"
-              title="Use the filters above to search for tasks"
+              :icon-size="xs ? 60 : sm ? 70 : 80"
+              :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
+              :title="xs ? 'Use filters above' : 'Use the filters above to search for tasks'"
+              :subtitle="
+                xs
+                  ? 'Choose your criteria'
+                  : 'Select different filtering options to find your tasks.'
+              "
+              img-src="/src/assets/todolist.svg"
+              img-alt="Empty filter illustration"
+              :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
             />
           </v-col>
         </v-row>
@@ -418,24 +517,32 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           <v-col>
             <VEmptyState
               icon="mdi-filter-remove"
-              :icon-size="64"
-              title="No tasks found with current filters"
+              :icon-size="xs ? 60 : sm ? 70 : 80"
+              :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
+              :title="xs ? 'No tasks found' : 'No tasks found with current filters'"
+              :subtitle="
+                xs ? 'Try different filters' : 'Adjust your filter criteria to find tasks.'
+              "
+              img-src="/src/assets/todolist.svg"
+              img-alt="No tasks found illustration"
+              :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
             />
           </v-col>
         </v-row>
 
-        <v-card-actions class="justify-center pt-4 pb-8 mt-8">
+        <v-card-actions class="justify-center pt-4 pb-8 mt-4">
           <v-btn
             color="red-accent-2"
             variant="tonal"
             rounded="pill"
             size="large"
             prepend-icon="mdi-refresh"
-            :class="xs ? '' : 'px-8'"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
             :block="xs"
             class="text-none text-button"
             @click="taskStore.resetFilters()"
             :disabled="!hasActiveFilters()"
+            elevation="2"
           >
             Clear All Filters
           </v-btn>
@@ -451,25 +558,33 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         closable
         height="4rem"
         width="32rem"
-        class="mt-8 mx-auto rounded-pill"
+        class="mt-8 mx-auto d-flex flex-wrap justify-center"
+        aria-live="polite"
       >
         {{ taskStore.state.error }}
       </v-alert>
 
       <v-alert
         v-model="showAlert"
-        type="warning"
+        type="info"
         dense
         outlined
         closable
         height="4rem"
         :width="xs ? '90%' : '32rem'"
-        class="alert mt-8 rounded-pill"
+        class="alert mt-8"
+        aria-live="polite"
       >
         <span>
           {{ xs ? 'Please, log in...' : 'Please, log in to use the filters' }}
         </span>
-        <v-btn icon class="ml-2" variant="plain" @click="$router.push('/login')">
+        <v-btn
+          icon
+          class="ml-2"
+          variant="plain"
+          @click="$router.push('/login')"
+          aria-label="Log in"
+        >
           <v-icon>mdi-account-arrow-right-outline</v-icon>
           <v-tooltip activator="parent" location="bottom">
             <span>Log in to unlock filter options</span>
@@ -513,15 +628,12 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
         v-if="hasActiveFilters() && taskStore.tasksPage.length > 0"
       >
         <template v-if="taskStore.state.isLoading">
-          <v-col
-            v-for="n in taskStore.state.pageSize"
-            :key="n"
-            cols="12"
-            md="6"
-            lg="4"
-            class="mb-8"
-          >
-            <v-skeleton-loader type="card" />
+          <v-col cols="12" class="d-flex justify-center align-center">
+            <v-skeleton-loader
+              type="card"
+              :class="xs ? 'my-4' : 'my-8'"
+              :width="xs ? '95%' : sm ? '90%' : '85%'"
+            />
           </v-col>
         </template>
         <template v-else-if="hasActiveFilters() && taskStore.tasksPage.length > 0">
@@ -531,31 +643,47 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
             cols="12"
             sm="11"
             md="10"
-            lg="12"
-            xl="12"
-            :class="mdAndDown ? 'mx-auto' : ''"
-            class="mb-8"
+            lg="9"
+            xl="8"
+            :class="xs ? 'mx-auto my-2' : 'mx-auto my-4'"
           >
-            <VCardTask
-              :title="task.title"
-              :id="task.id"
-              :description="task.description"
-              :label="task.label"
-              :project="task.project"
-              :priority="task.priority"
-              :status="task.status"
-              :startDate="task.startDate"
-              :endDate="task.endDate"
-              :createdAt="task.createdAt"
-              :completed="task.completed"
-              :color="task.color ? task.color : task.project?.color || 'default'"
-              :projectId="task.projectId"
-              :startDateHour="task.startDateHour"
-              :endDateHour="task.endDateHour"
-              @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
-              @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
-              @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
-            />
+            <Suspense>
+              <template #default>
+                <VCardTask
+                  :title="task.title"
+                  :id="task.id"
+                  :description="task.description"
+                  :label="task.label"
+                  :project="task.project"
+                  :priority="task.priority"
+                  :status="task.status"
+                  :startDate="task.startDate"
+                  :endDate="task.endDate"
+                  :createdAt="task.createdAt"
+                  :completed="task.completed"
+                  :color="task.color ? task.color : task.project?.color || 'default'"
+                  :projectId="task.projectId"
+                  :startDateHour="task.startDateHour"
+                  :endDateHour="task.endDateHour"
+                  elevation="1"
+                  @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
+                  @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+                  @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
+                  :aria-label="`Task card: ${task.title}`"
+                />
+              </template>
+              <template #fallback>
+                <div class="fallback" role="status" aria-live="polite">
+                  <v-progress-circular
+                    indeterminate
+                    color="red-darken-2"
+                    :size="40"
+                    class="mr-2"
+                  ></v-progress-circular>
+                  Loading...
+                </div>
+              </template>
+            </Suspense>
           </v-col>
         </template>
       </v-row>
@@ -563,7 +691,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
       <!-- Paginación -->
       <v-row
         v-if="taskStore.tasksPage.length > 0 && taskStore.totalPages > 1 && hasActiveFilters()"
-        class="pa-3"
+        class="pa-3 mt-4 d-flex justify-center"
       >
         <VPagination
           :currentPage="taskStore.state.currentPage"
@@ -576,44 +704,56 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           @last-page="taskStore.lastPage"
         >
           <template #default>
-            Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+            <span class="font-weight-medium">
+              Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
+            </span>
           </template>
         </VPagination>
       </v-row>
 
       <!-- Botón para regresar -->
       <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-8">
-        <v-col cols="12">
-          <div class="d-flex justify-space-between">
-            <v-spacer></v-spacer>
-            <v-btn
-              @click="goBack"
-              color="red-darken-2"
-              variant="flat"
-              rounded
-              size="large"
-              prepend-icon="mdi-chevron-left"
-              :class="xs ? '' : 'px-8'"
-              class="text-none text-button"
-              aria-label="Go back to previous page"
-            >
-              Back
-            </v-btn>
-          </div>
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
+          <v-btn
+            @click="goBack"
+            color="red-darken-2"
+            variant="flat"
+            rounded
+            :size="xs ? 'default' : 'large'"
+            :block="xs ? true : false"
+            prepend-icon="mdi-chevron-left"
+            :class="xs ? 'px-4 py-2' : 'px-8'"
+            class="text-none text-button"
+            aria-label="Go back to previous page"
+          >
+            Back
+          </v-btn>
         </v-col>
       </v-row>
 
       <!-- Diálogo de edición -->
       <v-dialog
         v-model="taskStore.dialogEditTask"
-        :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
+        :max-width="xs ? '100%' : sm ? '90%' : md ? '600px' : '600px'"
         class="dialog dialog-edit-task"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
       >
-        <v-card class="card card-edit-task pa-4">
-          <v-card-title class="card-title card-title-edit-task">
-            <span class="text-h6">Edit task </span>
+        <v-card
+          class="card card-edit-task"
+          :class="xs ? 'pa-2' : 'pa-4'"
+          variant="elevated"
+          elevation="3"
+        >
+          <v-card-title
+            class="card-title card-title-edit-task"
+            :class="xs ? 'text-subtitle-1 py-2' : 'text-h6 py-3'"
+            :id="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
+          >
+            <span>Edit task: {{ taskStore.editedTask?.title }}</span>
           </v-card-title>
-          <v-card-text>
+          <v-card-text :class="xs ? 'px-1 py-2' : ''">
             <VTaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
@@ -628,8 +768,8 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
           <v-card-actions
             :class="
               smAndDown
-                ? 'd-flex flex-column align-center'
-                : 'd-flex flex-wrap justify-space-around'
+                ? 'd-flex flex-column align-center py-2 gap-3'
+                : 'd-flex flex-wrap justify-space-around py-3'
             "
           >
             <VActionButtons :buttons="btnsForm" />
@@ -643,16 +783,17 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
 <style scoped>
 .alert {
   position: fixed;
-  top: 42%;
+  top: 37%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 999;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .tasks {
-  min-height: 60vh;
   position: relative;
   transition: opacity 0.3s ease;
+  min-height: 200px;
 }
 
 .tasks-loading {
@@ -661,13 +802,16 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
 }
 
 .fallback {
-  height: 300px;
+  min-height: 150px;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f5f5;
   border-radius: 8px;
   margin: 16px;
+  padding: 24px;
+  font-size: 16px;
 }
 
 .v-col .fallback {
@@ -693,5 +837,9 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
   50% {
     transform: translateY(5px);
   }
+}
+
+:deep(.v-card-title) {
+  line-height: 1.5;
 }
 </style>
