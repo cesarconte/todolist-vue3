@@ -213,7 +213,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 label="Filter by priority"
                 :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
                 item-title="title"
-                item-value="value"
+                item-value="title"
                 :placeholder="
                   userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
                 "
@@ -251,7 +251,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 label="Filter by label"
                 :items="userStore.isLoggedIn ? dataStore.labelItems : []"
                 item-title="title"
-                item-value="value"
+                item-value="title"
                 :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
                 variant="outlined"
                 color="red-accent-2"
@@ -284,7 +284,7 @@ const { xs, sm, smAndDown, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDispla
                 label="Filter by status"
                 :items="userStore.isLoggedIn ? dataStore.statusItems : []"
                 item-title="title"
-                item-value="value"
+                item-value="title"
                 :placeholder="
                   userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'
                 "

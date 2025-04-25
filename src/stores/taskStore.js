@@ -443,8 +443,6 @@ export const useTaskStore = defineStore('tasks', () => {
       if (!userStore.userId) throw new Error('Usuario no autenticado')
       if (!newTaskData.projectId) throw new Error('projectId es obligatorio')
 
-      // setSelectedProject(newTaskData.projectId)
-
       const project = projectStore.getProjectById(newTaskData.projectId)
       const color = project && project.color ? project.color : 'default'
 

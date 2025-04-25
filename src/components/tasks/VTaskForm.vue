@@ -191,6 +191,8 @@ onUnmounted(() => {
       clearable
       required
       :items="labels"
+      item-title="title"
+      item-value="value"
       :rules="labelRules"
       class="mb-8"
       :disabled="
@@ -210,6 +212,8 @@ onUnmounted(() => {
       clearable
       required
       :items="priorities"
+      item-title="title"
+      item-value="value"
       :rules="priorityRules"
       class="mb-8"
       :disabled="
@@ -229,6 +233,8 @@ onUnmounted(() => {
       clearable
       required
       :items="statuses"
+      item-title="title"
+      item-value="value"
       :rules="statusRules"
       class="mb-8"
       :disabled="
