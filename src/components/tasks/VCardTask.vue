@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import useLabelIcons from '@/composables/useLabelIcons.js'
+import useLabelIcons from '@/composables/ui/useLabelIcons'
 import { formatDate } from '@/utils/date/dateFormat'
 
 /************************************

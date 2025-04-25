@@ -212,8 +212,13 @@ onMounted(() => {
                 item-title="title"
                 auto-select-first
                 class="flex-grow-1"
+                :menu-props="{
+                  maxHeight: 300,
+                  maxWidth: '100%',
+                  contentClass: 'search-results-menu',
+                  transition: 'scale-transition'
+                }"
               >
-                <!-- Personalización de los items -->
                 <template #item="{ props }">
                   <v-list-item v-bind="props" :class="xs ? 'px-2 py-1' : 'px-4 py-2'">
                     <template #prepend>
