@@ -3,7 +3,7 @@ import { useTaskStore } from '@/stores/taskStore'
 import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useUserStore } from '@/stores/userStore'
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js'
 
 export function useDataInitialization() {
   const taskStore = useTaskStore()

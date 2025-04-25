@@ -6,14 +6,14 @@ import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import { useSubmitEditedTask } from '@/composables/useSubmitEditedTask'
-import { useFormBtnActions } from '@/composables/useFormBtnActions'
-import { useMaxLengthRule } from '@/composables/validationFormRules.js'
-import { useResetForm } from '@/composables/useResetForm'
-import VCardTask from '@/components/VCardTask.vue'
-import VActionButtons from '@/components/VActionButtons.vue'
-import VTaskForm from '@/components/VTaskForm.vue'
-import VEmptyState from '@/components/VEmptyState.vue'
+import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
+import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
+import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
+import { useResetForm } from '@/composables/forms/useResetForm'
+import VCardTask from '@/components/tasks/VCardTask.vue'
+import VActionButtons from '@/components/tasks/VActionButtons.vue'
+import VTaskForm from '@/components/tasks/VTaskForm.vue'
+import VEmptyState from '@/components/tasks/VEmptyState.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -22,7 +22,7 @@ const userStore = useUserStore()
 const router = useRouter()
 
 const form = ref(null)
-const isFocused = ref(false) // Variable para controlar el estado de foco
+const isFocused = ref(false)
 const searchTitle = ref('')
 const searchItems = computed(() =>
   userStore.isLoggedIn ? taskStore.tasksData.map((task) => ({ title: task.title })) : []

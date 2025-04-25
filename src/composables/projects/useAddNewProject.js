@@ -1,6 +1,6 @@
 import { useProjectStore } from '@/stores/projectStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 // Changed the third parameter from 'drawer' to 'closeDrawerCallback' (a function)
 export function useAddNewProject(resetAddProjectFormFn, dialogAddProject, closeDrawerCallback) {

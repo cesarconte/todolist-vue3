@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
-import { showSnackbar } from '@/utils/notificationHelpers.js'
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js'
 
 /************************************
  * Props & Emits

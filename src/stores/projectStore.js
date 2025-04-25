@@ -18,12 +18,17 @@ import { useTaskStore } from './taskStore.js'
 import { useUserStore } from './userStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
 import { useRouter } from 'vue-router'
-import { validProjectForm } from '@/composables/validationFormRules.js'
-import { getDocument, addDocument, updateDocument, deleteDocument } from '@/utils/firestoreCrud.js'
-import { mapFirestoreProject } from '@/utils/projectMappers.js'
-import { requireUserId, showSnackbar, handleError } from '@/utils/notificationHelpers.js'
-import { batchDeleteDocuments } from '@/utils/firestoreBatch.js'
-import { getEmptyProject, getEmptyEditedProject } from '@/composables/useTaskHelpers.js'
+import { validProjectForm } from '@/composables/forms/validationFormRules.js'
+import {
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument
+} from '@/utils/firestore/firestoreCrud.js'
+import { mapFirestoreProject } from '@/utils/projects/projectMappers.js'
+import { requireUserId, showSnackbar, handleError } from '@/utils/notifications/notificationHelpers.js'
+import { batchDeleteDocuments } from '@/utils/firestore/firestoreBatch.js'
+import { getEmptyProject, getEmptyEditedProject } from '@/composables/tasks/useTaskHelpers.js'
 // import { buildProjectQuery } from '@/utils/projectQueries.js'
 
 // Ejemplo de uso futuro (si necesitas paginación o filtrado):

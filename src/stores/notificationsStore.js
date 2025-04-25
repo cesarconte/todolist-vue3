@@ -4,11 +4,20 @@ import { doc, updateDoc, getDocs, query, where, onSnapshot, collection } from 'f
 import { useUserStore } from '@/stores/userStore'
 // import { useDataStore } from '@/stores/dataStore'
 import { useTaskStore } from '@/stores/taskStore'
-import { getDocument, getCollection, addDocument, deleteDocument } from '@/utils/firestoreCrud.js'
-import { mapFirestoreNotification } from '@/utils/notificationMappers.js'
-import { showSnackbar, handleError, requireUserId } from '@/utils/notificationHelpers.js'
-import { buildNotificationQuery } from '@/utils/notificationQueries.js'
-import { batchDeleteDocuments } from '@/utils/firestoreBatch.js'
+import {
+  getDocument,
+  getCollection,
+  addDocument,
+  deleteDocument
+} from '@/utils/firestore/firestoreCrud.js'
+import { mapFirestoreNotification } from '@/utils/notifications/notificationMappers.js'
+import {
+  showSnackbar,
+  handleError,
+  requireUserId
+} from '@/utils/notifications/notificationHelpers.js'
+import { buildNotificationQuery } from '@/utils/notifications/notificationQueries.js'
+import { batchDeleteDocuments } from '@/utils/firestore/firestoreBatch.js'
 
 /**
  * Notification Store - Manages all notification-related functionality

@@ -1,14 +1,12 @@
 // src/composables/useSubmitNewTask.js
 import { useTaskStore } from '@/stores/taskStore'
-import { formatDate } from '@/utils/dateFormat'
-// import { useProjectStore } from '@/stores/projectStore'
-import { validTaskForm } from '@/composables/validationFormRules' // Importar la función de validación
+import { formatDate } from '@/utils/date/dateFormat'
+import { validTaskForm } from '@/composables/forms/validationFormRules' // Importar la función de validación
 import { useNotificationsStore } from '@/stores/notificationsStore' // Importar para mostrar errores
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 export function useSubmitNewTask() {
   const taskStore = useTaskStore()
-  // const projectStore = useProjectStore()
   const notificationsStore = useNotificationsStore() // Instanciar el store de notificaciones
 
   const submitNewTask = async () => {

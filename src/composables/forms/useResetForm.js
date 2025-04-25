@@ -1,6 +1,6 @@
 // src/composables/useResetForm.js
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 export function useResetForm(
   formRef,

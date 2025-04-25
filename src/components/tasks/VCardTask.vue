@@ -1,9 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue' // Remove onMounted, onUnmounted imports
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/useLabelIcons.js'
-import { formatDate } from '@/utils/dateFormat'
+import { formatDate } from '@/utils/date/dateFormat'
 
 /************************************
  * Composables

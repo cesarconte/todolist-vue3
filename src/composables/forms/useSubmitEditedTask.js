@@ -1,9 +1,9 @@
 // // src/composables/useSubmitEditTask.js
 import { useTaskStore } from '@/stores/taskStore'
-import { formatDate } from '@/utils/dateFormat'
-import { validTaskForm } from '@/composables/validationFormRules' // Importar la función de validación
+import { formatDate } from '@/utils/date/dateFormat'
+import { validTaskForm } from '@/composables/forms/validationFormRules' // Importar la función de validación
 import { useNotificationsStore } from '@/stores/notificationsStore' // Importar para mostrar errores
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 export function useSubmitEditedTask() {
   const taskStore = useTaskStore()

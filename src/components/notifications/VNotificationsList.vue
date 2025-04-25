@@ -1,7 +1,7 @@
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import { useDisplay } from 'vuetify'
-import { formatDate } from '@/utils/dateFormat'
+import { formatDate } from '@/utils/date/dateFormat'
 
 /************************************
  * Props & Emits

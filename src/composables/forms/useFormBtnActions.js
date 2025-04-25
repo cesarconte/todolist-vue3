@@ -18,7 +18,7 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
         } catch (error) {
           console.error('Error during submit:', error)
           // Usar el helper centralizado para mostrar la notificación
-          const { showSnackbar } = await import('@/utils/notificationHelpers.js')
+          const { showSnackbar } = await import('@/utils/notifications/notificationHelpers.js')
           showSnackbar(
             notificationsStore,
             'An error occurred while processing the request.',

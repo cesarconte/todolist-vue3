@@ -2,7 +2,7 @@
 
 <script setup>
 import { ref, reactive, watch, onMounted, onUnmounted } from 'vue'
-import { requiredRule } from '@/composables/useFieldRules'
+import { requiredRule } from '@/composables/forms/useFieldRules'
 
 const props = defineProps({
   modelValue: {

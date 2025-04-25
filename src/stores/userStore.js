@@ -9,8 +9,8 @@ import { useDataStore } from './dataStore.js'
 import { useTaskStore } from './taskStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useNotificationsStore } from './notificationsStore.js'
-import { getDocument, updateDocument } from '@/utils/firestoreCrud.js'
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+import { getDocument, updateDocument } from '@/utils/firestore/firestoreCrud.js'
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 export const useUserStore = defineStore('user', () => {
   // State

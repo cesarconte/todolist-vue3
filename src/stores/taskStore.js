@@ -18,19 +18,23 @@ import {
 import { useNotificationsStore } from './notificationsStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
-import { buildFirestoreFilters } from '@/utils/firestoreFilters.js'
-import { buildPaginationQuery, getLastPageCount, getPaginationFlags } from '@/utils/pagination.js'
-import { mapFirestoreTask } from '@/utils/taskMappers.js'
+import { buildFirestoreFilters } from '@/utils/firestore/firestoreFilters.js'
+import {
+  buildPaginationQuery,
+  getLastPageCount,
+  getPaginationFlags
+} from '@/utils/pagination/pagination.js'
+import { mapFirestoreTask } from '@/utils/tasks/taskMappers.js'
 import {
   getDocument,
   getCollection,
   addDocument,
   updateDocument,
   deleteDocument
-} from '@/utils/firestoreCrud.js'
-import { combineDateTime } from '@/utils/taskUtils.js'
-import { toISODate } from '@/utils/dateFormat.js'
-import { showSnackbar } from '@/utils/notificationHelpers.js' // Import the helper
+} from '@/utils/firestore/firestoreCrud.js'
+import { combineDateTime } from '@/utils/tasks/taskUtils.js'
+import { toISODate } from '@/utils/date/dateFormat.js'
+import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 
 // 2. Store principal
 export const useTaskStore = defineStore('tasks', () => {

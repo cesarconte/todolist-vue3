@@ -4,11 +4,11 @@ import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import useLabelIcons from '@/composables/useLabelIcons.js'
+import useLabelIcons from '@/composables/ui/useLabelIcons.js'
 import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useDisplay } from 'vuetify'
-import { formatDate } from '@/utils/dateFormat'
-import { combineDateTime } from '@/utils/taskUtils'
+import { formatDate } from '@/utils/date/dateFormat'
+import { combineDateTime } from '@/utils/tasks/taskUtils'
 
 const router = useRouter()
 const projectStore = useProjectStore()
