@@ -36,12 +36,12 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :width="xs ? '100%' : sm ? '66%' : md ? '49%' : '10rem'"
       :height="button.height"
       :prepend-icon="button.icon"
-      :variant="button.variant || 'tonal'"
-      :rounded="button.rounded || true"
+      :variant="button.variant || 'elevated'"
+      :rounded="button.rounded || 'lg'"
       :size="button.size || 'large'"
-      :color="button.color || 'red-accent-2'"
+      :color="button.color || 'primary'"
       :disabled="button.disabled"
-      class="text-none text-button transition-swing action-btn-animated"
+      class="text-none text-button transition-swing action-btn-animated my-2"
       @click="button.function"
     >
       {{ button.text }}
@@ -55,3 +55,13 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
     </v-btn>
   </div>
 </template>
+
+<style scoped>
+.action-btn-animated {
+  transition: transform 0.2s ease-in-out;
+}
+
+.action-btn-animated:hover {
+  transform: translateY(-2px);
+}
+</style>

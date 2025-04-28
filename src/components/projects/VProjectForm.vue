@@ -82,17 +82,17 @@ onUnmounted(() => {
 </style>
 
 <template>
-  <v-form class="form pa-8" ref="formProject" @submit.prevent="$emit('submit')">
+  <v-form class="form pa-6" ref="formProject" @submit.prevent="$emit('submit')">
     <v-select
       v-model="formData.title"
       label="Title"
       prepend-inner-icon="mdi-format-title"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       :rules="titleRules"
       clearable
       required
-      class="mb-8"
+      class="mb-6"
       :items="projectTemplates"
     >
       <template v-slot:item="{ props, item }">
@@ -103,18 +103,18 @@ onUnmounted(() => {
         {{ item.value }}
       </template>
     </v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.icon"
       label="Icon"
       prepend-inner-icon="mdi-shape-outline"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       :items="icons"
       :rules="iconRules"
       clearable
       required
-      class="mb-8"
+      class="mb-6"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props" :prepend-icon="item.value" :title="item.value"></v-list-item>
@@ -124,18 +124,18 @@ onUnmounted(() => {
         {{ item.value }}
       </template>
     </v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.color"
       label="Color"
       prepend-inner-icon="mdi-palette"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       :rules="colorRules"
       clearable
       required
       :items="colors"
-      class="mb-8"
+      class="mb-6"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props">
@@ -152,7 +152,7 @@ onUnmounted(() => {
         <span :style="{ color: item.value }">{{ item.title }}</span>
       </template>
     </v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <slot name="actions"></slot>
   </v-form>
 </template>

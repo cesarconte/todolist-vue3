@@ -1,7 +1,8 @@
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import { useDisplay } from 'vuetify'
+// import { useDisplay } from 'vuetify'
 import { formatDate } from '@/utils/date/dateFormat'
+import VEmptyState from '@/components/tasks/VEmptyState.vue'
 
 /************************************
  * Props & Emits
@@ -36,7 +37,7 @@ const closeDialog = () => {
 /************************************
  * Vuetify Display
  ************************************/
-const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
+// const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
@@ -46,34 +47,35 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     max-width="600px"
     class="dialog-notifications-list"
   >
-    <v-card class="notification-list-card pa-4 rounded-lg elevation-4">
-      <v-card-title class="d-flex align-center justify-space-between text-h5">
-        <span class="text-red-darken-2 font-weight-medium">Notification List</span>
-        <v-btn icon @click="closeDialog" variant="text" color="grey-darken-1">
+    <v-card class="notification-list-card pa-4 rounded-lg elevation-2" color="surface">
+      <v-card-title class="d-flex align-center justify-space-between mb-2">
+        <span class="text-h6 text-on-surface font-weight-medium">Notifications</span>
+        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle>
-        <v-icon icon="mdi-bell-badge"></v-icon>
-        Unread notifications: mark as read to clear
+      <v-card-subtitle class="text-on-surface-variant pb-2">
+        <v-icon icon="mdi-bell-badge" size="small" class="mr-1"></v-icon>
+        You have {{ notificationsStore.unreadCount }} unread notifications
       </v-card-subtitle>
 
       <v-divider class="my-4" />
 
-      <v-card-text class="pa-0">
-        <v-list density="comfortable" class="notification-list">
+      <v-card-text class="px-0 pt-0 pb-4">
+        <v-list density="comfortable" class="notification-list" bg-color="transparent">
           <template v-if="notificationsStore.activeNotifications.length > 0">
             <v-list-item
               v-for="item in notificationsStore.activeNotifications"
               :key="item.id"
-              rounded="pill"
-              class="mb-4 bg-grey-lighten-4"
+              rounded="lg"
+              class="mb-4"
+              :bg-color="item.read ? 'surface-variant' : 'primary-container'"
             >
               <template v-slot:prepend>
                 <v-checkbox
                   :model-value="item.read"
                   @click.stop="handleCheckboxChange(item)"
-                  color="red-accent-2"
+                  color="primary"
                   hide-details
                   density="compact"
                   class="mt-0 pt-0"
@@ -82,14 +84,27 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
               <template v-slot:default>
                 <v-row align="center">
-                  <v-icon :icon="item.icon" color="red-accent-2" class="ml-4" size="large" />
+                  <v-icon
+                    :icon="item.icon"
+                    :color="item.read ? 'on-surface-variant' : 'primary'"
+                    class="ml-4"
+                    size="large"
+                  />
                   <v-col>
-                    <v-list-item-title lines="one" class="text-body-1 font-weight-medium mb-2">
+                    <v-list-item-title
+                      lines="one"
+                      class="text-body-1 font-weight-medium mb-2"
+                      :class="item.read ? 'text-on-surface-variant' : 'text-on-primary-container'"
+                    >
                       {{ item.message }}
                     </v-list-item-title>
-                    <v-list-item-subtitle lines="one" class="mb-2">{{
-                      formatDate(item.timestamp)
-                    }}</v-list-item-subtitle>
+                    <v-list-item-subtitle
+                      lines="one"
+                      class="mb-2"
+                      :class="item.read ? 'text-on-surface-variant' : ''"
+                    >
+                      {{ formatDate(item.timestamp) }}
+                    </v-list-item-subtitle>
                   </v-col>
                 </v-row>
               </template>
@@ -97,48 +112,37 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           </template>
           <template v-else>
             <v-container class="empty-state-container">
-              <v-list-item class="d-flex justify-center">
-                <v-col class="d-flex flex-column align-center my-8">
-                  <v-icon
-                    icon="mdi-checkbox-marked-circle-auto-outline"
-                    size="96"
-                    color="grey-lighten-1"
-                    class="mb-8 d-flex flex-center empty-icon"
-                  />
-                  <v-list-item-title
-                    class="text-center text-h5 font-weight-medium text-grey-lighten-1 mb-4"
-                  >
-                    All caught up!
-                  </v-list-item-title>
-                  <v-list-item-subtitle
-                    class="text-center text-subtitle-1 text-grey-lighten-1 mb-2"
-                  >
-                    No new notifications
-                  </v-list-item-subtitle>
-                  <v-list-item-subtitle class="text-center text-subtitle-2 text-grey-lighten-1">
-                    Check back later for new notifications
-                  </v-list-item-subtitle>
-                </v-col>
-              </v-list-item>
+              <VEmptyState
+                icon="mdi-checkbox-marked-circle-auto-outline"
+                :icon-size="96"
+                icon-color="on-surface-variant"
+                title="All caught up!"
+                subtitle="No new notifications"
+                text-color="text-on-surface-variant"
+              >
+                <p class="text-caption text-on-surface-variant mt-2">
+                  Check back later for new notifications
+                </p>
+              </VEmptyState>
             </v-container>
           </template>
         </v-list>
       </v-card-text>
 
-      <v-card-actions :class="xs ? 'w-100' : 'justify-center'">
+      <v-divider class="mb-4" />
+
+      <v-card-actions class="justify-end px-4 pb-0">
         <v-tooltip text="Mark all notifications as read" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
               :disabled="notificationsStore.unreadCount === 0"
-              :class="xs ? '' : 'px-8'"
-              :block="xs"
-              class="text-none text-button"
-              color="red-accent-2"
-              variant="tonal"
-              rounded="pill"
+              color="primary"
+              variant="elevated"
+              rounded
               size="large"
               prepend-icon="mdi-check-all"
+              class="text-none"
               @click="notificationsStore.markAllAsRead()"
             >
               <template v-slot:loader>

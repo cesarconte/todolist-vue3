@@ -10,16 +10,13 @@ export function useToolbarNav({
   loginLogoutText,
   loginLogoutIcon
 }) {
-  // Helper para el título y el icono del usuario
+  // Helper para el título del usuario
   const getUserTitle = () => (userStore.isLoggedIn ? userStore.userName : 'User')
-  const getUserIcon = () =>
-    userStore.isLoggedIn ? userStore.userProfilePicture : 'mdi-alpha-c-circle'
 
   const navItems = [
     {
       title: getUserTitle(),
       value: 'user',
-      icon: getUserIcon(),
       color: 'blue-accent-4',
       permission: 'user',
       function: () => {

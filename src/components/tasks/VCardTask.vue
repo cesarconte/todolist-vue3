@@ -71,6 +71,10 @@ const props = defineProps({
   endDateHour: {
     type: String,
     required: false
+  },
+  showViewButton: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -190,22 +194,48 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
   -->
   <v-card
     variant="elevated"
+    :elevation="hover ? 4 : 2"
+    color="surface"
     :class="[
-      { 'rounded-xl': !hover },
-      mobile ? 'card card-task-view my-4' : 'card card-task-view ma-8 pa-8'
+      { 'rounded-lg': !hover },
+      mobile ? 'card card-task-view ma-4' : 'card card-task-view ma-8 pa-8',
+      hover ? 'card-hover' : '',
+      props.completed ? 'completed-card' : ''
     ]"
     hover
     @mouseover="hover = true"
     @mouseleave="hover = false"
   >
     <v-card-title class="card-title card-title-task-view d-flex align-center mb-4">
-      <span class="text-h5">{{ title }}</span>
+      <div class="d-flex align-center">
+        <span
+          class="text-h5"
+          :class="
+            props.completed
+              ? 'text-decoration-line-through text-surface-variant'
+              : 'text-on-surface'
+          "
+        >
+          {{ title }}
+        </span>
+        <v-chip
+          v-if="props.completed"
+          color="success"
+          size="small"
+          label
+          variant="tonal"
+          class="ml-3 font-weight-medium"
+        >
+          Completed
+        </v-chip>
+      </div>
       <v-spacer></v-spacer>
       <v-btn
-        v-if="$route.name !== 'task-detail' && $route.name !== 'search'"
+        v-if="props.showViewButton && $route.name !== 'task-detail' && $route.name !== 'search'"
         aria-label="View task details"
-        variant="flat"
+        variant="text"
         class="btn btn-task-view"
+        color="primary"
         icon
         @click="navigateToTaskDetail"
       >
@@ -213,165 +243,203 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
         <v-tooltip location="bottom" activator="parent"> View task details </v-tooltip>
       </v-btn>
     </v-card-title>
-    <v-card-subtitle class="mb-4">
-      <span class="text-subtitle1">Project: {{ project.title || project }}</span>
+    <v-card-subtitle class="mb-4 text-on-surface-variant">
+      <v-chip
+        :color="color === 'default' ? 'primary' : color"
+        variant="flat"
+        size="small"
+        class="font-weight-medium"
+        prepend-icon="mdi-folder-outline"
+      >
+        {{ project.title || project }}
+      </v-chip>
     </v-card-subtitle>
-    <v-divider class="mt-2 mb-4"></v-divider>
+    <v-divider class="my-4"></v-divider>
     <v-card-text class="card-text">
-      <v-list>
-        <v-list-item>
-          <v-list-item-title class="font-weight-medium my-4">Description:</v-list-item-title>
-          <v-list-item-subtitle class="my-4">{{ description }}</v-list-item-subtitle>
-        </v-list-item>
+      <!-- Descripción -->
+      <v-row class="my-4">
+        <v-col cols="12">
+          <p class="text-subtitle-1 font-weight-medium mb-4 text-on-surface">Description:</p>
+          <p class="text-body-1 py-2 px-4 bg-surface-variant text-on-surface-variant rounded-lg">
+            {{ description }}
+          </p>
+        </v-col>
+      </v-row>
 
-        <v-list-item>
-          <v-list-item-title class="font-weight-medium my-4">
-            Label:
-            <v-icon
-              v-bind="props"
-              :color="color"
-              size="24"
-              :style="{ verticalAlign: 'baseline' }"
-              class="icon"
-              >{{ labelIcons[label] || 'mdi-question' }}</v-icon
+      <!-- Metadatos con chips visuales -->
+      <v-row class="mt-4 mb-4">
+        <v-col cols="12" sm="6" md="4">
+          <div class="d-flex align-center">
+            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Label:</span>
+            <v-chip
+              :color="color === 'default' ? 'primary' : color"
+              size="small"
+              class="font-weight-medium"
+              variant="tonal"
             >
-          </v-list-item-title>
-          <v-list-item-subtitle class="my-4">{{ label }}</v-list-item-subtitle>
-        </v-list-item>
+              <v-icon size="16" class="mr-1">{{ labelIcons[label] || 'mdi-tag' }}</v-icon>
+              {{ label }}
+            </v-chip>
+          </div>
+        </v-col>
 
-        <v-list-item>
-          <v-list-item-title class="font-weight-medium my-4">Priority:</v-list-item-title>
-          <v-list-item-subtitle class="my-4">{{ priority }}</v-list-item-subtitle>
-        </v-list-item>
+        <v-col cols="12" sm="6" md="4">
+          <div class="d-flex align-center">
+            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Priority:</span>
+            <v-chip
+              :color="priority === 'High' ? 'error' : priority === 'Medium' ? 'warning' : 'success'"
+              size="small"
+              class="font-weight-medium"
+              variant="tonal"
+            >
+              <v-icon size="16" class="mr-1">
+                {{
+                  priority === 'High'
+                    ? 'mdi-flag'
+                    : priority === 'Medium'
+                      ? 'mdi-flag-outline'
+                      : 'mdi-flag-variant-outline'
+                }}
+              </v-icon>
+              {{ priority }}
+            </v-chip>
+          </div>
+        </v-col>
 
-        <v-list-item>
-          <v-list-item-title class="font-weight-medium my-4">Status:</v-list-item-title>
-          <v-list-item-subtitle class="my-4">{{ status }}</v-list-item-subtitle>
-        </v-list-item>
+        <v-col cols="12" sm="6" md="4">
+          <div class="d-flex align-center">
+            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Status:</span>
+            <v-chip
+              :color="
+                status === 'Completed'
+                  ? 'success'
+                  : status === 'In Progress'
+                    ? 'info'
+                    : status === 'Pending'
+                      ? 'warning'
+                      : 'on-surface-variant'
+              "
+              size="small"
+              class="font-weight-medium"
+              variant="tonal"
+            >
+              <v-icon size="16" class="mr-1">
+                {{
+                  status === 'Completed'
+                    ? 'mdi-check-circle'
+                    : status === 'In Progress'
+                      ? 'mdi-clock-outline'
+                      : status === 'Pending'
+                        ? 'mdi-clock-alert-outline'
+                        : 'mdi-help-circle-outline'
+                }}
+              </v-icon>
+              {{ status }}
+            </v-chip>
+          </div>
+        </v-col>
+      </v-row>
 
-        <v-list-item>
-          <v-row class="d-flex justify-space-between mt-4 mb-4">
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto">
-                  <span class="font-weight-medium">Start Date:</span>
-                </v-col>
-                <v-col>
-                  <span
-                    v-if="createdAt"
-                    :class="
-                      props.completed
-                        ? 'text-decoration-line-through text-grey-lighten-1'
-                        : 'font-weight-light'
-                    "
-                    >{{ formatDate(startDate) }}</span
-                  >
-                  <span v-else class="font-weight-light">No start date</span>
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto">
-                  <span class="font-weight-medium">Start Time:</span>
-                </v-col>
-                <v-col>
-                  <span
-                    v-if="props.startDateHour"
-                    :class="
-                      props.completed
-                        ? 'text-decoration-line-through text-grey-lighten-1'
-                        : 'font-weight-light'
-                    "
-                    >{{ props.startDateHour }} h.</span
-                  >
-                  <span v-else class="font-weight-light">No start time</span>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-list-item>
+      <!-- Fechas con mejor visualización -->
+      <v-row class="mt-4 mb-4">
+        <v-col cols="12" sm="6">
+          <v-card
+            variant="outlined"
+            rounded="lg"
+            class="pa-4"
+            :color="props.completed ? 'surface-variant' : 'text-on-surface'"
+            flat
+          >
+            <div class="d-flex align-center">
+              <v-icon color="primary" class="mr-3">mdi-calendar-start</v-icon>
+              <div>
+                <div class="text-subtitle-2 font-weight-medium">Start Date</div>
+                <div
+                  class="text-body-2"
+                >
+                  <template v-if="startDate">
+                    {{ formatDate(startDate) }}
+                    <span v-if="props.startDateHour" class="ml-1">
+                      at {{ props.startDateHour }} h
+                    </span>
+                  </template>
+                  <span v-else class="text-on-surface-variant">Not specified</span>
+                </div>
+              </div>
+            </div>
+          </v-card>
+        </v-col>
 
-        <v-list-item>
-          <v-row class="d-flex justify-space-between mt-4 mb-4">
-            <v-col cols="auto">
-              <v-row>
-                <v-col cols="auto">
-                  <span class="font-weight-medium">Due Date:</span>
-                </v-col>
-                <v-col>
-                  <span
-                    v-if="endDate"
-                    :class="
-                      props.completed
-                        ? 'text-decoration-line-through text-grey-lighten-1'
-                        : 'font-weight-light'
-                    "
-                  >
+        <v-col cols="12" sm="6">
+          <v-card
+            variant="outlined"
+            rounded="lg"
+            class="pa-4"
+            :color="props.completed ? 'surface-variant' : 'text-on-surface'"
+            flat
+          >
+            <div class="d-flex align-center due-date-icon">
+              <v-icon :color="props.completed ? 'success' : 'error'" class="mr-3">
+                {{ props.completed ? 'mdi-calendar-check' : 'mdi-calendar-end' }}
+              </v-icon>
+              <div>
+                <div class="text-subtitle-2 font-weight-medium">Due Date</div>
+                <div
+                  class="text-body-2"
+                >
+                  <template v-if="endDate">
                     {{ formatDate(endDate) }}
-                  </span>
-                  <span v-else class="font-weight-light"> No due date </span>
-                </v-col>
-              </v-row>
-            </v-col>
-            <v-col cols="auto" class="text-right">
-              <v-row>
-                <v-col cols="auto">
-                  <span class="font-weight-medium">Due Time:</span>
-                </v-col>
-                <v-col>
-                  <span
-                    v-if="props.endDateHour"
-                    :class="
-                      props.completed
-                        ? 'text-decoration-line-through text-grey-lighten-1'
-                        : 'font-weight-light'
-                    "
-                    >{{ props.endDateHour }} h.</span
-                  >
-                  <span v-else class="font-weight-light">No due time</span>
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-list-item>
-      </v-list>
+                    <span v-if="props.endDateHour" class="ml-1">
+                      at {{ props.endDateHour }} h
+                    </span>
+                  </template>
+                  <span v-else class="text-on-surface-variant">Not specified</span>
+                </div>
+              </div>
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
     </v-card-text>
 
     <v-divider class="my-4"></v-divider>
-    <v-card-actions class="card-actions card-actions-task-view pb-0 pr-0">
+    <v-card-actions class="card-actions py-4">
       <v-spacer></v-spacer>
-      <v-btn
-        v-for="(btn, i) in btnsTasks"
-        :key="i"
-        @click="btn.function"
-        :aria-label="btn.label"
-        class="btn btn-task-view mx-2"
-        icon
-      >
-        <template v-if="i === 2">
-          <v-scale-transition
-            :origin="props.completed ? 'bottom right' : 'top left'"
-            mode="out-in"
-            :key="props.id"
-          >
-            <v-icon
-              class="icon icon-btn-task-view"
-              :class="props.completed ? 'scale-out' : 'scale-in'"
-            >
-              {{ completedButton.icon }}
-            </v-icon>
-          </v-scale-transition>
-        </template>
-        <template v-else>
-          <v-icon class="icon icon-btn-task-view">
-            {{ btn.icon }}
+      <div class="d-flex flex-wrap justify-end button-container">
+        <!-- Botones de acción según Material Design 3 -->
+        <v-btn
+          v-for="(btn, i) in btnsTasks"
+          :key="i"
+          @click="btn.function"
+          :aria-label="btn.label"
+          class="action-btn mx-2 mb-2"
+          :color="i === 0 ? 'primary' : i === 1 ? 'error' : props.completed ? 'success' : 'primary'"
+          :variant="i === 0 ? 'elevated' : i === 1 ? 'tonal' : 'tonal'"
+          density="comfortable"
+          size="small"
+          rounded="lg"
+          :height="40"
+          :min-width="96"
+        >
+          <!-- Icono para todos los botones -->
+          <v-icon start :size="18" class="mr-1">
+            {{ i !== 2 ? btn.icon : props.completed ? 'mdi-check-circle' : 'mdi-circle-outline' }}
           </v-icon>
-        </template>
-        <v-tooltip :location="tooltips[i].location" :activator="tooltips[i].activator">
-          {{ i === 2 ? completedButton.tooltipText : tooltips[i].text }}
-        </v-tooltip>
-      </v-btn>
+
+          <!-- Texto para todos los botones -->
+          <span class="text-body-2 font-weight-medium">
+            {{ i === 0 ? 'Edit' : i === 1 ? 'Delete' : props.completed ? 'Completed' : 'Complete' }}
+          </span>
+
+          <v-tooltip
+            :location="tooltips[i].location"
+            :activator="tooltips[i].activator"
+            content-class="tooltip-custom"
+          >
+            {{ i === 2 ? completedButton.tooltipText : tooltips[i].text }}
+          </v-tooltip>
+        </v-btn>
+      </div>
     </v-card-actions>
   </v-card>
 </template>
@@ -401,5 +469,14 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
   100% {
     transform: scale(1);
   }
+}
+
+/* Estilos adicionales para las tarjetas */
+.action-btn {
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
 }
 </style>

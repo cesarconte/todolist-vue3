@@ -1,18 +1,6 @@
 @import './base.css';
 
 #app {
-  /* max-width: 1280px; */
   margin: 0 auto;
-  /* padding: 2rem; */
   font-weight: normal;
-  /* background-color: #f9fafb; */
-}
-
-a {
-  /* color: #f9fafb; */
-  transition: 0.4s;
-}
-
-a:hover {
-  color: #fff;
 }

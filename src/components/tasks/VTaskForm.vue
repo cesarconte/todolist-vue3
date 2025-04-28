@@ -94,7 +94,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <v-form class="form pa-8" ref="taskFormRef" @submit.prevent="$emit('submit')">
+  <v-form class="form pa-6" ref="taskFormRef" @submit.prevent="$emit('submit')">
     <v-alert
       v-if="
         projects.length === 0 ||
@@ -103,7 +103,7 @@ onUnmounted(() => {
         statuses.length === 0
       "
       type="warning"
-      class="mb-8"
+      class="mb-6"
       border="start"
       border-color="warning"
       variant="tonal"
@@ -125,13 +125,13 @@ onUnmounted(() => {
       placeholder="Enter title"
       prepend-inner-icon="mdi-format-title"
       type="text"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       :rules="titleRules"
       counter
       clearable
       required
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -139,20 +139,20 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-text-field>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-textarea
       v-model="formData.description"
       label="Description"
       placeholder="Enter description"
       prepend-inner-icon="mdi-text"
       type="text"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       :rules="descriptionRules"
       counter
       clearable
       required
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -160,20 +160,20 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-textarea>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.projectId"
       label="Project"
       prepend-inner-icon="mdi-folder-outline"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       clearable
       required
       :items="projects"
       item-title="title"
       item-value="id"
       :rules="projectRules"
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -181,20 +181,20 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.label"
       label="Label"
       prepend-inner-icon="mdi-label-outline"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       clearable
       required
       :items="labels"
       item-title="title"
       item-value="value"
       :rules="labelRules"
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -202,20 +202,20 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.priority"
       label="Priority"
       prepend-inner-icon="mdi-alert-circle-outline"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       clearable
       required
       :items="priorities"
       item-title="title"
       item-value="value"
       :rules="priorityRules"
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -223,20 +223,20 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-select
       v-model="formData.status"
       label="Status"
       prepend-inner-icon="mdi-checkbox-marked-outline"
-      variant="plain"
-      color="red-darken-2"
+      variant="outlined"
+      color="primary"
       clearable
       required
       :items="statuses"
       item-title="title"
       item-value="value"
       :rules="statusRules"
-      class="mb-8"
+      class="mb-6"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -244,17 +244,17 @@ onUnmounted(() => {
         statuses.length === 0
       "
     ></v-select>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-date-input
       v-model="formData.startDate"
       label="Start Date"
       required
       clearable
-      variant="plain"
+      variant="outlined"
       prepend-icon=""
       prepend-inner-icon="mdi-calendar"
-      color="red-darken-2"
-      class="date-create-task mb-8"
+      color="primary"
+      class="date-create-task mb-6"
       :rules="startDateRules"
       :disabled="
         projects.length === 0 ||
@@ -264,17 +264,17 @@ onUnmounted(() => {
       "
     >
     </v-date-input>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-date-input
       v-model="formData.endDate"
       label="Due Date"
       required
       clearable
-      variant="plain"
+      variant="outlined"
       prepend-icon=""
       prepend-inner-icon="mdi-calendar"
-      color="red-darken-2"
-      class="date-create-task mb-8"
+      color="primary"
+      class="date-create-task mb-6"
       :rules="endDateRules"
       :disabled="
         projects.length === 0 ||
@@ -284,19 +284,19 @@ onUnmounted(() => {
       "
     >
     </v-date-input>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-text-field
       v-model="formData.startDateHour"
       label="Start Hour"
       placeholder="hh:mm"
       prepend-inner-icon="mdi-clock-time-four-outline"
-      variant="plain"
+      variant="outlined"
       readonly
       clearable
       :active="menuStart"
       :focused="menuStart"
-      color="red-darken-2"
-      class="mb-8"
+      color="primary"
+      class="mb-6"
       @click="menuStart = true"
       :disabled="
         projects.length === 0 ||
@@ -318,7 +318,7 @@ onUnmounted(() => {
           v-model="formData.startDateHour"
           format="24hr"
           full-width
-          color="red-darken-2"
+          color="primary"
           scrollable
           required
           class="time-create-task justify-center w-100"
@@ -327,13 +327,13 @@ onUnmounted(() => {
         ></v-time-picker>
       </v-menu>
     </v-text-field>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <v-text-field
       v-model="formData.endDateHour"
       label="Due Hour"
       placeholder="hh:mm"
       prepend-inner-icon="mdi-clock-time-four-outline"
-      variant="plain"
+      variant="outlined"
       readonly
       clearable
       :active="menuEnd"
@@ -345,8 +345,8 @@ onUnmounted(() => {
         labels.length === 0 ||
         statuses.length === 0
       "
-      color="red-darken-2"
-      class="mb-8"
+      color="primary"
+      class="mb-6"
     >
       <v-menu
         v-model="menuEnd"
@@ -361,7 +361,7 @@ onUnmounted(() => {
           v-model="formData.endDateHour"
           format="24hr"
           full-width
-          color="red-darken-2"
+          color="primary"
           scrollable
           required
           class="time-create-task justify-center w-100"
@@ -370,7 +370,7 @@ onUnmounted(() => {
         ></v-time-picker>
       </v-menu>
     </v-text-field>
-    <v-divider class="mb-8"></v-divider>
+    <v-divider class="mb-6"></v-divider>
     <slot name="actions"></slot>
   </v-form>
 </template>

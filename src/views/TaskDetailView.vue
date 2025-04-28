@@ -82,21 +82,17 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
 </script>
 
 <template>
-  <v-container fluid class="mt-6">
+  <v-container fluid class="mt-6 bg-background">
     <v-responsive
       class="task-detail-container mx-auto"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
-          <h2 v-if="task" class="text-h5 font-weight-bold mb-4 text-red-darken-2">
+          <h2 v-if="task" class="text-h5 font-weight-bold mb-4 text-primary">
             Task {{ task.title }}
           </h2>
-          <v-divider
-            color="red-darken-2"
-            :thickness="1"
-            class="mx-auto border-opacity-50"
-          ></v-divider>
+          <v-divider color="primary" :thickness="1" class="mx-auto border-opacity-75"></v-divider>
         </v-col>
       </v-row>
       <v-row>
@@ -125,7 +121,10 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
               />
             </template>
             <template #fallback>
-              <div class="fallback">Loading...</div>
+              <v-card flat color="surface-variant" rounded="lg" class="pa-6 text-center">
+                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                <div class="text-body-1 mt-4 text-on-surface-variant">Loading task details...</div>
+              </v-card>
             </template>
           </Suspense>
         </v-col>
@@ -134,9 +133,9 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
           <v-btn
             @click="goBack"
-            color="red-darken-2"
-            variant="flat"
-            rounded
+            color="primary"
+            variant="tonal"
+            rounded="lg"
             :size="xs ? 'default' : 'large'"
             :block="xs ? true : false"
             prepend-icon="mdi-chevron-left"
@@ -155,8 +154,8 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
     :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
     class="dialog dialog-edit-task"
   >
-    <v-card class="card card-edit-task pa-4">
-      <v-card-title class="card-title card-title-edit-task">
+    <v-card class="card card-edit-task pa-6" rounded="lg" color="surface" elevation="4">
+      <v-card-title class="card-title card-title-edit-task text-primary">
         <span class="text-h6">Edit task {{ taskStore.editedTask.title }}</span>
       </v-card-title>
       <v-card-text>

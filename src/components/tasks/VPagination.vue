@@ -54,7 +54,7 @@ const { xs, sm } = useDisplay()
 </script>
 
 <template>
-  <v-row :class="xs ? 'pa-2' : sm ? 'pa-4' : 'pa-8'" class="d-flex">
+  <v-row :class="xs ? 'pa-2' : sm ? 'pa-4' : 'pa-6'" class="d-flex">
     <div
       class="container-tasks-title d-flex mx-auto w-100"
       :class="xs ? 'justify-center' : 'justify-space-between'"
@@ -64,20 +64,15 @@ const { xs, sm } = useDisplay()
         icon
         :class="xs ? 'me-1' : 'me-2'"
         class="align-self-center"
-        variant="elevated"
-        color="red-accent-2"
+        variant="tonal"
+        color="primary"
         @click="firstPage"
         :disabled="currentPage === 1"
         :size="xs ? 'x-small' : 'small'"
         aria-label="Go to first page"
       >
         <v-icon :size="xs ? 16 : 20">mdi-skip-backward</v-icon>
-        <v-tooltip
-          activator="parent"
-          location="bottom"
-          color="red-accent-2"
-          class="first-page-tooltip"
-        >
+        <v-tooltip activator="parent" location="bottom" class="first-page-tooltip">
           First page
         </v-tooltip>
       </v-btn>
@@ -85,28 +80,25 @@ const { xs, sm } = useDisplay()
         icon
         :class="xs ? 'me-1' : 'me-2'"
         class="align-self-center"
-        variant="elevated"
-        color="red-accent-2"
+        variant="tonal"
+        color="primary"
         @click="prevPage"
         :disabled="!props.hasPrevPage"
         :size="xs ? 'x-small' : 'small'"
         aria-label="Go to previous page"
       >
         <v-icon :size="xs ? 16 : 20"> mdi-chevron-left </v-icon>
-        <v-tooltip
-          activator="parent"
-          location="bottom"
-          color="red-accent-2"
-          class="previous-page-tooltip"
-        >
+        <v-tooltip activator="parent" location="bottom" class="previous-page-tooltip">
           Previous page
         </v-tooltip>
       </v-btn>
-      <span 
-        class="page-indicator font-weight-semibold d-flex align-items-center"
-        :class="xs ? 'text-caption px-1 py-2 mx-1' : sm ? 'text-body-2 px-2 py-2 mx-2' : 'pa-3 me-2'"
+      <span
+        class="page-indicator font-weight-semibold d-flex align-items-center rounded-lg bg-surface-variant text-on-surface-variant"
+        :class="
+          xs ? 'text-caption px-2 py-2 mx-1' : sm ? 'text-body-2 px-3 py-2 mx-2' : 'pa-3 me-2'
+        "
       >
-        <slot> 
+        <slot>
           <span v-if="xs">{{ currentPage }}/{{ totalPages }}</span>
           <span v-else>Page {{ currentPage }} of {{ totalPages }}</span>
         </slot>
@@ -115,20 +107,15 @@ const { xs, sm } = useDisplay()
         icon
         :class="xs ? 'me-1' : 'me-2'"
         class="align-self-center"
-        variant="elevated"
-        color="red-accent-2"
+        variant="tonal"
+        color="primary"
         @click="nextPage"
         :disabled="!props.hasNextPage"
         :size="xs ? 'x-small' : 'small'"
         aria-label="Go to next page"
       >
         <v-icon :size="xs ? 16 : 20"> mdi-chevron-right </v-icon>
-        <v-tooltip 
-          activator="parent" 
-          location="bottom" 
-          color="red-accent-2" 
-          class="next-page-tooltip"
-        >
+        <v-tooltip activator="parent" location="bottom" class="next-page-tooltip">
           Next page
         </v-tooltip>
       </v-btn>
@@ -136,20 +123,15 @@ const { xs, sm } = useDisplay()
         icon
         :class="xs ? 'me-1' : 'me-2'"
         class="align-self-center"
-        variant="elevated"
-        color="red-accent-2"
+        variant="tonal"
+        color="primary"
         @click="lastPage"
         :disabled="currentPage === totalPages || totalPages === 0"
         :size="xs ? 'x-small' : 'small'"
         aria-label="Go to last page"
       >
         <v-icon :size="xs ? 16 : 20">mdi-skip-forward</v-icon>
-        <v-tooltip
-          activator="parent"
-          location="bottom"
-          color="red-accent-2"
-          class="last-page-tooltip"
-        >
+        <v-tooltip activator="parent" location="bottom" class="last-page-tooltip">
           Last page
         </v-tooltip>
       </v-btn>

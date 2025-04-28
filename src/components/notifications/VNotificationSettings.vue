@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { useDisplay } from 'vuetify'
+// import { useDisplay } from 'vuetify'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js'
 
 /************************************
@@ -44,8 +44,8 @@ const switchLabel = computed(() =>
     : 'Notifications disabled'
 ) // Sets the label for the notification switch
 const switchColor = computed(() =>
-  notificationsStore.notificationSettings.enabled ? 'red-accent-2' : 'grey-darken-1'
-) // Sets the color of the notification switch
+  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+) // Sets the color of the notification switch using semantic MD3 colors
 const isDisabled = computed(() => !notificationsStore.hasFullSupport || !userStore.isLoggedIn) // Determines if the notification switch should be disabled
 
 /************************************
@@ -137,7 +137,7 @@ const notificationTimeOptions = [
   { title: '15 minutes before', value: 0.25 }
 ]
 
-const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
+// const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
@@ -147,11 +147,12 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
     class="dialog dialog-notifications-settings"
   >
     <v-card
-      class="notification-settings-card pa-4 rounded-lg elevation-4 d-flex flex-column"
+      class="notification-settings-card pa-4 rounded-lg elevation-2 d-flex flex-column"
+      color="surface"
       density="comfortable"
     >
-      <v-card-title class="d-flex align-center justify-space-between text-h5">
-        <span class="text-red-darken-2 font-weight-medium">Notifications Settings</span>
+      <v-card-title class="d-flex align-center justify-space-between mb-2">
+        <span class="text-h6 text-on-surface font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
           <template v-slot:activator="{ props }">
             <v-icon
@@ -175,23 +176,37 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             </span>
           </span>
         </v-tooltip>
-        <v-btn icon @click="closeDialog" variant="text" color="grey-darken-1">
+        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle class="text-grey-darken-3">
-        <v-icon icon="mdi-bell-cog"></v-icon>
+      <v-card-subtitle class="text-on-surface-variant pb-2">
+        <v-icon icon="mdi-bell-cog" size="small" class="mr-1"></v-icon>
         Configure when you want to receive notifications</v-card-subtitle
       >
 
       <v-divider class="my-4" />
 
-      <v-card-text class="pa-0">
-        <v-alert v-if="saveError" type="error" density="compact" class="mb-4">
+      <v-card-text class="px-4 pt-0 pb-4">
+        <v-alert
+          v-if="saveError"
+          type="error"
+          density="compact"
+          variant="tonal"
+          border="start"
+          class="mb-4"
+        >
           {{ saveError }}
         </v-alert>
 
-        <v-alert v-if="!hasFullSupport" type="warning" density="compact" class="mb-4">
+        <v-alert
+          v-if="!hasFullSupport"
+          type="warning"
+          density="compact"
+          variant="tonal"
+          border="start"
+          class="mb-4"
+        >
           <template v-slot:title> Limited Browser Support </template>
           Some notification features are not available in your current browser.
         </v-alert>
@@ -214,6 +229,8 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
                 :disabled="isDisabled"
                 inset
                 hide-details
+                density="comfortable"
+                class="mb-2"
                 @update:model-value="handleSwitchChange"
               >
               </v-switch>
@@ -229,33 +246,49 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             item-title="title"
             label="Notification Times"
             variant="outlined"
-            :color="switchColor"
+            :color="
+              notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+            "
             :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
             multiple
             clearable
             chips
             closable-chips
             hide-details
-            rounded="pill"
-            class="mt-4"
+            rounded="lg"
+            class="mt-2"
             density="comfortable"
           >
             <template v-slot:selection="{ item, index }">
-              <v-chip v-if="index < 2" :color="switchColor" class="ma-1" label size="small">
+              <v-chip
+                v-if="index < 2"
+                :color="
+                  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+                "
+                class="ma-1"
+                label
+                size="small"
+                variant="tonal"
+              >
                 {{ item.title }}
               </v-chip>
-              <span v-if="index === 2" class="text-grey text-caption ml-1">
+              <span v-if="index === 2" class="text-on-surface-variant text-caption ml-1">
                 +{{ notificationsStore.notificationSettings.time.length - 2 }} more
               </span>
             </template>
           </v-select>
         </v-card-item>
 
-        <v-card-item class="mb-2">
+        <v-card-item class="mb-2 mt-2">
           <v-row class="text-caption">
             <v-col cols="auto" class="d-flex align-center">
-              <v-icon icon="mdi-clock-outline" class="mr-2" color="grey" />
-              <span class="text-grey">
+              <v-icon
+                icon="mdi-clock-outline"
+                class="mr-2"
+                color="on-surface-variant"
+                size="small"
+              />
+              <span class="text-on-surface-variant">
                 Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
               </span>
             </v-col>
@@ -265,26 +298,19 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
       <v-divider class="mb-4" />
 
-      <v-card-actions class="d-flex flex-column align-center justify-center pa-8">
-        <v-tooltip text="Send test notification" location="top">
-          <template v-slot:activator="{ props }">
-            <v-btn
-              v-bind="props"
-              :disabled="isDisabled"
-              :class="xs ? '' : 'px-8'"
-              :block="xs"
-              class="text-none text-button mb-4"
-              color="red-accent-2"
-              variant="tonal"
-              rounded="pill"
-              size="large"
-              prepend-icon="mdi-bell-alert-outline"
-              @click="notificationsStore.sendTestNotification()"
-            >
-              Test Notification
-            </v-btn>
-          </template>
-        </v-tooltip>
+      <v-card-actions class="justify-end px-4 pb-4">
+        <v-btn
+          :disabled="isDisabled || !notificationsStore.notificationSettings.enabled"
+          color="primary"
+          variant="elevated"
+          rounded
+          size="large"
+          prepend-icon="mdi-bell-alert-outline"
+          class="text-none"
+          @click="notificationsStore.sendTestNotification()"
+        >
+          Test Notification
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

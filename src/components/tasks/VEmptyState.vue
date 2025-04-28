@@ -1,18 +1,9 @@
 <template>
   <div
     class="empty-state-container text-center d-flex flex-column align-center justify-center py-8"
-  >
-    <v-icon :size="iconSize" :color="iconColor" class="empty-icon mb-4">{{ icon }}</v-icon>
+  >    <v-icon :size="iconSize" :color="iconColor" class="empty-icon mb-4">{{ icon }}</v-icon>
     <p class="text-h6 font-weight-medium mt-4 mb-2" :class="textColor">{{ title }}</p>
     <span class="text-body-2 mb-4" :class="textColor">{{ subtitle }}</span>
-    <v-img
-      v-if="imgSrc"
-      :src="imgSrc"
-      max-width="180"
-      class="mx-auto my-4"
-      :alt="imgAlt"
-      style="opacity: 0.7"
-    />
     <slot />
   </div>
 </template>
@@ -23,16 +14,14 @@ import { toRefs } from 'vue'
 const props = defineProps({
   icon: { type: String, default: 'mdi-magnify' },
   iconSize: { type: [String, Number], default: 80 },
-  iconColor: { type: String, default: 'grey-lighten-1' },
+  iconColor: { type: String, default: 'on-surface' },
   title: { type: String, required: true },
   subtitle: { type: String, default: '' },
-  imgSrc: { type: String, default: '' },
-  imgAlt: { type: String, default: 'Empty state illustration' },
-  textColor: { type: String, default: 'text-grey-lighten-1' }
+  textColor: { type: String, default: 'on-surface' }
 })
 
 // Desestructuramos props para que sean reactivas en el template
-const { icon, iconSize, iconColor, title, subtitle, imgSrc, imgAlt, textColor } = toRefs(props)
+const { icon, iconSize, iconColor, title, subtitle, textColor } = toRefs(props)
 </script>
 
 <style scoped>
@@ -41,7 +30,6 @@ const { icon, iconSize, iconColor, title, subtitle, imgSrc, imgAlt, textColor } 
   transition: all 0.3s ease;
 }
 .empty-icon {
-  opacity: 0.8;
   transform: translateY(-5px);
   animation: float 3s ease-in-out infinite;
 }

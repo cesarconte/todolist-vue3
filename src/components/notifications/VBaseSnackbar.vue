@@ -130,7 +130,7 @@ watch(show, (newValue) => {
     v-bind="$attrs"
     @show="$emit('show')"
     @hide="$emit('hide')"
-    class="mb-8 pa-8"
+    class="mb-8 pa-6"
   >
     <v-icon v-if="prependIcon" class="mr-2" :icon="prependIcon"></v-icon>
     {{ message }}
@@ -144,11 +144,12 @@ watch(show, (newValue) => {
     <template v-slot:actions>
       <slot name="actions"></slot>
       <v-btn
-        color="white"
         variant="text"
         class="text-none"
         icon="mdi-close"
         @click="$emit('update:modelValue', false)"
+        density="comfortable"
+        color="on-primary"
       >
       </v-btn>
     </template>

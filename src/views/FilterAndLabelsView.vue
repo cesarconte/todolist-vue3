@@ -128,16 +128,16 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 </script>
 
 <template>
-  <v-container fluid class="my-6">
+  <v-container fluid class="my-6 bg-background">
     <v-responsive
-      class="tasksByProject-container mx-auto"
+      class="tasksFiltered-container mx-auto"
       :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
           <h2
-            class="text-center font-weight-bold text-red-darken-2"
+            class="text-center font-weight-bold text-primary"
             :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h4 mb-8'"
           >
             Filter and Label Tasks
@@ -146,24 +146,39 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
       </v-row>
 
       <!-- Filtros -->
-      <v-card class="mb-8" :class="xs ? 'pa-2' : 'pa-4'" variant="outlined" rounded elevation="2">
+      <v-card
+        class="mb-8 mx-2 filters-card"
+        :class="xs ? 'pa-2' : 'pa-4'"
+        variant="elevated"
+        rounded="lg"
+        color="surface"
+      >
         <v-card-title
           class="d-flex align-center justify-space-between pb-2 mb-2"
           :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-sheet class="filter-header" :class="xs ? 'pa-1' : 'pa-2'" rounded>
+          <v-sheet
+            class="filter-header"
+            :class="xs ? 'pa-1' : 'pa-2'"
+            rounded="lg"
+            color="surface-variant"
+            elevation="1"
+          >
             <div class="d-flex align-center">
               <v-icon
                 icon="mdi-filter-variant"
-                color="red-darken-2"
+                color="primary"
                 :size="xs ? '28' : '40'"
                 class="mr-1"
               ></v-icon>
               <div class="ml-0">
-                <div class="text-h6 font-weight-medium" :class="xs ? 'text-subtitle-1' : ''">
+                <div
+                  class="text-h6 font-weight-medium text-on-surface-variant"
+                  :class="xs ? 'text-subtitle-1' : ''"
+                >
                   Filter Options
                 </div>
-                <div class="text-caption text-medium-emphasis mt-1 text-wrap">
+                <div class="text-caption text-on-surface-variant mt-1 text-wrap">
                   {{ xs ? 'Find matching tasks' : 'Filter tasks using multiple criteria' }}
                 </div>
               </div>
@@ -171,7 +186,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           </v-sheet>
           <v-chip
             v-if="hasActiveFilters()"
-            color="red-darken-2"
+            color="primary"
             size="small"
             prepend-icon="mdi-filter-outline"
             class="font-weight-medium mx-2"
@@ -181,10 +196,10 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-red-accent-4 text-center mb-4"
+          class="text-subtitle-1 font-weight-medium py-2 text-primary text-center mb-4"
           :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-icon icon="mdi-tune" class="mr-2" color="red-accent-4" :size="xs ? 18 : 24"></v-icon>
+          <v-icon icon="mdi-tune" class="mr-2" color="primary" :size="xs ? 18 : 24"></v-icon>
           <span :class="xs ? 'text-body-2' : ''">Choose your filters</span>
         </v-card-subtitle>
 
@@ -195,30 +210,35 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <v-col cols="12" sm="6">
               <v-autocomplete
                 v-model="taskStore.state.selectedProjects"
-                label="Filter by project"
-                :items="userStore.isLoggedIn ? projectStore.projectItems : []"
-                item-title="title"
-                item-value="value"
+                label="Project"
                 :placeholder="
                   userStore.isLoggedIn ? 'Select project...' : 'Login to view projects...'
                 "
+                :items="userStore.isLoggedIn ? projectStore.projectItems : []"
+                item-title="title"
+                item-value="value"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 multiple
-                chips
+                :chips="!!taskStore.state.selectedProjects.length"
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
                 :menu-props="{
                   maxHeight: 300,
                   maxWidth: '100%',
-                  contentClass: 'search-results-menu',
+                  contentClass: 'search-results-menu rounded-lg',
                   transition: 'scale-transition'
                 }"
+                @update:modelValue="
+                  (val) => {
+                    taskStore.state.selectedProjects = Array.isArray(val) ? val : []
+                  }
+                "
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -236,29 +256,34 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <v-col cols="12" sm="6">
               <v-autocomplete
                 v-model="taskStore.state.selectedPriorities"
-                label="Filter by priority"
-                :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
-                item-title="title"
-                item-value="title"
+                label="Priority"
                 :placeholder="
                   userStore.isLoggedIn ? 'Select priority...' : 'Log in to view priorities.'
                 "
+                :items="userStore.isLoggedIn ? dataStore.priorityItems : []"
+                item-title="title"
+                item-value="title"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 multiple
-                chips
+                :chips="!!taskStore.state.selectedPriorities.length"
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
                 :menu-props="{
                   maxHeight: 300,
-                  contentClass: 'filter-menu',
+                  contentClass: 'filter-menu rounded-lg',
                   transition: 'scale-transition'
                 }"
+                @update:modelValue="
+                  (val) => {
+                    taskStore.state.selectedPriorities = Array.isArray(val) ? val : []
+                  }
+                "
               >
                 <template v-slot:selection="{ item }">
                   <v-chip
@@ -304,28 +329,33 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <v-col cols="12" sm="6">
               <v-autocomplete
                 v-model="taskStore.state.selectedLabels"
-                label="Filter by label"
+                label="Label"
+                :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
                 :items="userStore.isLoggedIn ? dataStore.labelItems : []"
                 item-title="title"
                 item-value="title"
-                :placeholder="userStore.isLoggedIn ? 'Select label...' : 'Log in to view labels.'"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 multiple
-                chips
+                :chips="!!taskStore.state.selectedLabels.length"
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
                 :menu-props="{
                   maxHeight: 300,
                   maxWidth: '100%',
-                  contentClass: 'search-results-menu',
+                  contentClass: 'search-results-menu rounded-lg',
                   transition: 'scale-transition'
                 }"
+                @update:modelValue="
+                  (val) => {
+                    taskStore.state.selectedLabels = Array.isArray(val) ? val : []
+                  }
+                "
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -343,30 +373,35 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <v-col cols="12" sm="6">
               <v-autocomplete
                 v-model="taskStore.state.selectedStatuses"
-                label="Filter by status"
-                :items="userStore.isLoggedIn ? dataStore.statusItems : []"
-                item-title="title"
-                item-value="title"
+                label="Status"
                 :placeholder="
                   userStore.isLoggedIn ? 'Select status...' : 'Log in to view statuses.'
                 "
+                :items="userStore.isLoggedIn ? dataStore.statusItems : []"
+                item-title="title"
+                item-value="title"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 multiple
-                chips
+                :chips="!!taskStore.state.selectedStatuses.length"
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
                 :menu-props="{
                   maxHeight: 300,
                   maxWidth: '100%',
-                  contentClass: 'search-results-menu',
+                  contentClass: 'search-results-menu rounded-lg',
                   transition: 'scale-transition'
                 }"
+                @update:modelValue="
+                  (val) => {
+                    taskStore.state.selectedStatuses = Array.isArray(val) ? val : []
+                  }
+                "
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.title" />
@@ -390,11 +425,11 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 label="Filter by start date"
                 class="date-picker"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 prepend-icon=""
                 @click:clear="handleClearStartDate"
               >
@@ -414,11 +449,11 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 label="Filter by end date"
                 class="date-picker"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
+                hide-details="auto"
                 prepend-icon=""
                 @click:clear="handleClearDate"
               >
@@ -438,27 +473,32 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <v-col cols="12" sm="6" :class="mdAndUp ? 'mx-auto' : ''">
               <v-autocomplete
                 v-model="taskStore.state.selectedCompletionStatus"
-                label="Filter by completion status"
+                label="Completion Status"
+                :placeholder="'Completion status...'"
                 :items="completionStatusItems"
                 item-title="title"
                 item-value="value"
-                :placeholder="'Completion status...'"
                 variant="outlined"
-                color="red-accent-2"
-                rounded
+                color="primary"
                 density="comfortable"
+                rounded="lg"
                 clearable
-                hide-details
-                chips
+                hide-details="auto"
+                :chips="taskStore.state.selectedCompletionStatus !== null"
                 closable-chips
                 auto-select-first
                 @click="handleFilterClick"
                 :menu-props="{
                   maxHeight: 300,
                   maxWidth: '100%',
-                  contentClass: 'search-results-menu',
+                  contentClass: 'search-results-menu rounded-lg',
                   transition: 'scale-transition'
                 }"
+                @update:modelValue="
+                  (val) => {
+                    taskStore.state.selectedCompletionStatus = val === '' ? null : val
+                  }
+                "
               >
                 <template v-slot:item="{ props, item }">
                   <v-list-item v-bind="props" :title="item.raw.title" />
@@ -496,45 +536,22 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             <VEmptyState
               icon="mdi-filter-outline"
               :icon-size="xs ? 60 : sm ? 70 : 80"
-              :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
               :title="xs ? 'Use filters above' : 'Use the filters above to search for tasks'"
               :subtitle="
                 xs
                   ? 'Choose your criteria'
                   : 'Select different filtering options to find your tasks.'
               "
-              img-src="/src/assets/todolist.svg"
-              img-alt="Empty filter illustration"
-              :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
-            />
-          </v-col>
-        </v-row>
-        <v-row
-          v-else-if="
-            hasActiveFilters() && !taskStore.state.isLoading && taskStore.totalFilteredTasks === 0
-          "
-        >
-          <v-col>
-            <VEmptyState
-              icon="mdi-filter-remove"
-              :icon-size="xs ? 60 : sm ? 70 : 80"
-              :icon-color="xs ? 'grey-darken-1' : 'grey-lighten-1'"
-              :title="xs ? 'No tasks found' : 'No tasks found with current filters'"
-              :subtitle="
-                xs ? 'Try different filters' : 'Adjust your filter criteria to find tasks.'
-              "
-              img-src="/src/assets/todolist.svg"
-              img-alt="No tasks found illustration"
-              :text-color="xs ? 'text-grey-darken-1' : 'text-grey-lighten-1'"
+              class="empty-state-container"
             />
           </v-col>
         </v-row>
 
         <v-card-actions class="justify-center pt-4 pb-8 mt-4">
           <v-btn
-            color="red-accent-2"
+            color="primary"
             variant="tonal"
-            rounded="pill"
+            rounded
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? 'px-4 py-2' : 'px-8'"
@@ -600,15 +617,15 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
         <v-col cols="12">
           <div class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
-            <span class="text-h6 font-weight-medium text-red-darken-2">Filtered Tasks</span>
+            <span class="text-h6 font-weight-medium text-primary">Filtered Tasks</span>
             <v-divider class="ml-4"></v-divider>
           </div>
           <div class="d-flex align-center justify-end">
             <v-chip
-              color="green"
+              color="success"
               size="small"
               label
-              rounded="pill"
+              rounded
               prepend-icon="mdi-check"
               class="font-weight-medium"
             >
@@ -676,7 +693,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 <div class="fallback" role="status" aria-live="polite">
                   <v-progress-circular
                     indeterminate
-                    color="red-darken-2"
+                    color="primary"
                     :size="40"
                     class="mr-2"
                   ></v-progress-circular>
@@ -716,7 +733,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
           <v-btn
             @click="goBack"
-            color="red-darken-2"
+            color="primary"
             variant="flat"
             rounded
             :size="xs ? 'default' : 'large'"
@@ -807,26 +824,33 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
   border-radius: 8px;
   margin: 16px;
   padding: 24px;
   font-size: 16px;
 }
 
-.v-col .fallback {
-  height: 200px;
-  width: 100%;
+.empty-state-container {
+  opacity: 0.7;
+}
+
+.empty-icon {
+  transform: translateY(-5px);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(-5px);
+  }
+  50% {
+    transform: translateY(5px);
+  }
 }
 
 .date-picker {
   width: 100%;
-}
-
-.empty-icon {
-  opacity: 0.8;
-  transform: translateY(-5px);
-  animation: float 3s ease-in-out infinite;
 }
 
 @keyframes float {

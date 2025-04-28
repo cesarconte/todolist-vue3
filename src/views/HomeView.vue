@@ -17,7 +17,57 @@ const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
 const { labelIcons } = useLabelIcons()
 
-// Ref variables for the calendar
+const { xs, sm, md, lg, xl, mobile, smAndDown } = useDisplay()
+
+// --- Dashboard statistics ---
+const pendingTasks = computed(() => (taskStore.tasksData || []).filter((task) => !task.completed))
+const completedTasksCount = computed(
+  () => (taskStore.tasksData || []).filter((task) => task.completed).length
+)
+const totalTasks = computed(() => taskStore.tasksData?.length || 0)
+const completionPercentage = computed(() =>
+  totalTasks.value === 0 ? 0 : Math.round((completedTasksCount.value / totalTasks.value) * 100)
+)
+
+// --- Upcoming Deadlines ---
+const upcomingDeadlines = computed(() => {
+  const now = new Date()
+  return pendingTasks.value
+    .filter((task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) >= now)
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
+    .slice(0, 3)
+})
+const upcomingDeadlinesTotal = computed(() => {
+  const now = new Date()
+  return pendingTasks.value.filter(
+    (task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) >= now
+  ).length
+})
+const isDeadlinesPanelExpanded = ref(false)
+
+// --- Overdue Tasks ---
+const overdueTasks = computed(() => {
+  const now = new Date()
+  return pendingTasks.value
+    .filter((task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) < now)
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
+    .slice(0, 3)
+})
+const overdueTasksTotal = computed(() => {
+  const now = new Date()
+  return pendingTasks.value.filter(
+    (task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) < now
+  ).length
+})
+const isOverduePanelExpanded = ref(false)
+
+// --- Calendar ---
 const type = ref('month')
 const types = ref([
   { text: 'Month View', value: 'month' },
@@ -31,18 +81,13 @@ const weekdays = ref([
   { title: 'Mon - Fri', value: [1, 2, 3, 4, 5] }
 ])
 const value = ref([new Date()])
-
-// Computed variables for the calendar
 const calendarEvents = computed(() => {
-  // Ordenar por endDate y endDateHour ascendente
   return (taskStore.tasksData || [])
-    .slice() // Copia para no mutar el store
-    .sort((a, b) => {
-      // Combina fecha y hora para comparar correctamente
-      const aDue = combineDateTime(a.endDate, a.endDateHour)
-      const bDue = combineDateTime(b.endDate, b.endDateHour)
-      return aDue - bDue
-    })
+    .slice()
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
     .map((task) => ({
       id: task.id,
       title: task.title,
@@ -59,111 +104,16 @@ const calendarEvents = computed(() => {
     }))
 })
 
-// Computed properties for dashboard statistics
-const pendingTasks = computed(() => {
-  return (taskStore.tasksData || []).filter((task) => !task.completed)
-})
-
-const pendingTasksCount = computed(() => pendingTasks.value.length)
-
-const completedTasksCount = computed(() => {
-  return (taskStore.tasksData || []).filter((task) => task.completed).length
-})
-
-const totalTasks = computed(() => taskStore.tasksData?.length || 0)
-
-const completionPercentage = computed(() => {
-  if (totalTasks.value === 0) return 0
-  return Math.round((completedTasksCount.value / totalTasks.value) * 100)
-})
-
-// Get upcoming deadlines (all pending tasks with future deadlines, sorted by date and hour)
-const upcomingDeadlines = computed(() => {
-  const now = new Date()
-  return pendingTasks.value
-    .filter((task) => {
-      if (!task.endDate) return false
-      const taskDue = combineDateTime(task.endDate, task.endDateHour)
-      return taskDue >= now
-    })
-    .sort((a, b) => {
-      const aDue = combineDateTime(a.endDate, a.endDateHour)
-      const bDue = combineDateTime(b.endDate, b.endDateHour)
-      return aDue - bDue
-    })
-    .slice(0, 3) // Mostrar solo las primeras 3 tareas
-})
-
-// Get total upcoming deadlines (all pending tasks with future deadlines, sin límite)
-const upcomingDeadlinesTotal = computed(() => {
-  const now = new Date()
-  return pendingTasks.value.filter((task) => {
-    if (!task.endDate) return false
-    const taskDue = combineDateTime(task.endDate, task.endDateHour)
-    return taskDue >= now
-  }).length
-})
-
-// Control the expansion state of the deadlines panel
-const isDeadlinesPanelExpanded = ref(false)
-
-// Check if user has overdue tasks (pending, con fecha+hora pasada)
-const overdueTasks = computed(() => {
-  const now = new Date()
-  return pendingTasks.value
-    .filter((task) => {
-      if (!task.endDate) return false
-      const taskDue = combineDateTime(task.endDate, task.endDateHour)
-      return taskDue < now
-    })
-    .sort((a, b) => {
-      const aDue = combineDateTime(a.endDate, a.endDateHour)
-      const bDue = combineDateTime(b.endDate, b.endDateHour)
-      return aDue - bDue
-    })
-    .slice(0, 3) // Mostrar solo las primeras 3 tareas
-})
-
-const overdueTasksCount = computed(() => overdueTasks.value.length)
-
-// Get total overdue tasks (all pending tasks with past deadlines, sin límite)
-const overdueTasksTotal = computed(() => {
-  const now = new Date()
-  return pendingTasks.value.filter((task) => {
-    if (!task.endDate) return false
-    const taskDue = combineDateTime(task.endDate, task.endDateHour)
-    return taskDue < now
-  }).length
-})
-
-// Control the expansion state of the overdue tasks panel
-const isOverduePanelExpanded = ref(false)
-
-// Format date for display
-const formatDisplayDate = (date) => {
-  if (!date) return 'No date'
-  return formatDate(date, 'MMM DD, YYYY')
-}
-
-// Función para garantizar colores accesibles con contraste adecuado según WCAG 2.1
-// Respetando los colores originales de Firestore
-const getAccessibleColor = (color, isCompleted) => {
-  if (isCompleted) return 'grey-darken-1' // Mantener gris para tareas completadas
-
-  // Todos los proyectos y tareas tienen un color asignado desde Firestore
-  return color // Mantener el color original de la tarea/proyecto
-}
-
-// Helper function to get the weekdays array from the selected title
+// --- Helpers ---
+const formatDisplayDate = (date) => (date ? formatDate(date, 'MMM DD, YYYY') : 'No date')
+const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'on-surface-variant' : color)
 const getWeekdays = (title) => {
-  if (!title) return [0, 1, 2, 3, 4, 5, 6] // Valor predeterminado si no hay título
   const found = weekdays.value.find((item) => item.title === title)
-  return found ? found.value : [0, 1, 2, 3, 4, 5, 6] // Valor predeterminado si no encuentra coincidencia
+  return found ? found.value : [0, 1, 2, 3, 4, 5, 6]
 }
 
-// Función para obtener mensajes motivacionales según el porcentaje de tareas completadas
+// --- Motivational (adaptado a MD3) ---
 const getMotivationalMessage = (percentage) => {
-  const color = getMotivationalColor(percentage)
   let message = ''
   if (percentage === 100) message = 'All tasks done!'
   else if (percentage >= 90) message = 'Almost there!'
@@ -172,36 +122,32 @@ const getMotivationalMessage = (percentage) => {
   else if (percentage >= 25) message = 'Good start!'
   else if (percentage > 0) message = 'Keep going!'
   else message = 'Start your first task!'
-  return { message, color }
+  return message
 }
-
-// Helper to get icon and color for motivational message
 const getMotivationalIcon = (percentage) => {
-  if (percentage === 100)
-    return { icon: 'mdi-trophy', color: getMotivationalColor(percentage), size: 28 }
-  if (percentage >= 90)
-    return { icon: 'mdi-star-circle', color: getMotivationalColor(percentage), size: 24 }
-  if (percentage >= 75)
-    return { icon: 'mdi-star-circle', color: getMotivationalColor(percentage), size: 24 }
-  if (percentage >= 50)
-    return { icon: 'mdi-fire', color: getMotivationalColor(percentage), size: 24 }
-  if (percentage >= 25)
-    return { icon: 'mdi-fire', color: getMotivationalColor(percentage), size: 24 }
-  if (percentage > 0)
-    return { icon: 'mdi-alert-circle', color: getMotivationalColor(percentage), size: 24 }
-  return { icon: 'mdi-flag-outline', color: getMotivationalColor(percentage), size: 24 }
+  if (percentage === 100) return { icon: 'mdi-trophy', color: 'success', size: 28 }
+  if (percentage >= 75) return { icon: 'mdi-star-circle', color: 'primary', size: 24 }
+  if (percentage >= 50) return { icon: 'mdi-fire', color: 'secondary', size: 24 }
+  if (percentage >= 25) return { icon: 'mdi-fire', color: 'warning', size: 24 }
+  if (percentage > 0) return { icon: 'mdi-alert-circle', color: 'error', size: 24 }
+  return { icon: 'mdi-flag-outline', color: 'on-surface-variant', size: 24 }
 }
 
-// Helper to get color for progress circle based on completion percentage
-const getMotivationalColor = (percentage) => {
-  if (percentage === 100) return 'green-darken-3' // #388e3c, contraste ≈ 4.53:1
-  if (percentage >= 90) return 'light-green-darken-2' // #689f38, contraste ≈ 3.17:1
-  if (percentage >= 75) return 'amber-darken-4' // #F9A825, contraste ≈ 1.97:1
-  if (percentage >= 50) return 'orange-darken-4' // #E65100, contraste ≈ 3.78:1
-  if (percentage >= 25) return 'deep-orange-darken-4' // #BF360C, contraste ≈ 5.6:1
-  if (percentage > 0) return 'red-darken-4' // #B71C1C, contraste ≈ 6.57:1
-  return 'grey-darken-3' // #424242, contraste ≈ 8.59:1
-}
+// Computada para la información motivacional
+const motivationalInfo = computed(() => getMotivationalIcon(completionPercentage.value))
+
+// --- Responsive text for Upcoming Deadlines ---
+const getUpcomingDeadlinesText = computed(() => {
+  if (upcomingDeadlinesTotal.value > 1) {
+    return smAndDown.value
+      ? `${upcomingDeadlinesTotal.value} tasks upcoming`
+      : `${upcomingDeadlinesTotal.value} tasks with upcoming deadline`
+  } else if (upcomingDeadlinesTotal.value === 1) {
+    return smAndDown.value ? '1 task upcoming' : '1 task with upcoming deadline'
+  } else {
+    return smAndDown.value ? 'No deadlines' : 'No upcoming deadlines'
+  }
+})
 
 onMounted(() => {
   // Activar suscripción en tiempo real a las tareas del usuario
@@ -245,8 +191,6 @@ onBeforeRouteLeave((to, from, next) => {
   }
   next()
 })
-
-const { xs, sm, md, lg, xl, mobile } = useDisplay()
 </script>
 
 <template>
@@ -255,9 +199,9 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
       class="mx-auto"
       :max-width="xs ? '100%' : sm ? '95%' : md ? '85%' : lg ? '80%' : xl ? '75%' : '70%'"
     >
-      <v-card flat :elevation="4" class="rounded-lg pa-8" color="background">
+      <v-card flat elevation="0" rounded="lg" class="pa-8" color="background">
         <v-card-title class="text-center font-weight-bold mb-8">
-          <span class="text-red-darken-2" :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
+          <span class="text-primary" :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
             Vuetify Todolist
           </span>
         </v-card-title>
@@ -268,35 +212,37 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
             <v-sheet
               v-if="userStore.isLoggedIn && totalTasks > 0"
               rounded="lg"
-              class="mb-8 pa-4 bg-grey-lighten-4"
-              border
+              class="mb-8 pa-4"
+              color="surface-variant"
             >
-              <v-row align="center" class="px-2">
+              <v-row align="start" class="px-2">
                 <!-- Upcoming Deadlines: izquierda -->
-                <v-col :cols="xs ? 12 : sm ? 4 : 4" class="mb-8">
+                <v-col :cols="xs ? 12 : sm ? 4 : 4">
                   <v-card
                     flat
                     rounded="lg"
-                    class="stat-panel-card"
-                    :class="upcomingDeadlines.length > 0 ? 'bg-yellow-lighten-5' : ''"
+                    :elevation="upcomingDeadlinesTotal > 0 ? 3 : 1"
+                    color="surface"
+                    hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
                         <v-icon
-                          :color="
-                            upcomingDeadlines.length > 0 ? 'yellow-darken-4' : 'grey-darken-3'
-                          "
+                          :color="upcomingDeadlinesTotal > 0 ? 'primary' : 'on-surface'"
                           icon="mdi-clock-alert"
                         ></v-icon>
                       </template>
-                      <v-card-title class="text-subtitle-1 font-weight-bold pa-0"
-                        >Upcoming Deadlines</v-card-title
+                      <v-card-title
+                        class="text-subtitle-1 font-weight-bold pa-0"
+                        :class="upcomingDeadlinesTotal > 0 ? 'text-primary' : 'text-on-surface'"
                       >
+                        Upcoming Deadlines
+                      </v-card-title>
                       <template v-slot:append>
                         <v-badge
                           v-if="upcomingDeadlinesTotal > 0"
                           :content="upcomingDeadlinesTotal"
-                          color="yellow-darken-4"
+                          color="primary"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -306,6 +252,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       v-model="isDeadlinesPanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
+                      bg-color="surface"
                     >
                       <v-expansion-panel value="true" class="border-0">
                         <v-expansion-panel-title class="px-3 py-2 upcoming-panel" hide-actions>
@@ -313,34 +260,39 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                             <v-col>
                               <v-sheet
                                 color="transparent"
-                                class="text-body-2 d-inline-flex align-center"
+                                class="text-body-2 d-inline-flex align-center text-truncate"
+                                :class="
+                                  upcomingDeadlinesTotal > 0 ? 'text-primary' : 'text-on-surface'
+                                "
                               >
                                 <v-icon
                                   size="small"
                                   class="me-1"
                                   :color="
-                                    upcomingDeadlines.length > 0
-                                      ? 'yellow-darken-4'
-                                      : 'grey-darken-3'
+                                    upcomingDeadlinesTotal > 0 ? 'primary' : 'on-surface-variant'
                                   "
                                 >
                                   {{
-                                    upcomingDeadlines.length > 0
+                                    upcomingDeadlinesTotal > 0
                                       ? 'mdi-calendar-clock'
                                       : 'mdi-calendar-check'
                                   }}
                                 </v-icon>
-                                <span class="text-truncate d-inline-block" style="max-width: 220px">
-                                  {{
-                                    upcomingDeadlines.length > 0
-                                      ? `Next: ${upcomingDeadlines[0]?.title}`
-                                      : 'No upcoming deadlines'
-                                  }}
+                                <span class="text-truncate d-inline-block" max-width="220px">
+                                  {{ getUpcomingDeadlinesText }}
                                 </span>
                               </v-sheet>
                             </v-col>
                             <v-spacer></v-spacer>
-                            <v-col cols="auto" class="text-caption text-medium-emphasis me-2">
+                            <v-col
+                              cols="auto"
+                              class="text-caption text-medium-emphasis me-2"
+                              :class="
+                                upcomingDeadlinesTotal > 0
+                                  ? 'text-primary'
+                                  : 'text-on-surface-variant'
+                              "
+                            >
                               {{ isDeadlinesPanelExpanded ? 'Hide' : 'Show all' }}
                               <v-btn
                                 density="comfortable"
@@ -350,7 +302,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                 variant="text"
                                 size="small"
                                 :color="
-                                  upcomingDeadlines.length > 0 ? 'yellow-darken-4' : 'grey-darken-3'
+                                  upcomingDeadlinesTotal > 0 ? 'primary' : 'on-surface-variant'
                                 "
                                 aria-label="Toggle upcoming deadlines panel"
                               >
@@ -362,43 +314,49 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           <v-list
                             v-if="upcomingDeadlines.length"
                             density="compact"
-                            class="bg-transparent px-0"
+                            class="px-0"
+                            color="transparent"
                           >
                             <v-list-item
                               v-for="task in upcomingDeadlines"
                               :key="task.id"
                               :to="{ name: 'task-detail', params: { taskId: task.id } }"
-                              class="px-2 py-1 rounded-lg mb-1 bg-grey-lighten-5 task-item upcoming"
+                              class="px-2 py-1 rounded-lg mb-1 task-item upcoming"
                               exact
                               lines="two"
+                              color="surface-variant"
+                              base-color="on-surface-variant"
                             >
                               <template v-slot:prepend>
                                 <v-icon
                                   :color="task.color || 'primary'"
                                   size="32"
-                                  class="me-2 bg-grey-lighten-3 rounded-circle pa-1"
+                                  class="me-2 rounded-circle pa-1"
                                   :icon="labelIcons[task.label] || 'mdi-calendar-alert'"
                                 />
                               </template>
-                              <v-list-item-title class="text-truncate text-subtitle-2">
+                              <v-list-item-title
+                                class="text-truncate text-subtitle-2 text-on-surface-variant"
+                              >
                                 {{ task.title }}
                               </v-list-item-title>
-                              <v-list-item-subtitle class="text-caption d-flex align-center">
+                              <v-list-item-subtitle
+                                class="text-caption d-flex align-center bg-primary text-on-primary rounded-lg"
+                              >
                                 <v-icon
                                   size="x-small"
                                   class="me-1"
-                                  :color="
-                                    upcomingDeadlines.length > 0
-                                      ? 'yellow-darken-4'
-                                      : 'grey-darken-3'
-                                  "
+                                  :color="'primary'"
                                   icon="mdi-clock-alert-outline"
                                 ></v-icon>
-                                {{ formatDisplayDate(task.endDate) }}
+                                Deadline: {{ formatDisplayDate(task.endDate) }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
-                          <v-sheet v-else class="text-caption text-center pa-2">
+                          <v-sheet
+                            v-else
+                            class="text-caption text-center pa-2 bg-transparent text-on-surface"
+                          >
                             No upcoming deadlines
                           </v-sheet>
                           <v-row justify="end" no-gutters class="mt-2">
@@ -406,9 +364,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                               <v-btn
                                 density="comfortable"
                                 variant="text"
-                                :color="
-                                  upcomingDeadlines.length > 0 ? 'yellow-darken-4' : 'grey-darken-3'
-                                "
+                                :color="upcomingDeadlinesTotal > 0 ? 'primary' : 'on-surface'"
                                 rounded
                                 size="small"
                                 :to="{ name: 'filter-and-labels' }"
@@ -430,31 +386,32 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                   cols="12"
                   sm="4"
                   md="4"
-                  class="d-flex flex-column align-center justify-center mb-8"
+                  class="d-flex flex-column align-center justify-center"
                 >
                   <v-card
                     flat
                     rounded="lg"
-                    class="stat-panel-card"
-                    :class="completionPercentage === 100 ? 'bg-green-lighten-5' : ''"
+                    :elevation="completionPercentage === 100 ? 3 : 1"
+                    color="surface"
+                    hover
                   >
                     <v-card-text class="d-flex flex-column align-center justify-center pa-6">
                       <v-fade-transition>
                         <v-icon
                           v-if="completionPercentage === 100"
                           size="64"
-                          :color="getMotivationalColor(completionPercentage)"
+                          :color="motivationalInfo.color"
                           class="mb-2 animate__animated animate__bounceIn"
                           >mdi-check-circle</v-icon
                         >
                       </v-fade-transition>
                       <v-progress-circular
                         :model-value="completionPercentage"
-                        :color="getMotivationalColor(completionPercentage)"
+                        :color="motivationalInfo.color"
                         :width="6"
                         :size="100"
                         class="mb-4"
-                        bg-color="grey-lighten-4"
+                        bg-color="surface-variant"
                         :indeterminate="false"
                         :rotate="-90"
                         transition="scale-transition"
@@ -463,7 +420,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           :class="[
                             'font-weight-bold',
                             'text-h4',
-                            `text-${getMotivationalColor(completionPercentage)}`,
+                            `text-${motivationalInfo.color}`,
                             'progress-percentage-transition'
                           ]"
                         >
@@ -473,8 +430,10 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
 
                       <v-card-text class="text-center pa-0">
                         <div
-                          class="text-body-1 mb-1 font-weight-bold"
-                          :class="`text-${getMotivationalColor(completionPercentage)}`"
+                          :class="[
+                            'text-body-1 mb-1 font-weight-bold',
+                            `text-${motivationalInfo.color}`
+                          ]"
                         >
                           <span class="font-weight-bold">{{ completedTasksCount }}</span>
                           <span class="font-weight-bold"> / </span>
@@ -482,24 +441,28 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           <span class="font-weight-bold"> Tasks Completed</span>
                         </div>
                         <div
-                          class="text-body-2 font-weight-medium mb-3"
-                          :class="`text-${getMotivationalColor(completionPercentage)}`"
+                          :class="[
+                            'text-body-2 font-weight-medium mb-3',
+                            `text-${motivationalInfo.color}`
+                          ]"
                         >
-                          {{ pendingTasksCount }} remaining
+                          {{ pendingTasks.length }} remaining
                         </div>
                         <v-fade-transition mode="out-in">
                           <div
                             key="motivational-{{ completionPercentage }}"
-                            class="text-h6 font-weight-bold d-flex align-center justify-center mt-2"
-                            :class="`text-${getMotivationalColor(completionPercentage)}`"
+                            :class="[
+                              'text-h6 font-weight-bold d-flex align-center justify-center mt-2',
+                              `text-${motivationalInfo.color}`
+                            ]"
                           >
                             <v-icon
-                              :icon="getMotivationalIcon(completionPercentage).icon"
-                              :color="getMotivationalIcon(completionPercentage).color"
-                              :size="getMotivationalIcon(completionPercentage).size"
+                              :icon="motivationalInfo.icon"
+                              :color="motivationalInfo.color"
+                              :size="motivationalInfo.size"
                               class="me-2"
                             ></v-icon>
-                            {{ getMotivationalMessage(completionPercentage).message }}
+                            {{ getMotivationalMessage(completionPercentage) }}
                           </div>
                         </v-fade-transition>
                       </v-card-text>
@@ -508,28 +471,32 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                 </v-col>
 
                 <!-- Overdue Tasks: derecha -->
-                <v-col cols="12" sm="4" md="4" class="mb-8">
+                <v-col cols="12" sm="4" md="4">
                   <v-card
                     flat
                     rounded="lg"
-                    class="stat-panel-card"
-                    :class="overdueTasksCount > 0 ? 'bg-red-lighten-5' : ''"
+                    :elevation="overdueTasksTotal > 0 ? 3 : 1"
+                    color="surface"
+                    hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
                         <v-icon
-                          :color="overdueTasksCount > 0 ? 'red-darken-2' : 'grey-darken-3'"
+                          :color="overdueTasksTotal > 0 ? 'error' : 'on-surface'"
                           icon="mdi-alarm"
                         ></v-icon>
                       </template>
-                      <v-card-title class="text-subtitle-1 font-weight-bold pa-0"
-                        >Overdue Tasks</v-card-title
+                      <v-card-title
+                        class="text-subtitle-1 font-weight-bold pa-0"
+                        :class="overdueTasksTotal > 0 ? 'text-error' : 'text-on-surface'"
+                      >
+                        Overdue Tasks</v-card-title
                       >
                       <template v-slot:append>
                         <v-badge
                           v-if="overdueTasksTotal > 0"
                           :content="overdueTasksTotal"
-                          color="red-darken-2"
+                          color="error"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -539,6 +506,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                       v-model="isOverduePanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
+                      bg-color="surface"
                     >
                       <v-expansion-panel value="true" class="border-0">
                         <v-expansion-panel-title class="px-3 py-2 overdue-panel" hide-actions>
@@ -547,27 +515,32 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                               <v-sheet
                                 color="transparent"
                                 class="text-body-2 d-inline-flex align-center text-truncate"
+                                :class="overdueTasksTotal > 0 ? 'text-error' : 'text-on-surface'"
                               >
                                 <v-icon
                                   size="small"
                                   class="me-1"
-                                  :color="overdueTasksCount > 0 ? 'red-darken-2' : 'grey-darken-3'"
+                                  :color="overdueTasksTotal > 0 ? 'error' : 'on-surface'"
                                 >
                                   {{
-                                    overdueTasksCount > 0 ? 'mdi-alert-circle' : 'mdi-check-circle'
+                                    overdueTasksTotal > 0 ? 'mdi-alert-circle' : 'mdi-check-circle'
                                   }}
                                 </v-icon>
-                                <span class="text-truncate d-inline-block" style="max-width: 220px">
+                                <span class="text-truncate d-inline-block" max-width="220px">
                                   {{
-                                    overdueTasksCount > 0
-                                      ? `${overdueTasksCount} task${overdueTasksCount > 1 ? 's' : ''} past deadline`
+                                    overdueTasksTotal > 0
+                                      ? `${overdueTasksTotal} task${overdueTasksTotal > 1 ? 's' : ''} past deadline`
                                       : 'All tasks are on schedule'
                                   }}
                                 </span>
                               </v-sheet>
                             </v-col>
                             <v-spacer></v-spacer>
-                            <v-col cols="auto" class="text-caption text-medium-emphasis me-2">
+                            <v-col
+                              cols="auto"
+                              class="text-caption text-medium-emphasis me-2"
+                              :class="overdueTasksTotal > 0 ? 'text-error' : 'text-on-surface'"
+                            >
                               {{ isOverduePanelExpanded ? 'Hide' : 'Show all' }}
                               <v-btn
                                 density="comfortable"
@@ -576,7 +549,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                                 "
                                 variant="text"
                                 size="small"
-                                :color="overdueTasksCount > 0 ? 'red-darken-2' : 'grey-darken-3'"
+                                :color="overdueTasksTotal > 0 ? 'error' : 'on-surface'"
                                 aria-label="Toggle overdue tasks panel"
                               >
                               </v-btn>
@@ -587,39 +560,48 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           <v-list
                             v-if="overdueTasks.length"
                             density="compact"
-                            class="bg-transparent px-0"
+                            class="px-0"
+                            color="transparent"
                           >
                             <v-list-item
                               v-for="task in overdueTasks"
                               :key="task.id"
                               :to="{ name: 'task-detail', params: { taskId: task.id } }"
-                              class="px-2 py-1 rounded-lg mb-1 bg-grey-lighten-5 task-item overdue"
+                              class="px-2 py-1 rounded-lg mb-1 task-item overdue"
                               exact
                               lines="two"
+                              color="surface-variant"
+                              base-color="on-surface-variant"
                             >
                               <template v-slot:prepend>
                                 <v-icon
                                   :color="task.color || 'primary'"
                                   size="32"
-                                  class="me-2 bg-grey-lighten-3 rounded-circle pa-1"
+                                  class="me-2 rounded-circle pa-1"
                                   :icon="labelIcons[task.label] || 'mdi-calendar-alert'"
                                 />
                               </template>
-                              <v-list-item-title class="text-truncate text-subtitle-2">
+                              <v-list-item-title
+                                class="text-truncate text-subtitle-2 text-on-surface-variant"
+                              >
                                 {{ task.title }}
                               </v-list-item-title>
-                              <v-list-item-subtitle class="text-caption d-flex align-center">
+                              <v-list-item-subtitle
+                                class="text-caption d-flex align-center bg-error text-on-error rounded-lg"
+                              >
                                 <v-icon
                                   size="x-small"
-                                  class="me-1"
                                   icon="mdi-clock-alert-outline"
-                                  :color="overdueTasksCount > 0 ? 'red-darken-2' : 'grey-darken-3'"
+                                  color="error"
                                 ></v-icon>
                                 Due: {{ formatDisplayDate(task.endDate) }}
                               </v-list-item-subtitle>
                             </v-list-item>
                           </v-list>
-                          <v-sheet v-else class="text-caption text-center pa-2">
+                          <v-sheet
+                            v-else
+                            class="text-caption text-center pa-2 bg-transparent text-on-surface"
+                          >
                             All tasks are on schedule!
                           </v-sheet>
                           <v-row justify="end" no-gutters class="mt-2">
@@ -627,7 +609,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                               <v-btn
                                 density="comfortable"
                                 variant="text"
-                                :color="overdueTasksCount > 0 ? 'red-darken-2' : 'grey-darken-3'"
+                                :color="overdueTasksTotal > 0 ? 'error' : 'on-surface'"
                                 rounded
                                 size="small"
                                 :to="{ name: 'filter-and-labels' }"
@@ -655,16 +637,15 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                 label="View Mode"
                 variant="outlined"
                 density="comfortable"
-                bg-color="grey-lighten-4"
                 hide-details
                 rounded
-                color="red-darken-2"
+                color="primary"
                 prepend-inner-icon="mdi-calendar-month"
                 menu-icon="mdi-menu-down"
                 class="font-weight-medium"
                 item-title="text"
                 item-value="value"
-                :menu-props="{ contentClass: 'bg-grey-lighten-4' }"
+                :menu-props="{ contentClass: 'bg-surface-variant' }"
               ></v-select>
             </v-col>
 
@@ -677,14 +658,13 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                 label="Weekdays"
                 variant="outlined"
                 density="comfortable"
-                bg-color="grey-lighten-4"
                 hide-details
                 rounded
-                color="red-darken-2"
+                color="primary"
                 prepend-inner-icon="mdi-calendar-week"
                 menu-icon="mdi-menu-down"
                 class="font-weight-medium"
-                :menu-props="{ contentClass: 'bg-grey-lighten-4' }"
+                :menu-props="{ contentClass: 'bg-surface-variant' }"
               ></v-select>
             </v-col>
           </v-row>
@@ -703,14 +683,16 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                     class="rounded-lg elevation-1"
                     height="auto"
                     aria-label="Calendario de tareas"
+                    elevation="1"
                   >
                     <template #event="{ event }">
                       <v-card
                         :key="event.id"
                         flat
-                        :color="event.completed ? 'grey-lighten-5' : 'grey-lighten-3'"
+                        :color="event.completed ? 'surface-variant' : 'surface'"
                         :class="[
-                          'ma-1 pa-2 rounded cursor-pointer transition-swing focus-visible-outline'
+                          'ma-1 pa-2 rounded cursor-pointer transition-swing focus-visible-outline',
+                          { 'opacity-60': event.completed }
                         ]"
                         :ripple="true"
                         @click="
@@ -732,7 +714,8 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           <v-col cols="9" class="text-truncate">
                             <span
                               :class="{
-                                'text-decoration-line-through text-grey-lighten-1': event.completed
+                                'text-decoration-line-through text-on-surface-variant':
+                                  event.completed
                               }"
                             >
                               {{ event.title }}
@@ -740,7 +723,7 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
                           </v-col>
                           <v-col cols="3" class="text-right">
                             <v-icon
-                              :color="getAccessibleColor(event.color, event.completed)"
+                              :color="getAccessibleColor(event.color, event.completed) || 'primary'"
                               :icon="
                                 event.completed
                                   ? 'mdi-check-circle'
@@ -776,28 +759,6 @@ const { xs, sm, md, lg, xl, mobile } = useDisplay()
 </template>
 
 <style scoped>
-/* Animación y transición más sutil para los paneles del Panel estadístico */
-.stat-panel-card {
-  transition:
-    box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-    background-color 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: box-shadow, transform, background-color;
-}
-.stat-panel-card:hover {
-  box-shadow:
-    0 4px 16px rgba(60, 60, 60, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px) scale(1.0125);
-  background-color: #fafafa;
-  z-index: 2;
-}
-
-.stat-panel-card:focus-visible {
-  outline: 2px solid var(--v-theme-primary, #1976d2);
-  outline-offset: 2px;
-}
-
 .progress-percentage-transition {
   transition:
     color 0.3s,
