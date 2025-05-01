@@ -22,14 +22,25 @@ onMounted(() => {
     <v-main>
       <RouterView />
     </v-main>
-    <VFooter />
+    <v-footer>
+      <VFooter />
+    </v-footer>
     <VNotifications />
     <VBaseSnackbar />
   </v-app>
 </template>
 
-<style scoped>
+<!--<style scoped>
 .v-main {
   min-height: 100vh;
+}
+</style>-->
+<style scoped>
+header {
+  line-height: 1.5;
+  max-height: 100vh;
+}
+main {
+  min-height: 80vh;
 }
 </style>

@@ -56,7 +56,7 @@ const { xs, sm } = useDisplay()
 <template>
   <v-row :class="xs ? 'pa-2' : sm ? 'pa-4' : 'pa-6'" class="d-flex">
     <div
-      class="container-tasks-title d-flex mx-auto w-100"
+      class="container-tasks-title d-flex align-center mx-auto w-100"
       :class="xs ? 'justify-center' : 'justify-space-between'"
     >
       <v-spacer v-if="!xs"></v-spacer>
@@ -92,17 +92,22 @@ const { xs, sm } = useDisplay()
           Previous page
         </v-tooltip>
       </v-btn>
-      <span
-        class="page-indicator font-weight-semibold d-flex align-items-center rounded-lg bg-surface-variant text-on-surface-variant"
+      <v-chip
+        variant="text"
+        rounded
+        :size="xs ? 'small' : sm ? 'medium' : 'large'"
+        class="page-indicator font-weight-semibold d-flex align-center justify-center my-0 text-decoration-underline"
         :class="
           xs ? 'text-caption px-2 py-2 mx-1' : sm ? 'text-body-2 px-3 py-2 mx-2' : 'pa-3 me-2'
         "
       >
         <slot>
           <span v-if="xs">{{ currentPage }}/{{ totalPages }}</span>
-          <span v-else>Page {{ currentPage }} of {{ totalPages }}</span>
+          <span v-else>
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
         </slot>
-      </span>
+      </v-chip>
       <v-btn
         icon
         :class="xs ? 'me-1' : 'me-2'"

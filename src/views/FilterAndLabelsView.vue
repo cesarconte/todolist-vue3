@@ -220,7 +220,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 multiple
@@ -266,7 +266,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 multiple
@@ -337,7 +337,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 multiple
@@ -383,7 +383,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 multiple
@@ -427,7 +427,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 prepend-icon=""
@@ -451,7 +451,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 prepend-icon=""
@@ -481,7 +481,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 variant="outlined"
                 color="primary"
                 density="comfortable"
-                rounded="lg"
+                rounded
                 clearable
                 hide-details="auto"
                 :chips="taskStore.state.selectedCompletionStatus !== null"
@@ -551,7 +551,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           <v-btn
             color="primary"
             variant="tonal"
-            rounded="lg"
+            rounded
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? 'px-4 py-2' : 'px-8'"

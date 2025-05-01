@@ -222,7 +222,7 @@ onMounted(() => {
                   userStore.isLoggedIn ? 'Type task title keywords...' : 'Log in to search tasks'
                 "
                 variant="outlined"
-                rounded="lg"
+                rounded
                 :density="xs ? 'default' : 'comfortable'"
                 color="primary"
                 hide-details
@@ -325,7 +325,7 @@ onMounted(() => {
           <v-btn
             color="primary"
             variant="tonal"
-            rounded="lg"
+            rounded
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? 'px-4 py-2' : 'px-8'"

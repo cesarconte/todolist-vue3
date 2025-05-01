@@ -100,9 +100,9 @@ const completedButton = computed(() => {
   // Defines the completed button's icon, label, and function
   return {
     icon: props.completed
-      ? `mdi-check-circle text-${props.color}`
-      : `mdi-circle-outline text-${props.color}`,
-    label: props.completed ? 'Task completed' : 'Not completed task',
+      ? 'mdi-check-circle text-secondary'
+      : `mdi-circle-outline text-secondary`,
+    label: props.completed ? 'Completed' : 'Complete',
     tooltipText: props.completed ? 'Task completed' : 'Not completed task',
     function: completeTask
   }
@@ -113,12 +113,12 @@ const btnsTasks = computed(() => {
   return [
     {
       icon: 'mdi-pencil',
-      label: 'Edit task',
+      label: 'Edit',
       function: editTask
     },
     {
       icon: 'mdi-delete',
-      label: 'Delete task',
+      label: 'Delete',
       function: deleteTask
     },
     {
@@ -150,7 +150,7 @@ const tooltips = computed(() => [
 
 const cardColor = computed(() => (props.completed ? 'surfaceDim' : 'surface'))
 const textColorClass = computed(() => (props.completed ? 'text-medium-emphasis' : 'text-onSurface'))
-const dateCardColor = computed(() => (props.completed ? 'surfaceContainerHighest' : 'surface'))
+const dateCardColor = computed(() => (props.completed ? 'surfaceContainerHighest' : 'outline'))
 const dateTextColorClass = computed(() =>
   props.completed ? 'text-medium-emphasis' : 'text-onSurface'
 )
@@ -193,15 +193,12 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
     :elevation="hover && !props.completed ? 4 : props.completed ? 0 : 2"
     :color="cardColor"
     :class="[
-      { 'rounded-lg': !hover },
-      mobile ? 'card card-task-view ma-4' : 'card card-task-view ma-8 pa-8',
-      hover && !props.completed ? 'card-hover' : '',
-      props.completed ? 'completed-card' : '',
-      props.completed ? 'bg-surfaceContainerHighest' : '',
+      'card card-task-view',
+      'rounded-lg',
+      mobile ? 'ma-4' : 'ma-8 pa-8',
+      props.completed ? 'bg-surfaceContainerHighest' : 'bg-surfaceContainer'
     ]"
-    :hover="!props.completed"
-    @mouseover="hover = !props.completed && true"
-    @mouseleave="hover = false"
+    :disabled="props.completed"
   >
     <v-card-title class="card-title card-title-task-view d-flex align-center mb-4">
       <div class="d-flex align-center">
@@ -219,6 +216,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           size="small"
           label
           variant="tonal"
+          rounded="pill"
           class="ml-3 font-weight-medium"
         >
           Completed
@@ -266,11 +264,8 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             Description:
           </p>
           <p
-            class="text-body-1 py-2 px-4 rounded-lg"
-            :class="[
-              textColorClass,
-              props.completed ? 'bg-surfaceContainerHighest' : 'bg-surfaceContainer'
-            ]"
+            class="text-body-1 py-2 px-4 bg-surfaceContainerHighest rounded-lg"
+            :class="textColorClass"
           >
             {{ description }}
           </p>
@@ -425,14 +420,16 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           @click="btn.function"
           :aria-label="btn.label"
           class="action-btn mx-2 mb-2"
-          :color="i === 0 ? 'primary' : i === 1 ? 'error' : props.completed ? 'success' : 'primary'"
-          :variant="i === 0 ? 'elevated' : i === 1 ? 'tonal' : 'tonal'"
+          :color="
+            i === 0 ? 'primary' : i === 1 ? (props.completed ? 'secondary' : 'error') : 'secondary'
+          "
+          :variant="i === 0 ? 'flat' : i === 1 ? 'tonal' : 'tonal'"
           density="comfortable"
           size="small"
-          rounded="lg"
+          rounded
           :height="40"
           :min-width="96"
-          :disabled="props.completed && i !== 2"
+          :disabled="props.completed"
         >
           <!-- Icono para todos los botones -->
           <v-icon
@@ -441,7 +438,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             class="mr-1"
             :color="props.completed && i !== 2 ? 'medium-emphasis' : ''"
           >
-            {{ i !== 2 ? btn.icon : props.completed ? 'mdi-check-circle' : 'mdi-circle-outline' }}
+            {{ btn.icon }}
           </v-icon>
 
           <!-- Texto para todos los botones -->
@@ -449,7 +446,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             class="text-body-2 font-weight-medium"
             :class="props.completed && i !== 2 ? 'text-medium-emphasis' : ''"
           >
-            {{ i === 0 ? 'Edit' : i === 1 ? 'Delete' : props.completed ? 'Completed' : 'Complete' }}
+            {{ btn.label }}
           </span>
 
           <v-tooltip
@@ -466,49 +463,4 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
   </v-card>
 </template>
 
-<style scoped>
-.scale-out {
-  animation: scale-out 0.3s ease-in-out;
-}
-
-.scale-in {
-  animation: scale-in 0.3s ease-in-out;
-}
-
-@keyframes scale-out {
-  0% {
-    transform: scale(0);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes scale-in {
-  0% {
-    transform: scale(0);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-/* Estilos adicionales para las tarjetas */
-.action-btn {
-  transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-}
-
-.completed-card {
-  /* Add specific styles for completed cards if needed, e.g., border */
-  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
-}
-
-/* Ensure disabled buttons look appropriately dimmed */
-.v-btn--disabled {
-  opacity: 0.5; /* Adjust opacity as needed */
-}
-</style>
+<style scoped></style>

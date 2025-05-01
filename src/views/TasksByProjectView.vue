@@ -282,7 +282,7 @@ const btnsFormProject = [
     variant: 'tonal',
     rounded: 'lg',
     size: 'large',
-    color: 'default',
+    color: 'surface',
     function: reset
   },
   {
@@ -292,7 +292,7 @@ const btnsFormProject = [
     variant: 'text',
     rounded: 'lg',
     size: 'large',
-    color: 'default',
+    color: 'surface',
     function: () => (dialogEditProject.value = false)
   }
 ]
@@ -355,11 +355,11 @@ const confirmDeleteAndClose = () => {
           class="card card-create-task pa-4"
           color="surface"
           variant="elevated"
-          elevation="3"
+          elevation="2"
           rounded="lg"
         >
           <v-card-title
-            class="card-title card-title-create-task text-on-surface"
+            class="card-title card-title-create-task text-onSurface"
             :class="mobile ? 'px-1' : ''"
           >
             <span class="text-h6">Add new task</span>
@@ -392,10 +392,10 @@ const confirmDeleteAndClose = () => {
           class="card card-edit-project pa-4"
           color="surface"
           variant="elevated"
-          elevation="3"
+          elevation="2"
           rounded="lg"
         >
-          <v-card-title class="card-title card-title-edit-project text-on-surface">
+          <v-card-title class="card-title card-title-edit-project text-onSurface">
             <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
           </v-card-title>
           <v-card-text>
@@ -423,10 +423,10 @@ const confirmDeleteAndClose = () => {
           class="card card-edit-task pa-4"
           color="surface"
           variant="elevated"
-          elevation="3"
+          elevation="2"
           rounded="lg"
         >
-          <v-card-title class="card-title card-title-edit-task text-on-surface">
+          <v-card-title class="card-title card-title-edit-task text-onSurface">
             <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
@@ -447,7 +447,7 @@ const confirmDeleteAndClose = () => {
         </v-card>
       </v-dialog>
       <v-dialog v-model="confirmDialog" max-width="400px" class="dialog-confirm-delete">
-        <v-card color="surface" variant="elevated" elevation="3" rounded="lg" class="pa-4">
+        <v-card color="surface" variant="elevated" elevation="2" rounded="lg" class="pa-4">
           <v-card-title class="text-h6 pb-2">Confirm Delete</v-card-title>
           <v-card-text>
             <p>Are you sure you want to delete all tasks in this project?</p>
@@ -455,7 +455,7 @@ const confirmDeleteAndClose = () => {
           </v-card-text>
           <v-card-actions class="justify-end pt-3">
             <v-btn
-              color="default"
+              color="surface"
               variant="text"
               @click="confirmDialog = false"
               class="text-button mr-2"
@@ -483,7 +483,7 @@ const confirmDeleteAndClose = () => {
           <v-btn
             icon
             variant="outlined"
-            color="tertiary"
+            color="error"
             class="delete-project-btn me-2"
             @click="confirmDeleteAllTasks"
             aria-label="Delete all tasks in project"
@@ -510,7 +510,7 @@ const confirmDeleteAndClose = () => {
             </template>
             <v-card
               variant="elevated"
-              elevation="3"
+              elevation="2"
               rounded="lg"
               class="menu-card pa-2"
               width="auto"
@@ -563,12 +563,7 @@ const confirmDeleteAndClose = () => {
             'col-xl-7': xl
           }"
         >
-          <v-card
-            color="surface-variant"
-            rounded="lg"
-            elevation="1"
-            :class="xs ? 'pa-3' : 'pa-4'"
-          >
+          <v-card color="surfaceVariant" rounded="lg" elevation="1" :class="xs ? 'pa-3' : 'pa-4'">
             <!-- Primera fila: Total con icono + botón añadir -->
             <v-row class="d-flex align-center" :class="xs ? 'py-1' : 'py-2'">
               <v-col cols="auto" class="d-flex align-center">
@@ -633,7 +628,7 @@ const confirmDeleteAndClose = () => {
                     color="primary"
                     size="22"
                   ></v-icon>
-                  <span class="text-on-surface-variant font-weight-medium text-body-2">
+                  <span class="text onSurfaceVariant font-weight-medium text-body-2">
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -646,7 +641,7 @@ const confirmDeleteAndClose = () => {
                     color="primary"
                     size="22"
                   ></v-icon>
-                  <span class="text-on-surface-variant font-weight-medium text-body-2">
+                  <span class="text onSurfaceVariant font-weight-medium text-body-2">
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -655,11 +650,8 @@ const confirmDeleteAndClose = () => {
               <!-- Tercera fila: Progress -->
               <v-row dense class="pb-2">
                 <v-col cols="12">
-                  <!-- Contenedor para agrupar visualmente la etiqueta y el círculo -->
                   <div class="d-flex flex-column align-center mt-2">
-                    <!-- Etiqueta Progress con mayor visibilidad -->
                     <span class="text-body-2 font-weight-medium text-primary mb-2">Progress:</span>
-                    <!-- Círculo de progreso más grande -->
                     <v-progress-circular
                       v-model="progressPercentage"
                       :size="64"
@@ -687,7 +679,7 @@ const confirmDeleteAndClose = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text-on-surface-variant font-weight-medium"
+                    class="text-onSurfaceVariant font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
@@ -702,7 +694,7 @@ const confirmDeleteAndClose = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text-on-surface-variant font-weight-medium"
+                    class="text onSurfaceVariant font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
@@ -786,7 +778,7 @@ const confirmDeleteAndClose = () => {
                 :endDate="task.endDate"
                 :createdAt="task.createdAt"
                 :completed="task.completed"
-                :color="task.color ? task.color : 'default'"
+                :color="task.color ? task.color : 'primary'"
                 :projectId="task.projectId"
                 :startDateHour="task.startDateHour"
                 :endDateHour="task.endDateHour"
@@ -866,7 +858,7 @@ const confirmDeleteAndClose = () => {
             @click="router.back()"
             color="primary"
             variant="tonal"
-            rounded="lg"
+            rounded
             :size="xs ? 'default' : 'large'"
             :block="xs ? true : false"
             prepend-icon="mdi-chevron-left"
