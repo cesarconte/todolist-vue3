@@ -17,7 +17,7 @@ import LoginCard from '@/components/auth/VLoginCard.vue'
             handleRoute="/signin/name/:name"
           >
             <template #form>
-              <p class="mt-10 text-body-2 text-on-surface-variant">
+              <p class="mt-10 text-body-2 text-onSurfaceVariant">
                 Not your computer? Use Guest Mode to sign in privately.
                 <a
                   href="https://support.google.com/chrome/answer/6130773?hl=en"

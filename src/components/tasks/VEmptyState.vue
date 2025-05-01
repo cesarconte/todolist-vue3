@@ -1,10 +1,28 @@
 <template>
   <div
     class="empty-state-container text-center d-flex flex-column align-center justify-center py-8"
-  >    <v-icon :size="iconSize" :color="iconColor" class="empty-icon mb-4">{{ icon }}</v-icon>
-    <p class="text-h6 font-weight-medium mt-4 mb-2" :class="textColor">{{ title }}</p>
-    <span class="text-body-2 mb-4" :class="textColor">{{ subtitle }}</span>
-    <slot />
+  >
+    <v-icon
+      :icon="icon"
+      :size="iconSize"
+      :color="iconColor || 'onSurfaceVariant'"
+      class="mb-4 empty-icon"
+    ></v-icon>
+    <h3
+      class="text-h5 font-weight-medium mb-2"
+      :class="textColor || 'text-onSurfaceVariant'"
+    >
+      {{ title }}
+    </h3>
+    <p
+      class="text-body-1 mb-4"
+      :class="textColor || 'text-onSurfaceVariant'"
+    >
+      {{ subtitle }}
+    </p>
+    <div class="empty-state-actions">
+      <slot></slot>
+    </div>
   </div>
 </template>
 

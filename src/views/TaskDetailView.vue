@@ -121,9 +121,9 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
               />
             </template>
             <template #fallback>
-              <v-card flat color="surface-variant" rounded="lg" class="pa-6 text-center">
+              <v-card flat color="surfaceVariant" rounded="lg" class="pa-6 text-center">
                 <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                <div class="text-body-1 mt-4 text-on-surface-variant">Loading task details...</div>
+                <div class="text-body-1 mt-4 text-onSurfaceVariant">Loading task details...</div>
               </v-card>
             </template>
           </Suspense>

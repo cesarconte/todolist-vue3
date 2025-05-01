@@ -11,24 +11,6 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
   // - La acción primaria debe ser filled/elevated (más prominente)
   const btnsForm = [
     {
-      type: 'button',
-      height: '2.5rem',
-      text: 'Cancel',
-      icon: 'mdi-close',
-      color: 'on-surface-variant', // Color neutro para cancelación (MD3)
-      variant: 'text', // Variante menos prominente para cancelación (MD3)
-      function: closeFn
-    },
-    {
-      type: 'button',
-      height: '2.5rem',
-      text: 'Reset',
-      icon: 'mdi-refresh',
-      color: 'secondary', // Color secundario para acción alternativa (MD3)
-      variant: 'tonal', // Variante intermedia para acción secundaria (MD3)
-      function: resetFn
-    },
-    {
       type: 'submit',
       height: '2.5rem',
       text: '', // Se configurará en el componente
@@ -52,6 +34,24 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
           )
         }
       }
+    },
+    {
+      type: 'button',
+      height: '2.5rem',
+      text: 'Reset',
+      icon: 'mdi-refresh',
+      color: 'secondary', // Color secundario para acción alternativa (MD3)
+      variant: 'tonal', // Variante intermedia para acción secundaria (MD3)
+      function: resetFn
+    },
+    {
+      type: 'button',
+      height: '2.5rem',
+      text: 'Cancel',
+      icon: 'mdi-close',
+      color: 'surface-variant', // Cambiado de 'on-surface-variant' para mejorar contraste
+      variant: 'outlined', // Cambiado de 'text' para mejor visibilidad
+      function: closeFn
     }
   ]
 

@@ -78,6 +78,7 @@ const taskFormRef = ref(null)
 const projectFormRef = ref(null)
 const dialogEditProject = ref(false)
 const dialogAddTask = ref(false)
+const confirmDialog = ref(false)
 
 // const isLoading = computed(() => taskStore.state.isLoading)
 
@@ -266,23 +267,32 @@ const btnsProject = [
 const btnsFormProject = [
   {
     type: 'submit',
-    height: '3rem',
     text: 'Save Edit',
     icon: 'mdi-check',
+    variant: 'elevated',
+    rounded: 'lg',
+    size: 'large',
+    color: 'primary',
     function: submitEditedProject
   },
   {
     type: 'button',
-    height: '3rem',
     text: 'Reset Form',
     icon: 'mdi-refresh',
+    variant: 'tonal',
+    rounded: 'lg',
+    size: 'large',
+    color: 'default',
     function: reset
   },
   {
     type: 'button',
-    height: '3rem',
     text: 'Close',
     icon: 'mdi-close',
+    variant: 'text',
+    rounded: 'lg',
+    size: 'large',
+    color: 'default',
     function: () => (dialogEditProject.value = false)
   }
 ]
@@ -301,7 +311,31 @@ const completedTasksIcon = computed(() => {
     : 'mdi-calendar-check-outline'
 })
 
-const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay()
+const { mobile, xs, sm, smAndUp, md, mdAndDown, mdAndUp, lg, xl } = useDisplay()
+
+const computedProgressSize = computed(() => {
+  if (xs.value) return 64 // Size for xs (increased from 56 to 64 to match our direct template change)
+  if (sm.value) return 64 // Size for sm
+  if (mdAndUp.value) return 72 // Size for md and up
+  return 64 // Default fallback
+})
+
+const computedProgressWidth = computed(() => {
+  if (xs.value) return 6 // Width for xs (increased from 5 to 6 to match our direct template change)
+  if (sm.value) return 6 // Width for sm
+  if (mdAndUp.value) return 7 // Width for md and up
+  return 6 // Default fallback
+})
+
+const confirmDeleteAllTasks = () => {
+  confirmDialog.value = true
+}
+
+const confirmDeleteAndClose = () => {
+  projectStore.deleteAllTasksInProject()
+  confirmDialog.value = false
+  showSnackbar(notificationsStore, 'All tasks deleted from project', 'success', 'mdi-delete-sweep')
+}
 </script>
 
 <template>
@@ -315,9 +349,19 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         v-model="dialogAddTask"
         :max-width="xs ? '100vw' : smAndUp ? '600px' : mdAndDown ? '800px' : '1000px'"
         class="dialog dialog-create-task"
+        scrollable
       >
-        <v-card class="card card-create-task pa-4">
-          <v-card-title class="card-title card-title-create-task" :class="mobile ? 'px-1' : ''">
+        <v-card
+          class="card card-create-task pa-4"
+          color="surface"
+          variant="elevated"
+          elevation="3"
+          rounded="lg"
+        >
+          <v-card-title
+            class="card-title card-title-create-task text-on-surface"
+            :class="mobile ? 'px-1' : ''"
+          >
             <span class="text-h6">Add new task</span>
           </v-card-title>
           <v-card-text :class="mobile ? 'px-0' : ''">
@@ -333,7 +377,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             >
             </VTaskForm>
           </v-card-text>
-          <v-card-actions class="justify-center">
+          <v-card-actions class="justify-end px-4 pb-4">
             <VActionButtons :buttons="btnsNewTaskForm" />
           </v-card-actions>
         </v-card>
@@ -342,9 +386,16 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         v-model="dialogEditProject"
         :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
         class="dialog dialog-edit-project"
+        scrollable
       >
-        <v-card class="card card-edit-project pa-4">
-          <v-card-title class="card-title card-title-edit-project">
+        <v-card
+          class="card card-edit-project pa-4"
+          color="surface"
+          variant="elevated"
+          elevation="3"
+          rounded="lg"
+        >
+          <v-card-title class="card-title card-title-edit-project text-on-surface">
             <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
           </v-card-title>
           <v-card-text>
@@ -357,13 +408,7 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
               @submit="submitEditedProject"
             />
           </v-card-text>
-          <v-card-actions
-            :class="
-              smAndDown
-                ? 'd-flex flex-column align-center'
-                : 'd-flex flex-wrap justify-space-around'
-            "
-          >
+          <v-card-actions class="justify-end px-4 pb-4">
             <VActionButtons :buttons="btnsFormProject" />
           </v-card-actions>
         </v-card>
@@ -372,9 +417,16 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         v-model="taskStore.dialogEditTask"
         :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
         class="dialog dialog-edit-task"
+        scrollable
       >
-        <v-card class="card card-edit-task pa-4">
-          <v-card-title class="card-title card-title-edit-task">
+        <v-card
+          class="card card-edit-task pa-4"
+          color="surface"
+          variant="elevated"
+          elevation="3"
+          rounded="lg"
+        >
+          <v-card-title class="card-title card-title-edit-task text-on-surface">
             <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
@@ -389,65 +441,120 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
               @submit="submitEditedTask"
             ></VTaskForm>
           </v-card-text>
-          <v-card-actions
-            :class="
-              smAndDown
-                ? 'd-flex flex-column align-center'
-                : 'd-flex flex-wrap justify-space-around'
-            "
-          >
+          <v-card-actions class="justify-end px-4 pb-4">
             <VActionButtons :buttons="btnsForm" />
           </v-card-actions>
         </v-card>
       </v-dialog>
-
+      <v-dialog v-model="confirmDialog" max-width="400px" class="dialog-confirm-delete">
+        <v-card color="surface" variant="elevated" elevation="3" rounded="lg" class="pa-4">
+          <v-card-title class="text-h6 pb-2">Confirm Delete</v-card-title>
+          <v-card-text>
+            <p>Are you sure you want to delete all tasks in this project?</p>
+            <p class="text-caption text-tertiary mt-2">This action cannot be undone.</p>
+          </v-card-text>
+          <v-card-actions class="justify-end pt-3">
+            <v-btn
+              color="default"
+              variant="text"
+              @click="confirmDialog = false"
+              class="text-button mr-2"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="tertiary"
+              variant="flat"
+              @click="confirmDeleteAndClose"
+              class="text-button"
+            >
+              Delete All
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-row>
         <v-col cols="12" class="d-flex justify-content-between align-items-center mb-8">
-          <h2 class="text-left text-h4 font-weight-bold text-red-darken-2 d-flex align-self-center">
+          <h2 class="text-left text-h4 font-weight-bold text-primary d-flex align-self-center">
             {{ projectStore.selectedProjectTitle }} project tasks
           </h2>
           <v-spacer></v-spacer>
+          <!-- Botón Delete all tasks in project con color terciario -->
           <v-btn
             icon
-            variant="flat"
-            class="delete-project-btn"
-            @click="projectStore.deleteAllTasksInProject"
+            variant="outlined"
+            color="tertiary"
+            class="delete-project-btn me-2"
+            @click="confirmDeleteAllTasks"
+            aria-label="Delete all tasks in project"
           >
             <v-icon>mdi-delete</v-icon>
             <v-tooltip activator="parent" location="bottom" class="delete-all-tasks-tooltip"
               >Delete all tasks in project</v-tooltip
             >
           </v-btn>
-          <v-menu>
+          <!-- Botón de menú de proyecto con color primary explícito -->
+          <v-menu
+            transition="scale-transition"
+            location="bottom end"
+            :close-on-content-click="true"
+            :offset="8"
+          >
             <template v-slot:activator="{ props }">
-              <v-btn icon v-bind="props" class="menu-project-btn" variant="text">
+              <v-btn icon v-bind="props" class="menu-project-btn" variant="text" color="primary">
                 <v-icon>mdi-dots-vertical</v-icon>
                 <v-tooltip activator="parent" location="bottom" class="menu-project-tooltip"
                   >Project options</v-tooltip
                 >
               </v-btn>
             </template>
-            <v-list class="menu-list">
-              <v-list-item
-                v-for="(btn, i) in btnsProject"
-                :key="i"
-                :value="btn"
-                class="menu-item d-flex align-items-center justify-content-between"
-                @click="btn.function"
-              >
-                <v-list-item-title class="d-flex align-items-center">
-                  <v-icon class="me-2">{{ btn.icon }}</v-icon>
-                  {{ btn.text }}
-                </v-list-item-title>
-              </v-list-item>
-            </v-list>
+            <v-card
+              variant="elevated"
+              elevation="3"
+              rounded="lg"
+              class="menu-card pa-2"
+              width="auto"
+              color="surface"
+            >
+              <v-list class="menu-list pa-2" density="comfortable">
+                <v-list-item
+                  v-for="(btn, i) in btnsProject"
+                  :key="i"
+                  :value="btn"
+                  class="menu-item mb-1"
+                  @click="btn.function"
+                  rounded="lg"
+                  :ripple="true"
+                  :active="false"
+                  :hover="true"
+                  :color="btn.text.includes('Delete') ? 'tertiary' : 'primary'"
+                  variant="text"
+                >
+                  <template v-slot:prepend>
+                    <v-icon
+                      :color="btn.text.includes('Delete') ? 'tertiary' : 'primary'"
+                      class="me-2"
+                      >{{ btn.icon }}</v-icon
+                    >
+                  </template>
+                  <v-list-item-title
+                    :class="{
+                      'text-tertiary': btn.text.includes('Delete'),
+                      'text-primary': !btn.text.includes('Delete')
+                    }"
+                  >
+                    {{ btn.text }}
+                  </v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-card>
           </v-menu>
         </v-col>
       </v-row>
       <v-row class="d-flex align-center mb-8">
         <v-col
           cols="12"
-          class="d-flex align-center mb-8"
+          class="mb-8"
           :class="{
             'col-xs-12': xs,
             'col-sm-11': sm,
@@ -456,30 +563,40 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             'col-xl-7': xl
           }"
         >
-          <div class="container-project-info pa-3 w-100">
-            <v-divider></v-divider>
-            <v-row class="d-flex align-center py-4">
+          <v-card
+            color="surface-variant"
+            rounded="lg"
+            elevation="1"
+            :class="xs ? 'pa-3' : 'pa-4'"
+          >
+            <!-- Primera fila: Total con icono + botón añadir -->
+            <v-row class="d-flex align-center" :class="xs ? 'py-1' : 'py-2'">
               <v-col cols="auto" class="d-flex align-center">
                 <v-icon
-                  class="me-3 d-flex align-self-center"
-                  color="red-darken-2"
                   :icon="totalTasksIcon"
-                />
-                <strong class="text-red-darken-2 text-h6">
+                  class="me-3"
+                  color="primary"
+                  :size="xs ? 28 : sm ? 32 : 36"
+                ></v-icon>
+                <span
+                  class="text-primary font-weight-bold"
+                  :class="xs ? 'text-h6' : sm ? 'text-h5' : 'text-h4'"
+                >
                   Total: {{ taskStore.totalFilteredTasksInProject }}
-                </strong>
+                </span>
               </v-col>
               <v-spacer></v-spacer>
               <v-col cols="auto">
+                <!-- Botón para añadir tarea (FAB en xs/sm, texto en md+) -->
                 <v-tooltip location="top" v-if="xs || sm">
                   <template v-slot:activator="{ props: tooltipProps }">
                     <v-btn
                       v-bind="tooltipProps"
                       icon="mdi-plus"
-                      elevation="6"
-                      color="red-accent-2"
+                      elevation="2"
+                      color="primary"
                       class="action-btn-animated"
-                      size="large"
+                      size="default"
                       @click="handleAddTaskClick"
                       aria-label="Add Task"
                     >
@@ -489,9 +606,9 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 </v-tooltip>
                 <v-btn
                   v-else
-                  color="red-accent-2"
+                  color="primary"
                   variant="tonal"
-                  rounded="pill"
+                  rounded="lg"
                   size="large"
                   prepend-icon="mdi-plus"
                   class="action-btn-animated text-none text-button"
@@ -501,42 +618,117 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
                 </v-btn>
               </v-col>
             </v-row>
-            <v-divider class="my-3"></v-divider>
-            <v-row class="d-flex align-items-center align-content-center">
-              <v-col cols="auto" class="d-flex align-items-center">
-                <v-icon
-                  icon="mdi-calendar-clock-outline"
-                  class="me-3 d-flex align-self-center"
-                ></v-icon>
-                <strong class="d-flex align-self-center">
-                  Remaining: {{ taskStore.remainingFilteredTasksInProject }}
-                </strong>
-              </v-col>
-              <v-divider class="mx-4 my-2" vertical></v-divider>
-              <v-col cols="auto" class="d-flex align-items-center">
-                <v-icon class="me-3 d-flex align-self-center" :icon="completedTasksIcon"> </v-icon>
-                <strong class="d-flex align-self-center">
-                  Completed: {{ taskStore.completedFilteredTasksInProject }}
-                </strong>
-              </v-col>
-              <v-col cols="auto" class="d-flex align-items-center ml-8">
-                <v-fade-transition>
-                  <v-progress-circular
-                    v-model="progressPercentage"
-                    :size="64"
-                    :width="7"
-                    :value="progressPercentage"
-                    color="red-darken-2"
+
+            <v-divider class="my-2"></v-divider>
+
+            <!-- Diseño responsivo para la parte inferior -->
+            <template v-if="xs">
+              <!-- Segunda fila: Remaining y Completed -->
+              <v-row dense class="mb-2">
+                <!-- Columna Remaining -->
+                <v-col cols="6" class="d-flex align-center">
+                  <v-icon
+                    icon="mdi-calendar-clock-outline"
+                    class="me-2"
+                    color="primary"
+                    size="22"
+                  ></v-icon>
+                  <span class="text-on-surface-variant font-weight-medium text-body-2">
+                    Remaining: {{ taskStore.remainingFilteredTasksInProject }}
+                  </span>
+                </v-col>
+
+                <!-- Columna Completed -->
+                <v-col cols="6" class="d-flex align-center">
+                  <v-icon
+                    :icon="completedTasksIcon"
+                    class="me-2"
+                    color="primary"
+                    size="22"
+                  ></v-icon>
+                  <span class="text-on-surface-variant font-weight-medium text-body-2">
+                    Completed: {{ taskStore.completedFilteredTasksInProject }}
+                  </span>
+                </v-col>
+              </v-row>
+
+              <!-- Tercera fila: Progress -->
+              <v-row dense class="pb-2">
+                <v-col cols="12">
+                  <!-- Contenedor para agrupar visualmente la etiqueta y el círculo -->
+                  <div class="d-flex flex-column align-center mt-2">
+                    <!-- Etiqueta Progress con mayor visibilidad -->
+                    <span class="text-body-2 font-weight-medium text-primary mb-2">Progress:</span>
+                    <!-- Círculo de progreso más grande -->
+                    <v-progress-circular
+                      v-model="progressPercentage"
+                      :size="64"
+                      :width="6"
+                      :value="progressPercentage"
+                      color="primary"
+                    >
+                      <!-- Texto del porcentaje más visible -->
+                      <span class="text-body-1 font-weight-medium">{{ progressPercentage }}%</span>
+                    </v-progress-circular>
+                  </div>
+                </v-col>
+              </v-row>
+            </template>
+
+            <!-- Diseño optimizado para pantallas sm+ (incluye ahora sm) -->
+            <template v-else>
+              <v-row class="d-flex align-center py-2">
+                <!-- Stats en una fila más compacta para sm+ -->
+                <v-col cols="auto" class="d-flex align-center mr-4">
+                  <v-icon
+                    icon="mdi-calendar-clock-outline"
+                    class="me-2"
+                    color="primary"
+                    :size="sm ? 22 : md ? 24 : 26"
+                  ></v-icon>
+                  <span
+                    class="text-on-surface-variant font-weight-medium"
+                    :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
-                    <v-fade-transition>
-                      <p class="text-overline">{{ progressPercentage }}%</p>
-                    </v-fade-transition>
-                  </v-progress-circular>
-                </v-fade-transition>
-              </v-col>
-              <v-divider></v-divider>
-            </v-row>
-          </div>
+                    Remaining: {{ taskStore.remainingFilteredTasksInProject }}
+                  </span>
+                </v-col>
+
+                <v-col cols="auto" class="d-flex align-center mr-4">
+                  <v-icon
+                    :icon="completedTasksIcon"
+                    class="me-2"
+                    color="primary"
+                    :size="sm ? 22 : md ? 24 : 26"
+                  ></v-icon>
+                  <span
+                    class="text-on-surface-variant font-weight-medium"
+                    :class="sm ? 'text-body-2' : 'text-body-1'"
+                  >
+                    Completed: {{ taskStore.completedFilteredTasksInProject }}
+                  </span>
+                </v-col>
+
+                <v-divider vertical class="mx-4"></v-divider>
+
+                <!-- Progreso inline para sm+ -->
+                <v-col cols="auto">
+                  <div class="d-flex align-center">
+                    <span class="text-body-2 font-weight-medium text-primary mr-3">Progress:</span>
+                    <v-progress-circular
+                      v-model="progressPercentage"
+                      :size="sm ? 56 : computedProgressSize"
+                      :width="sm ? 5 : computedProgressWidth"
+                      :value="progressPercentage"
+                      color="primary"
+                    >
+                      <span class="text-body-2 font-weight-medium">{{ progressPercentage }}%</span>
+                    </v-progress-circular>
+                  </div>
+                </v-col>
+              </v-row>
+            </template>
+          </v-card>
         </v-col>
       </v-row>
 
@@ -544,11 +736,6 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         v-if="taskStore.state.isLoading || taskStore.state.initialLoadPending"
         class="tasks d-flex flex-wrap align-items-center justify-content-center mb-8"
       >
-        <v-divider
-          color="red-darken-2"
-          :thickness="1"
-          class="mx-auto border-opacity-50 mb-8"
-        ></v-divider>
         <v-col
           v-for="n in taskStore.state.pageSize"
           :key="`skel-${n}`"
@@ -572,21 +759,16 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         "
         class="tasks d-flex flex-wrap align-items-center justify-content-center mb-8"
       >
-        <v-divider
-          color="red-darken-2"
-          :thickness="1"
-          class="mx-auto border-opacity-50 mb-8"
-        ></v-divider>
         <v-col
           v-for="task in taskStore.paginatedTasksInSelectedProject"
           :key="task.id"
           cols="12"
           sm="11"
           md="10"
-          lg="12"
-          xl="12"
+          lg="9"
+          xl="8"
           class="py-0 mb-8"
-          :class="mdAndDown ? 'mx-auto' : ''"
+          :class="xs ? 'mx-auto my-2' : 'mx-auto my-4'"
         >
           <Suspense>
             <template #default>
@@ -636,9 +818,9 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
             subtitle="Start by creating your first task!"
           >
             <v-btn
-              color="red-accent-2"
+              color="primary"
               variant="tonal"
-              rounded="pill"
+              rounded="lg"
               size="large"
               prepend-icon="mdi-plus"
               class="mt-6 action-btn-animated"
@@ -682,9 +864,9 @@ const { mobile, xs, sm, smAndDown, smAndUp, md, mdAndDown, lg, xl } = useDisplay
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
           <v-btn
             @click="router.back()"
-            color="red-darken-2"
-            variant="flat"
-            rounded
+            color="primary"
+            variant="tonal"
+            rounded="lg"
             :size="xs ? 'default' : 'large'"
             :block="xs ? true : false"
             prepend-icon="mdi-chevron-left"

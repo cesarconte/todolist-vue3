@@ -44,7 +44,7 @@ const switchLabel = computed(() =>
     : 'Notifications disabled'
 ) // Sets the label for the notification switch
 const switchColor = computed(() =>
-  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+  notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
 ) // Sets the color of the notification switch using semantic MD3 colors
 const isDisabled = computed(() => !notificationsStore.hasFullSupport || !userStore.isLoggedIn) // Determines if the notification switch should be disabled
 
@@ -152,7 +152,7 @@ const notificationTimeOptions = [
       density="comfortable"
     >
       <v-card-title class="d-flex align-center justify-space-between mb-2">
-        <span class="text-h6 text-on-surface font-weight-medium">Notifications Settings</span>
+        <span class="text-h6 textOnSurface font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
           <template v-slot:activator="{ props }">
             <v-icon
@@ -176,11 +176,11 @@ const notificationTimeOptions = [
             </span>
           </span>
         </v-tooltip>
-        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
+        <v-btn icon @click="closeDialog" variant="text" color="onSurfaceVariant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle class="text-on-surface-variant pb-2">
+      <v-card-subtitle class="textOnSurfaceVariant pb-2">
         <v-icon icon="mdi-bell-cog" size="small" class="mr-1"></v-icon>
         Configure when you want to receive notifications</v-card-subtitle
       >
@@ -247,7 +247,7 @@ const notificationTimeOptions = [
             label="Notification Times"
             variant="outlined"
             :color="
-              notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+              notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
             "
             :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
             multiple
@@ -263,7 +263,7 @@ const notificationTimeOptions = [
               <v-chip
                 v-if="index < 2"
                 :color="
-                  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
+                  notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
                 "
                 class="ma-1"
                 label
@@ -272,7 +272,7 @@ const notificationTimeOptions = [
               >
                 {{ item.title }}
               </v-chip>
-              <span v-if="index === 2" class="text-on-surface-variant text-caption ml-1">
+              <span v-if="index === 2" class="textOnSurfaceVariant text-caption ml-1">
                 +{{ notificationsStore.notificationSettings.time.length - 2 }} more
               </span>
             </template>
@@ -282,13 +282,8 @@ const notificationTimeOptions = [
         <v-card-item class="mb-2 mt-2">
           <v-row class="text-caption">
             <v-col cols="auto" class="d-flex align-center">
-              <v-icon
-                icon="mdi-clock-outline"
-                class="mr-2"
-                color="on-surface-variant"
-                size="small"
-              />
-              <span class="text-on-surface-variant">
+              <v-icon icon="mdi-clock-outline" class="mr-2" color="onSurfaceVariant" size="small" />
+              <span class="textOnSurfaceVariant">
                 Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
               </span>
             </v-col>

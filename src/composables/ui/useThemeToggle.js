@@ -9,7 +9,7 @@ export default function useThemeToggle() {
   // Toggle entre tema claro y oscuro
   const toggleTheme = () => {
     isDarkMode.value = !isDarkMode.value
-    theme.global.name.value = isDarkMode.value ? 'myCustomDarkTheme' : 'myCustomLightTheme'
+    theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
     // Guardar preferencia en localStorage
     localStorage.setItem('darkMode', isDarkMode.value)
   }
@@ -18,7 +18,7 @@ export default function useThemeToggle() {
   watch(
     () => theme.global.name.value,
     (newTheme) => {
-      isDarkMode.value = newTheme === 'myCustomDarkTheme'
+      isDarkMode.value = newTheme === 'dark'
     }
   )
 
@@ -30,12 +30,12 @@ export default function useThemeToggle() {
     if (savedMode !== null) {
       // Convertir string a booleano
       isDarkMode.value = savedMode === 'true'
-      theme.global.name.value = isDarkMode.value ? 'myCustomDarkTheme' : 'myCustomLightTheme'
+      theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
     } else {
       // Si no hay preferencia guardada, usar la preferencia del sistema
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       isDarkMode.value = prefersDark
-      theme.global.name.value = prefersDark ? 'myCustomDarkTheme' : 'myCustomLightTheme'
+      theme.global.name.value = prefersDark ? 'dark' : 'light'
     }
   })
 

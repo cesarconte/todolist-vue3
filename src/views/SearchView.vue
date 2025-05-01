@@ -135,7 +135,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-container fluid class="my-6 bg-background">
+  <v-container fluid class="my-6">
     <v-responsive
       class="tasksByProject-container mx-auto"
       :class="xs ? 'pa-1' : ''"
@@ -158,9 +158,7 @@ onMounted(() => {
         :class="xs ? 'pa-2' : 'pa-4'"
         variant="elevated"
         rounded="lg"
-        elevation="2"
         color="surface"
-        border
       >
         <v-card-title
           class="d-flex align-center justify-space-between pb-2 mb-2"
@@ -170,7 +168,7 @@ onMounted(() => {
             class="search-header"
             :class="xs ? 'pa-1' : 'pa-2'"
             rounded="lg"
-            color="surface-variant"
+            color="surfaceVariant"
             elevation="1"
           >
             <div class="d-flex align-center">
@@ -182,12 +180,12 @@ onMounted(() => {
               ></v-icon>
               <div class="ml-0">
                 <div
-                  class="text-h6 font-weight-medium text-on-surface-variant"
+                  class="text-h6 font-weight-medium text-onSurfaceVariant"
                   :class="xs ? 'text-subtitle-1' : ''"
                 >
                   Search Tasks
                 </div>
-                <div class="text-caption text-on-surface-variant mt-1 text-wrap">
+                <div class="text-caption text-onSurfaceVariant mt-1 text-wrap">
                   {{ xs ? 'Find by title keywords' : 'Find tasks by title or keywords' }}
                 </div>
               </div>
@@ -235,11 +233,10 @@ onMounted(() => {
                 :prepend-inner-icon="'mdi-magnify'"
                 aria-label="Search tasks by title"
                 :aria-disabled="!userStore.isLoggedIn"
-                :class="xs ? 'text-body-2 search-field' : 'search-field'"
+                :class="[xs ? 'text-body-2' : '', 'flex-grow-1']"
                 clearable
                 item-title="title"
                 auto-select-first
-                class="flex-grow-1"
                 :menu-props="{
                   maxHeight: 300,
                   maxWidth: '100%',
@@ -250,7 +247,7 @@ onMounted(() => {
                 <template #item="{ props }">
                   <v-list-item v-bind="props" :class="xs ? 'px-2 py-1' : 'px-4 py-2'">
                     <template #prepend>
-                      <v-icon color="on-surface" :size="xs ? 18 : 20">mdi-magnify</v-icon>
+                      <v-icon color="onSurface" :size="xs ? 18 : 20">mdi-magnify</v-icon>
                     </template>
                   </v-list-item>
                 </template>
@@ -261,14 +258,14 @@ onMounted(() => {
                     <div class="d-flex flex-column align-center justify-center pa-2">
                       <v-icon
                         icon="mdi-magnify-close"
-                        color="on-surface-variant"
+                        color="onSurfaceVariant"
                         :size="28"
                         class="mb-3"
                       ></v-icon>
-                      <span class="text-subtitle-2 text-on-surface-variant text-center">
+                      <span class="text-subtitle-2 text-onSurfaceVariant text-center">
                         No tasks match your search
                       </span>
-                      <span class="text-caption text-on-surface-variant text-center mt-1">
+                      <span class="text-caption text-onSurfaceVariant text-center mt-1">
                         Try different keywords
                       </span>
                     </div>
@@ -284,7 +281,6 @@ onMounted(() => {
               <VEmptyState
                 icon="mdi-text-search"
                 :icon-size="xs ? 60 : sm ? 70 : 80"
-                icon-color="on-surface-variant"
                 :title="xs ? 'Search for tasks' : 'Type a task title in the search box above'"
                 :subtitle="xs ? 'Enter keywords above' : 'Use keywords to quickly find your tasks.'"
                 class="empty-state-container"
@@ -304,19 +300,19 @@ onMounted(() => {
               <v-card
                 class="pa-6 text-center rounded-lg"
                 variant="tonal"
-                color="surface-variant"
+                color="surfaceVariant"
                 elevation="0"
               >
                 <v-icon
                   icon="mdi-magnify-close"
                   size="64"
-                  color="on-surface-variant"
+                  color="onSurfaceVariant"
                   class="mb-4 empty-icon"
                 />
-                <h3 class="text-h6 mb-2 text-on-surface-variant">
+                <h3 class="text-h6 mb-2 text-onSurfaceVariant">
                   {{ xs ? 'No tasks found' : 'No tasks found with the current search term' }}
                 </h3>
-                <p class="text-subtitle-2 text-on-surface-variant">
+                <p class="text-subtitle-2 text-onSurfaceVariant">
                   {{
                     xs ? 'Try different keywords' : 'Try different keywords or check your spelling.'
                   }}
@@ -435,14 +431,14 @@ onMounted(() => {
                 />
               </template>
               <template #fallback>
-                <div class="fallback bg-surface-variant" role="status" aria-live="polite">
+                <div class="fallback bg-surfaceVariant" role="status" aria-live="polite">
                   <v-progress-circular
                     indeterminate
                     color="primary"
                     :size="40"
                     class="mr-2"
                   ></v-progress-circular>
-                  <span class="text-on-surface-variant">Loading...</span>
+                  <span class="text-onSurfaceVariant">Loading...</span>
                 </div>
               </template>
             </Suspense>

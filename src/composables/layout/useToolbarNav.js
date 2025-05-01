@@ -1,4 +1,7 @@
 // src/composables/useToolbarNav.js
+import { computed } from 'vue' // Importar computed
+import useThemeToggle from '@/composables/ui/useThemeToggle' // Importar el composable del tema
+
 export function useToolbarNav({
   userStore,
   router,
@@ -12,6 +15,17 @@ export function useToolbarNav({
 }) {
   // Helper para el título del usuario
   const getUserTitle = () => (userStore.isLoggedIn ? userStore.userName : 'User')
+
+  // Usar el composable del tema
+  const { isDarkMode, toggleTheme } = useThemeToggle()
+
+  // Propiedades computadas para el botón de tema
+  const themeToggleTitle = computed(() =>
+    isDarkMode.value ? 'Switch to Light Mode' : 'Switch to Dark Mode'
+  )
+  const themeToggleIcon = computed(() =>
+    isDarkMode.value ? 'mdi-weather-sunny' : 'mdi-weather-night'
+  )
 
   const navItems = [
     {
@@ -55,6 +69,11 @@ export function useToolbarNav({
   ]
 
   const dotsItems = [
+    {
+      title: themeToggleTitle.value, // Usar computed property
+      icon: themeToggleIcon.value, // Usar computed property
+      action: toggleTheme // Llamar a la función de toggle
+    },
     {
       title: 'Notifications',
       icon: 'mdi-bell-outline',

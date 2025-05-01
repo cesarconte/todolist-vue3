@@ -49,12 +49,12 @@ const closeDialog = () => {
   >
     <v-card class="notification-list-card pa-4 rounded-lg elevation-2" color="surface">
       <v-card-title class="d-flex align-center justify-space-between mb-2">
-        <span class="text-h6 text-on-surface font-weight-medium">Notifications</span>
-        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
+        <span class="text-h6 textOnSurface font-weight-medium">Notifications</span>
+        <v-btn icon @click="closeDialog" variant="text" color="onSurfaceVariant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle class="text-on-surface-variant pb-2">
+      <v-card-subtitle class="textOnSurfaceVariant pb-2">
         <v-icon icon="mdi-bell-badge" size="small" class="mr-1"></v-icon>
         You have {{ notificationsStore.unreadCount }} unread notifications
       </v-card-subtitle>
@@ -69,7 +69,7 @@ const closeDialog = () => {
               :key="item.id"
               rounded="lg"
               class="mb-4"
-              :bg-color="item.read ? 'surface-variant' : 'primary-container'"
+              :bg-color="item.read ? 'surfaceVariant' : 'primaryContainer'"
             >
               <template v-slot:prepend>
                 <v-checkbox
@@ -86,7 +86,7 @@ const closeDialog = () => {
                 <v-row align="center">
                   <v-icon
                     :icon="item.icon"
-                    :color="item.read ? 'on-surface-variant' : 'primary'"
+                    :color="item.read ? 'onSurfaceVariant' : 'primary'"
                     class="ml-4"
                     size="large"
                   />
@@ -94,14 +94,14 @@ const closeDialog = () => {
                     <v-list-item-title
                       lines="one"
                       class="text-body-1 font-weight-medium mb-2"
-                      :class="item.read ? 'text-on-surface-variant' : 'text-on-primary-container'"
+                      :class="item.read ? 'textOnSurfaceVariant' : 'textOnPrimaryContainer'"
                     >
                       {{ item.message }}
                     </v-list-item-title>
                     <v-list-item-subtitle
                       lines="one"
                       class="mb-2"
-                      :class="item.read ? 'text-on-surface-variant' : ''"
+                      :class="item.read ? 'textOnSurfaceVariant' : ''"
                     >
                       {{ formatDate(item.timestamp) }}
                     </v-list-item-subtitle>
@@ -115,12 +115,12 @@ const closeDialog = () => {
               <VEmptyState
                 icon="mdi-checkbox-marked-circle-auto-outline"
                 :icon-size="96"
-                icon-color="on-surface-variant"
+                icon-color="onSurfaceVariant"
                 title="All caught up!"
                 subtitle="No new notifications"
-                text-color="text-on-surface-variant"
+                text-color="textOnSurfaceVariant"
               >
-                <p class="text-caption text-on-surface-variant mt-2">
+                <p class="text-caption textOnSurfaceVariant mt-2">
                   Check back later for new notifications
                 </p>
               </VEmptyState>

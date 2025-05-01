@@ -161,7 +161,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             class="filter-header"
             :class="xs ? 'pa-1' : 'pa-2'"
             rounded="lg"
-            color="surface-variant"
+            color="surfaceVariant"
             elevation="1"
           >
             <div class="d-flex align-center">
@@ -173,12 +173,12 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
               ></v-icon>
               <div class="ml-0">
                 <div
-                  class="text-h6 font-weight-medium text-on-surface-variant"
+                  class="text-h6 font-weight-medium text-onSurfaceVariant"
                   :class="xs ? 'text-subtitle-1' : ''"
                 >
                   Filter Options
                 </div>
-                <div class="text-caption text-on-surface-variant mt-1 text-wrap">
+                <div class="text-caption text-onSurfaceVariant mt-1 text-wrap">
                   {{ xs ? 'Find matching tasks' : 'Filter tasks using multiple criteria' }}
                 </div>
               </div>
@@ -551,7 +551,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           <v-btn
             color="primary"
             variant="tonal"
-            rounded
+            rounded="lg"
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? 'px-4 py-2' : 'px-8'"
@@ -559,7 +559,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             class="text-none text-button"
             @click="taskStore.resetFilters()"
             :disabled="!hasActiveFilters()"
-            elevation="2"
+            elevation="1"
           >
             Clear All Filters
           </v-btn>
@@ -851,16 +851,6 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 
 .date-picker {
   width: 100%;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(-5px);
-  }
-  50% {
-    transform: translateY(5px);
-  }
 }
 
 :deep(.v-card-title) {

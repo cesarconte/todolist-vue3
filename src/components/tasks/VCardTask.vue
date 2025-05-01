@@ -148,6 +148,14 @@ const tooltips = computed(() => [
   }
 ])
 
+const cardColor = computed(() => (props.completed ? 'surfaceDim' : 'surface'))
+const textColorClass = computed(() => (props.completed ? 'text-medium-emphasis' : 'text-onSurface'))
+const dateCardColor = computed(() => (props.completed ? 'surfaceContainerHighest' : 'surface'))
+const dateTextColorClass = computed(() =>
+  props.completed ? 'text-medium-emphasis' : 'text-onSurface'
+)
+const dateIconColor = (baseColor) => (props.completed ? 'medium-emphasis' : baseColor)
+
 /************************************
  * Methods / Functions
  ************************************/
@@ -180,41 +188,28 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
-  <!-- 
-  1.Vuetify's rounded Prop: The rounded prop in Vuetify is meant to apply a pre-defined rounding style
-   (like sm, md, lg, xl). It doesn't directidly accept custom pixel values or empty strings to remove rounding.
-
-  2. Dynamic Values: Vuetify's rounded prop is evaluated only once when the component is mounted.
-  It doesn't re-evaluate on every change to the hover ref. This means that even though the hover ref changes,
-  the rounded prop doesn't update dynamically.
-
-  3. Conditional Class: The solution using the conditional class :class="{ 'rounded-lg': !hover }" works because it directly controls
-  the application of the rounded-lg class based on the hover state.
-  Vuetify's class system is designed to handle dynamic styling changes.
-  -->
   <v-card
-    variant="elevated"
-    :elevation="hover ? 4 : 2"
-    color="surface"
+    :variant="props.completed ? 'outlined' : 'elevated'"
+    :elevation="hover && !props.completed ? 4 : props.completed ? 0 : 2"
+    :color="cardColor"
     :class="[
       { 'rounded-lg': !hover },
       mobile ? 'card card-task-view ma-4' : 'card card-task-view ma-8 pa-8',
-      hover ? 'card-hover' : '',
-      props.completed ? 'completed-card' : ''
+      hover && !props.completed ? 'card-hover' : '',
+      props.completed ? 'completed-card' : '',
+      props.completed ? 'bg-surfaceContainerHighest' : '',
     ]"
-    hover
-    @mouseover="hover = true"
+    :hover="!props.completed"
+    @mouseover="hover = !props.completed && true"
     @mouseleave="hover = false"
   >
     <v-card-title class="card-title card-title-task-view d-flex align-center mb-4">
       <div class="d-flex align-center">
         <span
           class="text-h5"
-          :class="
-            props.completed
-              ? 'text-decoration-line-through text-surface-variant'
-              : 'text-on-surface'
-          "
+          :class="[
+            props.completed ? 'text-decoration-line-through text-medium-emphasis' : 'text-onSurface'
+          ]"
         >
           {{ title }}
         </span>
@@ -235,22 +230,30 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
         aria-label="View task details"
         variant="text"
         class="btn btn-task-view"
-        color="primary"
+        :color="props.completed ? 'medium-emphasis' : 'primary'"
         icon
         @click="navigateToTaskDetail"
+        :disabled="props.completed"
       >
         <v-icon class="icon icon-btn-task-vi">mdi-open-in-new</v-icon>
         <v-tooltip location="bottom" activator="parent"> View task details </v-tooltip>
       </v-btn>
     </v-card-title>
-    <v-card-subtitle class="mb-4 text-on-surface-variant">
+    <v-card-subtitle
+      class="mb-4"
+      :class="props.completed ? 'text-medium-emphasis' : 'text-onSurfaceVariant'"
+    >
       <v-chip
         :color="color === 'default' ? 'primary' : color"
-        variant="flat"
+        :variant="props.completed ? 'outlined' : 'flat'"
         size="small"
         class="font-weight-medium"
         prepend-icon="mdi-folder-outline"
+        :class="props.completed ? 'text-medium-emphasis' : ''"
       >
+        <template v-slot:prepend>
+          <v-icon :color="props.completed ? 'medium-emphasis' : ''"></v-icon>
+        </template>
         {{ project.title || project }}
       </v-chip>
     </v-card-subtitle>
@@ -259,8 +262,16 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <!-- Descripción -->
       <v-row class="my-4">
         <v-col cols="12">
-          <p class="text-subtitle-1 font-weight-medium mb-4 text-on-surface">Description:</p>
-          <p class="text-body-1 py-2 px-4 bg-surface-variant text-on-surface-variant rounded-lg">
+          <p class="text-subtitle-1 font-weight-medium mb-4" :class="textColorClass">
+            Description:
+          </p>
+          <p
+            class="text-body-1 py-2 px-4 rounded-lg"
+            :class="[
+              textColorClass,
+              props.completed ? 'bg-surfaceContainerHighest' : 'bg-surfaceContainer'
+            ]"
+          >
             {{ description }}
           </p>
         </v-col>
@@ -270,14 +281,19 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <v-row class="mt-4 mb-4">
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Label:</span>
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+              >Label:</span
+            >
             <v-chip
               :color="color === 'default' ? 'primary' : color"
               size="small"
               class="font-weight-medium"
-              variant="tonal"
+              :variant="props.completed ? 'outlined' : 'tonal'"
+              :class="props.completed ? 'text-medium-emphasis' : ''"
             >
-              <v-icon size="16" class="mr-1">{{ labelIcons[label] || 'mdi-tag' }}</v-icon>
+              <v-icon size="16" class="mr-1" :color="props.completed ? 'medium-emphasis' : ''">{{
+                labelIcons[label] || 'mdi-tag'
+              }}</v-icon>
               {{ label }}
             </v-chip>
           </div>
@@ -285,14 +301,17 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Priority:</span>
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+              >Priority:</span
+            >
             <v-chip
               :color="priority === 'High' ? 'error' : priority === 'Medium' ? 'warning' : 'success'"
               size="small"
               class="font-weight-medium"
-              variant="tonal"
+              :variant="props.completed ? 'outlined' : 'tonal'"
+              :class="props.completed ? 'text-medium-emphasis' : ''"
             >
-              <v-icon size="16" class="mr-1">
+              <v-icon size="16" class="mr-1" :color="props.completed ? 'medium-emphasis' : ''">
                 {{
                   priority === 'High'
                     ? 'mdi-flag'
@@ -308,7 +327,9 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2 text-on-surface">Status:</span>
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+              >Status:</span
+            >
             <v-chip
               :color="
                 status === 'Completed'
@@ -317,13 +338,14 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
                     ? 'info'
                     : status === 'Pending'
                       ? 'warning'
-                      : 'on-surface-variant'
+                      : 'onSurfaceVariant'
               "
               size="small"
               class="font-weight-medium"
-              variant="tonal"
+              :variant="props.completed ? 'outlined' : 'tonal'"
+              :class="props.completed ? 'text-medium-emphasis' : ''"
             >
-              <v-icon size="16" class="mr-1">
+              <v-icon size="16" class="mr-1" :color="props.completed ? 'medium-emphasis' : ''">
                 {{
                   status === 'Completed'
                     ? 'mdi-check-circle'
@@ -343,27 +365,22 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <!-- Fechas con mejor visualización -->
       <v-row class="mt-4 mb-4">
         <v-col cols="12" sm="6">
-          <v-card
-            variant="outlined"
-            rounded="lg"
-            class="pa-4"
-            :color="props.completed ? 'surface-variant' : 'text-on-surface'"
-            flat
-          >
+          <v-card variant="outlined" rounded="lg" class="pa-4" :color="dateCardColor" flat>
             <div class="d-flex align-center">
-              <v-icon color="primary" class="mr-3">mdi-calendar-start</v-icon>
+              <v-icon :color="dateIconColor('primary')" class="mr-3">mdi-calendar-start</v-icon>
               <div>
-                <div class="text-subtitle-2 font-weight-medium">Start Date</div>
-                <div
-                  class="text-body-2"
-                >
+                <div class="text-subtitle-2 font-weight-medium" :class="dateTextColorClass">
+                  Start Date
+                </div>
+                <div class="text-body-2" :class="dateTextColorClass">
                   <template v-if="startDate">
                     {{ formatDate(startDate) }}
                     <span v-if="props.startDateHour" class="ml-1">
                       at {{ props.startDateHour }} h
                     </span>
                   </template>
-                  <span v-else class="text-on-surface-variant">Not specified</span>
+                  <span v-else class="text-medium-emphasis">Not specified</span>
+                  <!-- Keep emphasis low -->
                 </div>
               </div>
             </div>
@@ -371,29 +388,24 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
         </v-col>
 
         <v-col cols="12" sm="6">
-          <v-card
-            variant="outlined"
-            rounded="lg"
-            class="pa-4"
-            :color="props.completed ? 'surface-variant' : 'text-on-surface'"
-            flat
-          >
+          <v-card variant="outlined" rounded="lg" class="pa-4" :color="dateCardColor" flat>
             <div class="d-flex align-center due-date-icon">
-              <v-icon :color="props.completed ? 'success' : 'error'" class="mr-3">
+              <v-icon :color="dateIconColor(props.completed ? 'success' : 'error')" class="mr-3">
                 {{ props.completed ? 'mdi-calendar-check' : 'mdi-calendar-end' }}
               </v-icon>
               <div>
-                <div class="text-subtitle-2 font-weight-medium">Due Date</div>
-                <div
-                  class="text-body-2"
-                >
+                <div class="text-subtitle-2 font-weight-medium" :class="dateTextColorClass">
+                  Due Date
+                </div>
+                <div class="text-body-2" :class="dateTextColorClass">
                   <template v-if="endDate">
                     {{ formatDate(endDate) }}
                     <span v-if="props.endDateHour" class="ml-1">
                       at {{ props.endDateHour }} h
                     </span>
                   </template>
-                  <span v-else class="text-on-surface-variant">Not specified</span>
+                  <span v-else class="text-medium-emphasis">Not specified</span>
+                  <!-- Keep emphasis low -->
                 </div>
               </div>
             </div>
@@ -420,14 +432,23 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           rounded="lg"
           :height="40"
           :min-width="96"
+          :disabled="props.completed && i !== 2"
         >
           <!-- Icono para todos los botones -->
-          <v-icon start :size="18" class="mr-1">
+          <v-icon
+            start
+            :size="18"
+            class="mr-1"
+            :color="props.completed && i !== 2 ? 'medium-emphasis' : ''"
+          >
             {{ i !== 2 ? btn.icon : props.completed ? 'mdi-check-circle' : 'mdi-circle-outline' }}
           </v-icon>
 
           <!-- Texto para todos los botones -->
-          <span class="text-body-2 font-weight-medium">
+          <span
+            class="text-body-2 font-weight-medium"
+            :class="props.completed && i !== 2 ? 'text-medium-emphasis' : ''"
+          >
             {{ i === 0 ? 'Edit' : i === 1 ? 'Delete' : props.completed ? 'Completed' : 'Complete' }}
           </span>
 
@@ -435,6 +456,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             :location="tooltips[i].location"
             :activator="tooltips[i].activator"
             content-class="tooltip-custom"
+            :disabled="props.completed && i !== 2"
           >
             {{ i === 2 ? completedButton.tooltipText : tooltips[i].text }}
           </v-tooltip>
@@ -478,5 +500,15 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
 .action-btn:hover {
   transform: scale(1.1);
+}
+
+.completed-card {
+  /* Add specific styles for completed cards if needed, e.g., border */
+  border-color: rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+/* Ensure disabled buttons look appropriately dimmed */
+.v-btn--disabled {
+  opacity: 0.5; /* Adjust opacity as needed */
 }
 </style>

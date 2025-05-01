@@ -149,7 +149,7 @@ watch(show, (newValue) => {
         icon="mdi-close"
         @click="$emit('update:modelValue', false)"
         density="comfortable"
-        color="on-primary"
+        color="onPrimary"
       >
       </v-btn>
     </template>
