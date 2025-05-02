@@ -106,7 +106,7 @@ const calendarEvents = computed(() => {
 
 // --- Helpers ---
 const formatDisplayDate = (date) => (date ? formatDate(date, 'MMM DD, YYYY') : 'No date')
-const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'onSurface' : color)
+const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'primary' : color)
 const getWeekdays = (title) => {
   const found = weekdays.value.find((item) => item.title === title)
   return found ? found.value : [0, 1, 2, 3, 4, 5, 6]
@@ -200,8 +200,8 @@ onBeforeRouteLeave((to, from, next) => {
       :max-width="xs ? '100%' : sm ? '95%' : md ? '85%' : lg ? '80%' : xl ? '75%' : '70%'"
     >
       <v-card flat elevation="0" rounded="lg" class="pa-8" color="background">
-        <v-card-title class="text-center font-weight-bold mb-8">
-          <span class="text-primary" :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
+        <v-card-title class="text-center font-weight-bold mb-8 text-primary">
+          <span :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
             Vuetify Todolist
           </span>
         </v-card-title>
@@ -213,29 +213,27 @@ onBeforeRouteLeave((to, from, next) => {
               v-if="userStore.isLoggedIn && totalTasks > 0"
               rounded="lg"
               class="mb-8 pa-4"
-              color="surfaceVariant"
+              color="surface"
               elevation="2"
             >
               <v-row align="start" class="px-2">
                 <!-- Upcoming Deadlines: izquierda -->
-                <v-col :cols="xs ? 12 : sm ? 4 : 4">
+                <v-col cols="12" sm="4" md="4">
                   <v-card
-                    flat
+                    outlined
                     rounded="lg"
-                    :elevation="upcomingDeadlinesTotal > 0 ? 3 : 1"
-                    color="surface"
+                    :color="upcomingDeadlinesTotal > 0 ? 'warning' : 'secondary'"
                     hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
                         <v-icon
-                          :color="upcomingDeadlinesTotal > 0 ? 'primary' : 'onSurface'"
+                          color="on-surface"
                           icon="mdi-clock-alert"
                         ></v-icon>
                       </template>
                       <v-card-title
-                        class="text-subtitle-1 font-weight-bold pa-0"
-                        :class="upcomingDeadlinesTotal > 0 ? 'text-primary' : 'text-onSurface'"
+                        class="text-subtitle-1 font-weight-bold pa-0 text-on-surface"
                       >
                         Upcoming Deadlines
                       </v-card-title>
@@ -243,7 +241,7 @@ onBeforeRouteLeave((to, from, next) => {
                         <v-badge
                           v-if="upcomingDeadlinesTotal > 0"
                           :content="upcomingDeadlinesTotal"
-                          color="primary"
+                          color="surface"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -253,25 +251,19 @@ onBeforeRouteLeave((to, from, next) => {
                       v-model="isDeadlinesPanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
-                      bg-color="surface"
                     >
-                      <v-expansion-panel value="true" class="border-0">
+                      <v-expansion-panel value="true">
                         <v-expansion-panel-title class="px-3 py-2 upcoming-panel" hide-actions>
                           <v-row align="center" no-gutters class="w-100">
                             <v-col>
                               <v-sheet
                                 color="transparent"
-                                class="text-body-2 d-inline-flex align-center text-truncate"
-                                :class="
-                                  upcomingDeadlinesTotal > 0 ? 'text-primary' : 'text-onSurface'
-                                "
+                                class="text-body-2 d-inline-flex align-center text-truncate text-on-surface"
                               >
                                 <v-icon
                                   size="small"
                                   class="me-1"
-                                  :color="
-                                    upcomingDeadlinesTotal > 0 ? 'primary' : 'onSurfaceVariant'
-                                  "
+                                  color="on-surface"
                                 >
                                   {{
                                     upcomingDeadlinesTotal > 0
@@ -287,12 +279,7 @@ onBeforeRouteLeave((to, from, next) => {
                             <v-spacer></v-spacer>
                             <v-col
                               cols="auto"
-                              class="text-caption text-medium-emphasis me-2"
-                              :class="
-                                upcomingDeadlinesTotal > 0
-                                  ? 'text-primary'
-                                  : 'text-onSurfaceVariant'
-                              "
+                              class="text-caption text-medium-emphasis me-2 text-on-surface"
                             >
                               {{ isDeadlinesPanelExpanded ? 'Hide' : 'Show all' }}
                               <v-btn
@@ -302,7 +289,7 @@ onBeforeRouteLeave((to, from, next) => {
                                 "
                                 variant="text"
                                 size="small"
-                                :color="upcomingDeadlinesTotal > 0 ? 'primary' : 'onSurfaceVariant'"
+                                color="on-surface"
                                 aria-label="Toggle upcoming deadlines panel"
                               >
                               </v-btn>
@@ -323,29 +310,28 @@ onBeforeRouteLeave((to, from, next) => {
                               class="px-2 py-1 rounded-lg mb-1 task-item upcoming"
                               exact
                               lines="two"
-                              color="surfaceVariant"
-                              base-color="onSurfaceVariant"
+                              color="surface-variant"
+                              base-color="on-surface"
                             >
                               <template v-slot:prepend>
                                 <v-icon
                                   :color="task.color || 'primary'"
                                   size="32"
-                                  class="me-2 rounded-circle pa-1"
                                   :icon="labelIcons[task.label] || 'mdi-calendar-alert'"
                                 />
                               </template>
                               <v-list-item-title
-                                class="text-truncate text-subtitle-2 text-onSurfaceVariant"
+                                class="text-truncate text-subtitle-2 text-on-surface"
                               >
                                 {{ task.title }}
                               </v-list-item-title>
                               <v-list-item-subtitle
-                                class="text-caption d-flex align-center bg-primary text-onPrimary rounded-lg"
+                                class="text-caption d-flex align-center rounded-lg bg-warning text-on-surface pl-1"
                               >
                                 <v-icon
                                   size="x-small"
                                   class="me-1"
-                                  :color="'primary'"
+                                  color="on-surface"
                                   icon="mdi-clock-alert-outline"
                                 ></v-icon>
                                 Deadline: {{ formatDisplayDate(task.endDate) }}
@@ -354,7 +340,7 @@ onBeforeRouteLeave((to, from, next) => {
                           </v-list>
                           <v-sheet
                             v-else
-                            class="text-caption text-center pa-2 bg-transparent text-onSurface"
+                            class="text-caption text-center pa-2 bg-transparent text-on-surface"
                           >
                             No upcoming deadlines
                           </v-sheet>
@@ -363,7 +349,7 @@ onBeforeRouteLeave((to, from, next) => {
                               <v-btn
                                 density="comfortable"
                                 variant="text"
-                                :color="upcomingDeadlinesTotal > 0 ? 'primary' : 'onSurface'"
+                                color="on-surface"
                                 rounded
                                 size="small"
                                 :to="{ name: 'filter-and-labels' }"
@@ -388,10 +374,8 @@ onBeforeRouteLeave((to, from, next) => {
                   class="d-flex flex-column align-center justify-center"
                 >
                   <v-card
-                    flat
+                    outlined
                     rounded="lg"
-                    :elevation="completionPercentage === 100 ? 3 : 1"
-                    color="surface"
                     hover
                   >
                     <v-card-text class="d-flex flex-column align-center justify-center pa-6">
@@ -410,7 +394,6 @@ onBeforeRouteLeave((to, from, next) => {
                         :width="6"
                         :size="100"
                         class="mb-4"
-                        bg-color="surfaceVariant"
                         :indeterminate="false"
                         :rotate="-90"
                         transition="scale-transition"
@@ -472,30 +455,27 @@ onBeforeRouteLeave((to, from, next) => {
                 <!-- Overdue Tasks: derecha -->
                 <v-col cols="12" sm="4" md="4">
                   <v-card
-                    flat
+                    outlined
                     rounded="lg"
-                    :elevation="overdueTasksTotal > 0 ? 3 : 1"
-                    color="surface"
+                    :color="overdueTasksTotal > 0 ? 'error' : 'secondary'"
                     hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
                         <v-icon
-                          :color="overdueTasksTotal > 0 ? 'error' : 'onSurface'"
+                          color="on-surface"
                           icon="mdi-alarm"
                         ></v-icon>
                       </template>
                       <v-card-title
-                        class="text-subtitle-1 font-weight-bold pa-0"
-                        :class="overdueTasksTotal > 0 ? 'text-error' : 'text-onSurface'"
-                      >
+                        class="text-subtitle-1 font-weight-bold pa-0 text-on-surface"                      >
                         Overdue Tasks</v-card-title
                       >
                       <template v-slot:append>
                         <v-badge
                           v-if="overdueTasksTotal > 0"
                           :content="overdueTasksTotal"
-                          color="error"
+                          color="surface"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -505,21 +485,19 @@ onBeforeRouteLeave((to, from, next) => {
                       v-model="isOverduePanelExpanded"
                       variant="accordion"
                       class="mt-2 deadlines-panel"
-                      bg-color="surface"
                     >
-                      <v-expansion-panel value="true" class="border-0">
+                      <v-expansion-panel value="true">
                         <v-expansion-panel-title class="px-3 py-2 overdue-panel" hide-actions>
                           <v-row align="center" no-gutters class="w-100">
                             <v-col>
                               <v-sheet
                                 color="transparent"
-                                class="text-body-2 d-inline-flex align-center text-truncate"
-                                :class="overdueTasksTotal > 0 ? 'text-error' : 'text-onSurface'"
+                                class="text-body-2 d-inline-flex align-center text-truncate text-on-surface"
                               >
                                 <v-icon
                                   size="small"
                                   class="me-1"
-                                  :color="overdueTasksTotal > 0 ? 'error' : 'onSurface'"
+                                  color="on-surface"
                                 >
                                   {{
                                     overdueTasksTotal > 0 ? 'mdi-alert-circle' : 'mdi-check-circle'
@@ -537,9 +515,7 @@ onBeforeRouteLeave((to, from, next) => {
                             <v-spacer></v-spacer>
                             <v-col
                               cols="auto"
-                              class="text-caption text-medium-emphasis me-2"
-                              :class="overdueTasksTotal > 0 ? 'text-error' : 'text-onSurface'"
-                            >
+                              class="text-caption text-medium-emphasis me-2 text-on-surface"                            >
                               {{ isOverduePanelExpanded ? 'Hide' : 'Show all' }}
                               <v-btn
                                 density="comfortable"
@@ -548,7 +524,7 @@ onBeforeRouteLeave((to, from, next) => {
                                 "
                                 variant="text"
                                 size="small"
-                                :color="overdueTasksTotal > 0 ? 'error' : 'onSurface'"
+                                color="on-surface"
                                 aria-label="Toggle overdue tasks panel"
                               >
                               </v-btn>
@@ -569,29 +545,28 @@ onBeforeRouteLeave((to, from, next) => {
                               class="px-2 py-1 rounded-lg mb-1 task-item overdue"
                               exact
                               lines="two"
-                              color="surfaceVariant"
-                              base-color="onSurfaceVariant"
+                              color="surface-variant"
+                              base-color="on-surface"
                             >
                               <template v-slot:prepend>
                                 <v-icon
                                   :color="task.color || 'primary'"
                                   size="32"
-                                  class="me-2 rounded-circle pa-1"
                                   :icon="labelIcons[task.label] || 'mdi-calendar-alert'"
                                 />
                               </template>
                               <v-list-item-title
-                                class="text-truncate text-subtitle-2 text-onSurfaceVariant"
+                                class="text-truncate text-subtitle-2 text-on-surface"
                               >
                                 {{ task.title }}
                               </v-list-item-title>
                               <v-list-item-subtitle
-                                class="text-caption d-flex align-center bg-error text-onError rounded-lg"
+                                class="text-caption d-flex align-center rounded-lg bg-error text-on-surface pl-1"
                               >
                                 <v-icon
                                   size="x-small"
                                   icon="mdi-clock-alert-outline"
-                                  color="error"
+                                  color="on-surface"
                                 ></v-icon>
                                 Due: {{ formatDisplayDate(task.endDate) }}
                               </v-list-item-subtitle>
@@ -599,7 +574,7 @@ onBeforeRouteLeave((to, from, next) => {
                           </v-list>
                           <v-sheet
                             v-else
-                            class="text-caption text-center pa-2 bg-transparent text-onSurface"
+                            class="text-caption text-center pa-2 bg-transparent text-on-surface"
                           >
                             All tasks are on schedule!
                           </v-sheet>
@@ -608,7 +583,7 @@ onBeforeRouteLeave((to, from, next) => {
                               <v-btn
                                 density="comfortable"
                                 variant="text"
-                                :color="overdueTasksTotal > 0 ? 'error' : 'onSurface'"
+                                color="on-surface"
                                 rounded
                                 size="small"
                                 :to="{ name: 'filter-and-labels' }"
@@ -644,7 +619,7 @@ onBeforeRouteLeave((to, from, next) => {
                 class="font-weight-medium"
                 item-title="text"
                 item-value="value"
-                :menu-props="{ contentClass: 'bg-surfaceVariant' }"
+                :menu-props="{ contentClass: 'bg-secondary' }"
               ></v-select>
             </v-col>
 
@@ -663,7 +638,7 @@ onBeforeRouteLeave((to, from, next) => {
                 prepend-inner-icon="mdi-calendar-week"
                 menu-icon="mdi-menu-down"
                 class="font-weight-medium"
-                :menu-props="{ contentClass: 'bg-surfaceVariant' }"
+                :menu-props="{ contentClass: 'bg-secondary' }"
               ></v-select>
             </v-col>
           </v-row>
@@ -678,9 +653,8 @@ onBeforeRouteLeave((to, from, next) => {
                     :events="calendarEvents"
                     :view-mode="type"
                     :weekdays="getWeekdays(weekday)"
-                    class="rounded-lg"
                     aria-label="Tasks Calendar"
-                    elevation="1"
+                    elevation="2"
                   >
                     <template #event="{ event }">
                       <v-card
@@ -711,7 +685,7 @@ onBeforeRouteLeave((to, from, next) => {
                           <v-col cols="9" class="text-truncate">
                             <span
                               :class="{
-                                'text-decoration-line-through text-onSurfaceVariant':
+                                'text-decoration-line-through text-on-surface':
                                   event.completed
                               }"
                             >
