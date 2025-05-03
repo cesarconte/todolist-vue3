@@ -30,11 +30,6 @@ onMounted(() => {
   </v-app>
 </template>
 
-<!--<style scoped>
-.v-main {
-  min-height: 100vh;
-}
-</style>-->
 <style scoped>
 header {
   line-height: 1.5;
@@ -42,5 +37,6 @@ header {
 }
 main {
   min-height: 80vh;
+  background-color: #fafafa;
 }
 </style>

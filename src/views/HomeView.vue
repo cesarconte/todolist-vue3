@@ -5,12 +5,11 @@ import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import useLabelIcons from '@/composables/ui/useLabelIcons.js'
-import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { formatDate } from '@/utils/date/dateFormat'
 import { combineDateTime } from '@/utils/tasks/taskUtils'
 
-const router = useRouter()
+// const router = useRouter()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
@@ -106,7 +105,7 @@ const calendarEvents = computed(() => {
 
 // --- Helpers ---
 const formatDisplayDate = (date) => (date ? formatDate(date, 'MMM DD, YYYY') : 'No date')
-const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'primary' : color)
+// const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'primary' : color)
 const getWeekdays = (title) => {
   const found = weekdays.value.find((item) => item.title === title)
   return found ? found.value : [0, 1, 2, 3, 4, 5, 6]
@@ -183,65 +182,46 @@ watch(
   },
   { immediate: true }
 )
-
-onBeforeRouteLeave((to, from, next) => {
-  if (to.name === 'task-detail') {
-    // Only store if going to task-detail
-    localStorage.setItem('previousRoute', JSON.stringify(from))
-  }
-  next()
-})
 </script>
 
 <template>
-  <v-container class="pa-4 pa-sm-6">
+  <v-container class="pa-4 pa-sm-6" fluid>
     <v-responsive
       class="mx-auto"
       :max-width="xs ? '100%' : sm ? '95%' : md ? '85%' : lg ? '80%' : xl ? '75%' : '70%'"
     >
-      <v-card flat elevation="0" rounded="lg" class="pa-8" color="background">
-        <v-card-title class="text-center font-weight-bold mb-8 text-primary">
-          <span :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'">
-            Vuetify Todolist
-          </span>
-        </v-card-title>
-
-        <v-card-text>
+      <v-sheet class="pa-8 ma-2" elevation="2" rounded="lg">
+        <h2
+          class="text-center mb-8 text-primary"
+          :class="xs ? 'text-h4' : mobile ? 'text-h3' : 'text-h2'"
+        >
+          Vuetify Todolist
+        </h2>
+        <v-container fluid class="bg-surface">
           <!-- Panel estadístico -->
           <v-expand-transition>
-            <v-sheet
-              v-if="userStore.isLoggedIn && totalTasks > 0"
-              rounded="lg"
-              class="mb-8 pa-4"
-              color="surface"
-              elevation="2"
-            >
+            <v-sheet v-if="userStore.isLoggedIn && totalTasks > 0" rounded="lg" class="mb-8 pa-4">
               <v-row align="start" class="px-2">
                 <!-- Upcoming Deadlines: izquierda -->
                 <v-col cols="12" sm="4" md="4">
                   <v-card
-                    outlined
                     rounded="lg"
+                    variant="tonal"
+                    class="upcoming-panel"
                     :color="upcomingDeadlinesTotal > 0 ? 'warning' : 'secondary'"
-                    hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
-                        <v-icon
-                          color="on-surface"
-                          icon="mdi-clock-alert"
-                        ></v-icon>
+                        <v-icon color="on-surface" icon="mdi-clock-alert"></v-icon>
                       </template>
-                      <v-card-title
-                        class="text-subtitle-1 font-weight-bold pa-0 text-on-surface"
-                      >
+                      <v-card-title class="text-subtitle-1 font-weight-bold pa-0 text-on-surface">
                         Upcoming Deadlines
                       </v-card-title>
                       <template v-slot:append>
                         <v-badge
                           v-if="upcomingDeadlinesTotal > 0"
                           :content="upcomingDeadlinesTotal"
-                          color="surface"
+                          color="warning"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -249,8 +229,11 @@ onBeforeRouteLeave((to, from, next) => {
                     </v-card-item>
                     <v-expansion-panels
                       v-model="isDeadlinesPanelExpanded"
-                      variant="accordion"
-                      class="mt-2 deadlines-panel"
+                      tile="true"
+                      flat="true"
+                      elevation="0"
+                      color="transparent"
+                      class="deadlines-panel"
                     >
                       <v-expansion-panel value="true">
                         <v-expansion-panel-title class="px-3 py-2 upcoming-panel" hide-actions>
@@ -260,11 +243,7 @@ onBeforeRouteLeave((to, from, next) => {
                                 color="transparent"
                                 class="text-body-2 d-inline-flex align-center text-truncate text-on-surface"
                               >
-                                <v-icon
-                                  size="small"
-                                  class="me-1"
-                                  color="on-surface"
-                                >
+                                <v-icon size="small" class="me-1" color="on-surface">
                                   {{
                                     upcomingDeadlinesTotal > 0
                                       ? 'mdi-calendar-clock'
@@ -289,7 +268,6 @@ onBeforeRouteLeave((to, from, next) => {
                                 "
                                 variant="text"
                                 size="small"
-                                color="on-surface"
                                 aria-label="Toggle upcoming deadlines panel"
                               >
                               </v-btn>
@@ -365,7 +343,6 @@ onBeforeRouteLeave((to, from, next) => {
                     </v-expansion-panels>
                   </v-card>
                 </v-col>
-
                 <!-- Porcentaje de completadas: centro -->
                 <v-col
                   cols="12"
@@ -373,11 +350,7 @@ onBeforeRouteLeave((to, from, next) => {
                   md="4"
                   class="d-flex flex-column align-center justify-center"
                 >
-                  <v-card
-                    outlined
-                    rounded="lg"
-                    hover
-                  >
+                  <v-card rounded="lg" variant="flat" class="progress-panel">
                     <v-card-text class="d-flex flex-column align-center justify-center pa-6">
                       <v-fade-transition>
                         <v-icon
@@ -451,31 +424,26 @@ onBeforeRouteLeave((to, from, next) => {
                     </v-card-text>
                   </v-card>
                 </v-col>
-
                 <!-- Overdue Tasks: derecha -->
                 <v-col cols="12" sm="4" md="4">
                   <v-card
-                    outlined
                     rounded="lg"
+                    variant="tonal"
+                    class="overdue-panel"
                     :color="overdueTasksTotal > 0 ? 'error' : 'secondary'"
-                    hover
                   >
                     <v-card-item class="pa-3 pb-1">
                       <template v-slot:prepend>
-                        <v-icon
-                          color="on-surface"
-                          icon="mdi-alarm"
-                        ></v-icon>
+                        <v-icon color="on-surface" icon="mdi-alarm"></v-icon>
                       </template>
-                      <v-card-title
-                        class="text-subtitle-1 font-weight-bold pa-0 text-on-surface"                      >
+                      <v-card-title class="text-subtitle-1 font-weight-bold pa-0 text-on-surface">
                         Overdue Tasks</v-card-title
                       >
                       <template v-slot:append>
                         <v-badge
                           v-if="overdueTasksTotal > 0"
                           :content="overdueTasksTotal"
-                          color="surface"
+                          color="error"
                           floating
                           class="me-4"
                         ></v-badge>
@@ -483,8 +451,11 @@ onBeforeRouteLeave((to, from, next) => {
                     </v-card-item>
                     <v-expansion-panels
                       v-model="isOverduePanelExpanded"
-                      variant="accordion"
                       class="mt-2 deadlines-panel"
+                      tile="true"
+                      flat="true"
+                      elevation="0"
+                      color="transparent"
                     >
                       <v-expansion-panel value="true">
                         <v-expansion-panel-title class="px-3 py-2 overdue-panel" hide-actions>
@@ -494,11 +465,7 @@ onBeforeRouteLeave((to, from, next) => {
                                 color="transparent"
                                 class="text-body-2 d-inline-flex align-center text-truncate text-on-surface"
                               >
-                                <v-icon
-                                  size="small"
-                                  class="me-1"
-                                  color="on-surface"
-                                >
+                                <v-icon size="small" class="me-1" color="on-surface">
                                   {{
                                     overdueTasksTotal > 0 ? 'mdi-alert-circle' : 'mdi-check-circle'
                                   }}
@@ -515,7 +482,8 @@ onBeforeRouteLeave((to, from, next) => {
                             <v-spacer></v-spacer>
                             <v-col
                               cols="auto"
-                              class="text-caption text-medium-emphasis me-2 text-on-surface"                            >
+                              class="text-caption text-medium-emphasis me-2 text-on-surface"
+                            >
                               {{ isOverduePanelExpanded ? 'Hide' : 'Show all' }}
                               <v-btn
                                 density="comfortable"
@@ -524,7 +492,6 @@ onBeforeRouteLeave((to, from, next) => {
                                 "
                                 variant="text"
                                 size="small"
-                                color="on-surface"
                                 aria-label="Toggle overdue tasks panel"
                               >
                               </v-btn>
@@ -603,8 +570,10 @@ onBeforeRouteLeave((to, from, next) => {
             </v-sheet>
           </v-expand-transition>
 
-          <v-row align="center" justify="center" class="mb-8">
-            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3" class="mb-8">
+          <v-divider class="ma-8"></v-divider>
+          <!-- Calendario -->
+          <v-row align="center" justify="center" class="ma-4">
+            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3">
               <v-select
                 v-model="type"
                 :items="types"
@@ -623,7 +592,7 @@ onBeforeRouteLeave((to, from, next) => {
               ></v-select>
             </v-col>
 
-            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3" class="mb-8">
+            <v-col :cols="xs ? 12 : 6" :sm="6" :md="5" :lg="4" :xl="3">
               <v-select
                 v-model="weekday"
                 :items="weekdays"
@@ -643,8 +612,8 @@ onBeforeRouteLeave((to, from, next) => {
             </v-col>
           </v-row>
 
-          <v-row justify="center" class="mb-8">
-            <v-col cols="12" class="mb-8">
+          <v-row justify="center">
+            <v-col cols="12">
               <Suspense>
                 <template #default>
                   <v-calendar
@@ -653,68 +622,9 @@ onBeforeRouteLeave((to, from, next) => {
                     :events="calendarEvents"
                     :view-mode="type"
                     :weekdays="getWeekdays(weekday)"
+                    class="pb-4"
                     aria-label="Tasks Calendar"
-                    elevation="2"
                   >
-                    <template #event="{ event }">
-                      <v-card
-                        :key="event.id"
-                        flat
-                        :color="event.completed ? 'red' : event.color"
-                        :class="[
-                          'ma-1 pa-2 rounded cursor-pointer transition-swing focus-visible-outline',
-                          { 'opacity-60': event.completed }
-                        ]"
-                        :ripple="true"
-                        @click="
-                          () => router.push({ name: 'task-detail', params: { taskId: event.id } })
-                        "
-                        @keydown.enter="
-                          () => router.push({ name: 'task-detail', params: { taskId: event.id } })
-                        "
-                        @keydown.space="
-                          () => router.push({ name: 'task-detail', params: { taskId: event.id } })
-                        "
-                        tabindex="0"
-                        :aria-label="
-                          'Task: ' + event.title + (event.completed ? ', Completed' : ', Pending')
-                        "
-                        role="button"
-                      >
-                        <v-row no-gutters align="center">
-                          <v-col cols="9" class="text-truncate">
-                            <span
-                              :class="{
-                                'text-decoration-line-through text-on-surface':
-                                  event.completed
-                              }"
-                            >
-                              {{ event.title }}
-                            </span>
-                          </v-col>
-                          <v-col cols="3" class="text-right">
-                            <v-icon
-                              :color="getAccessibleColor(event.color, event.completed) || 'primary'"
-                              :icon="
-                                event.completed
-                                  ? 'mdi-check-circle'
-                                  : labelIcons[event.label] || 'mdi-question'
-                              "
-                              size="20"
-                              :aria-label="event.completed ? 'Completed' : 'Label: ' + event.label"
-                            >
-                            </v-icon>
-                            <v-tooltip
-                              activator="parent"
-                              location="right"
-                              content-class="text-body-2"
-                            >
-                              {{ event.completed ? 'Task completed' : 'Task ' + event.label }}
-                            </v-tooltip>
-                          </v-col>
-                        </v-row>
-                      </v-card>
-                    </template>
                   </v-calendar>
                 </template>
                 <template #fallback>
@@ -723,8 +633,8 @@ onBeforeRouteLeave((to, from, next) => {
               </Suspense>
             </v-col>
           </v-row>
-        </v-card-text>
-      </v-card>
+        </v-container>
+      </v-sheet>
     </v-responsive>
   </v-container>
 </template>

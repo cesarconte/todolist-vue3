@@ -308,8 +308,8 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for creating a new task - note index [2] is for Submit in new order
-btnsForm[2].text = 'Create Task' // Botón primario de confirmación (ahora en índice 2)
-btnsForm[2].icon = 'mdi-plus-circle' // Icono más distintivo para crear, consistente con Add Project
+btnsForm[0].text = 'Create Task' // Botón primario de confirmación (ahora en índice 2)
+btnsForm[0].icon = 'mdi-plus-circle' // Icono más distintivo para crear, consistente con Add Project
 
 const btnsFormAddProject = [
   // Según MD3, los botones en diálogos deben organizarse en este orden:
