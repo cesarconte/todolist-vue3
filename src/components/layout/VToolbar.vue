@@ -394,7 +394,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       aria-label="Open main menu"
       @click.stop="menus.drawer = !menus.drawer"
       class="menu-btn"
-      color="onPrimary"
+      color="on-primary"
     >
       <v-icon class="menu-btn icon">mdi-menu</v-icon>
       <v-tooltip activator="parent" location="bottom" class="menu-btn tooltip">
@@ -414,10 +414,10 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       rounded="0"
       elevation="0"
     >
-      <v-app-bar-title class="text-onPrimary">
+      <v-app-bar-title class="text-on-primary">
         <h1 class="text-h6 font-weight-medium d-flex align-center mb-0">
           Todolist
-          <v-icon color="onPrimary" class="app-bar-title icon ml-1"
+          <v-icon color="on-primary" class="app-bar-title icon ml-1"
             >mdi-checkbox-marked-circle-auto-outline</v-icon
           >
         </h1>
@@ -426,45 +426,11 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </v-sheet>
 
     <v-spacer></v-spacer>
-    <template v-if="userStore.isLoggedIn && mdAndUp">
-      <v-avatar class="mr-2" size="24">
-        <v-img
-          v-if="userStore.userProfilePicture"
-          :src="userStore.userProfilePicture"
-          alt="Profile Picture"
-          cover
-        />
-        <v-icon v-if="!userStore.userProfilePicture" color="onPrimary">mdi-account-circle</v-icon>
-      </v-avatar>
-      <span class="text-onPrimary mr-2">{{ userStore.userName }}</span>
-    </template>
+    
     <template v-if="mdAndUp">
-      <!-- Botón para alternar entre modo claro y oscuro -->
-      <v-btn
-        icon
-        aria-label="Toggle dark/light mode"
-        @click="toggleTheme"
-        color="onPrimary"
-        class="mr-2"
-      >
-        <v-icon>{{ isDarkMode ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
-        <v-tooltip activator="parent" location="bottom">
-          {{ isDarkMode ? 'Switch to light mode' : 'Switch to dark mode' }}
-        </v-tooltip>
-      </v-btn>
-
-      <v-btn
-        icon
-        aria-label="Login or Logout"
-        @click="handleLoginLogout"
-        class="login-btn"
-        color="onPrimary"
-      >
-        <v-icon :icon="loginLogoutIcon" class="login-btn icon"></v-icon>
-        <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
-          {{ loginLogoutText }}
-        </v-tooltip>
-      </v-btn>
+      <!-- Orden reorganizado: notificaciones, tema, settings, login, avatar -->
+      
+      <!-- 1. Notificaciones (primero para mayor accesibilidad) -->
       <v-tooltip location="bottom">
         <template v-slot:activator="{ props }">
           <div v-bind="props">
@@ -473,30 +439,46 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
               aria-label="Open notifications"
               @click="handleNotificationsClick"
               :disabled="!userStore.isLoggedIn || !notificationsStore.notificationSettings.enabled"
-              class="notifications-btn"
-              color="onPrimary"
+              class="notifications-btn mr-2"
+              color="on-primary"
             >
               <template v-if="notificationsStore.notificationSettings.enabled">
                 <v-badge
                   :dot="unreadNotificationsCount === 0"
                   :content="unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined"
-                  :color="unreadNotificationsCount > 0 ? 'error' : 'inversePrimary'"
+                  :color="unreadNotificationsCount > 0 ? 'error' : 'transparent'"
                   overlap
                 >
-                  <v-icon icon="mdi-bell-outline" color="onPrimary"></v-icon>
+                  <v-icon icon="mdi-bell-outline" color="on-primary"></v-icon>
                 </v-badge>
               </template>
               <template v-else>
-                <v-icon icon="mdi-bell-off-outline" color="onPrimary"></v-icon>
+                <v-icon icon="mdi-bell-off-outline" color="on-primary"></v-icon>
               </template>
             </v-btn>
           </div>
         </template>
         <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
-      <v-menu v-model="menus.settings">
+      
+      <!-- 2. Botón para alternar entre modo claro y oscuro -->
+      <v-btn
+        icon
+        aria-label="Toggle dark/light mode"
+        @click="toggleTheme"
+        color="on-primary"
+        class="mr-2"
+      >
+        <v-icon>{{ isDarkMode ? 'mdi-weather-sunny' : 'mdi-weather-night' }}</v-icon>
+        <v-tooltip activator="parent" location="bottom">
+          {{ isDarkMode ? 'Switch to light mode' : 'Switch to dark mode' }}
+        </v-tooltip>
+      </v-btn>
+      
+      <!-- 3. Configuración/Settings -->
+      <v-menu v-model="menus.settings" class="mr-2">
         <template v-slot:activator="{ props }">
-          <v-btn icon aria-label="Settings" v-bind="props" color="onPrimary">
+          <v-btn icon aria-label="Settings" v-bind="props" color="on-primary">
             <v-icon>mdi-cog-outline</v-icon>
             <v-tooltip activator="parent" location="bottom" class="settings-btn tooltip"
               >Settings</v-tooltip
@@ -510,7 +492,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             class="rounded-lg mb-2"
             rounded="pill"
             color="primary"
-            base-color="onSurface"
+            base-color="on-surface"
           >
             <template v-slot:prepend>
               <v-icon icon="mdi-bell-cog-outline" class="mr-3"></v-icon>
@@ -518,24 +500,60 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
 
             <v-list-item-title class="font-weight-bold"> Notification Settings </v-list-item-title>
 
-            <v-list-item-subtitle class="text-caption text-onSurfaceVariant">
+            <v-list-item-subtitle class="text-caption text-on-surface-variant">
               Manage your notification preferences
             </v-list-item-subtitle>
 
             <template v-slot:append>
-              <v-icon icon="mdi-chevron-right" color="onSurfaceVariant"></v-icon>
+              <v-icon icon="mdi-chevron-right" color="on-surface-variant"></v-icon>
             </template>
           </v-list-item>
         </v-list>
       </v-menu>
+
+      <!-- 4. Login/Logout -->
+      <v-btn
+        icon
+        aria-label="Login or Logout"
+        @click="handleLoginLogout"
+        class="login-btn mr-2"
+        color="on-primary"
+      >
+        <v-icon :icon="loginLogoutIcon" class="login-btn icon"></v-icon>
+        <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
+          {{ loginLogoutText }}
+        </v-tooltip>
+      </v-btn>
+      
+      <!-- 5. Avatar de usuario (último elemento a la derecha) -->
+      <template v-if="userStore.isLoggedIn">
+        <v-avatar 
+          class="mr-2" 
+          variant="elevated"
+          :size="xs ? 24 : sm ? 28 : md ? 32 : lg ? 36 : xl ? 40 : 32"
+          color="white"
+        >
+          <v-img
+            v-if="userStore.userProfilePicture"
+            :src="userStore.userProfilePicture"
+            alt="Profile Picture"
+            cover
+          />
+          <v-icon v-else color="grey-darken-1" :size="xs ? 16 : sm ? 18 : md ? 20 : lg ? 24 : xl ? 28 : 20">mdi-account-circle</v-icon>
+          <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
+          {{ userStore.userName }}
+        </v-tooltip>
+        </v-avatar>
+      </template>
     </template>
+    
     <template v-else>
       <v-btn
         icon="mdi-dots-vertical"
         variant="text"
         aria-label="Open more options"
         @click="handleDotsClick"
-        color="onPrimary"
+        color="on-primary"
       ></v-btn>
     </template>
   </v-app-bar>
@@ -553,7 +571,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     color="surface"
   >
     <v-list nav class="navigation-drawer-list pa-2" density="default">
-      <v-list-subheader class="subheader text-onSurfaceVariant">MENU</v-list-subheader>
+      <v-list-subheader class="subheader text-on-surface-variant">MENU</v-list-subheader>
       <v-divider class="my-2"></v-divider>
       <v-list-item
         v-for="(item, i) in navItems"
@@ -565,7 +583,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         @click="item.function"
         rounded="lg"
         color="primary"
-        base-color="onSurface"
+        base-color="on-surface"
       >
         <template v-slot:prepend>
           <v-icon v-if="i !== 0" :icon="item.icon" class="icon"> </v-icon>
@@ -579,7 +597,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
                 alt="Profile Picture"
                 cover
               />
-              <v-icon v-if="!userStore.userProfilePicture" color="onSurface"
+              <v-icon v-if="!userStore.userProfilePicture" color="on-surface"
                 >mdi-account-circle</v-icon
               >
             </v-avatar>
@@ -587,12 +605,12 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         </template>
       </v-list-item>
       <v-list-item> </v-list-item>
-      <v-list-subheader class="subheader text-onSurfaceVariant">PROJECTS</v-list-subheader>
+      <v-list-subheader class="subheader text-on-surface-variant">PROJECTS</v-list-subheader>
       <v-divider class="my-2"></v-divider>
       <template v-if="userStore.isLoggedIn">
         <v-list-group value="My Projects">
           <template v-slot:activator="{ props }">
-            <v-list-item v-bind="props" title="My Projects" rounded="lg" base-color="onSurface">
+            <v-list-item v-bind="props" title="My Projects" rounded="lg" base-color="on-surface">
               <template v-slot:prepend>
                 <v-icon icon="mdi-folder" color="primary" class="icon"></v-icon>
               </template>
@@ -607,19 +625,19 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             class="item project-item"
             rounded="lg"
             color="primary"
-            base-color="onSurface"
+            base-color="on-surface"
           >
             <template v-slot:prepend>
               <v-icon :icon="project.icon" :color="project.color || 'primary'"></v-icon>
             </template>
             <v-list-item-title>{{ project.title }}</v-list-item-title>
           </v-list-item>
-          <v-list-item v-if="!projectStore.projects.length" base-color="onSurfaceVariant">
+          <v-list-item v-if="!projectStore.projects.length" base-color="on-surface-variant">
             <v-list-item-title>No projects yet</v-list-item-title>
           </v-list-item>
           <v-list-group value="Actions">
             <template v-slot:activator="{ props }">
-              <v-list-item v-bind="props" title="Actions" rounded="lg" base-color="onSurface">
+              <v-list-item v-bind="props" title="Actions" rounded="lg" base-color="on-surface">
                 <template v-slot:prepend>
                   <v-icon icon="mdi-cogs" class="icon"></v-icon>
                 </template>
@@ -633,7 +651,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
               @click="openDialog(item.value)"
               rounded="lg"
               color="primary"
-              base-color="onSurface"
+              base-color="on-surface"
             >
               <template v-slot:prepend>
                 <v-icon :icon="item.icon"></v-icon>
@@ -644,7 +662,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       </template>
       <template v-else>
         <div class="pa-3">
-          <p ref="loginParagraph" class="login-paragraph text-onSurfaceVariant">
+          <p ref="loginParagraph" class="login-paragraph text-on-surface-variant">
             Log in to see your projects
             <v-tooltip text="Login with Google" location="bottom">
               <template v-slot:activator="{ props }">
@@ -670,7 +688,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
   >
     <v-card class="card card-create-task pa-4" color="surface">
       <v-card-title
-        class="card-title card-title-create-task text-onSurface"
+        class="card-title card-title-create-task text-on-surface"
         :class="mobile ? 'px-1' : ''"
       >
         <span class="text-h6">Add new task</span>
@@ -701,7 +719,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     scrollable
   >
     <v-card class="card card-add-project pa-4" color="surface">
-      <v-card-title class="card-title card-title-add-project text-onSurface">
+      <v-card-title class="card-title card-title-add-project text-on-surface">
         <span class="text-h6">Add new project</span>
       </v-card-title>
       <v-card-text>
@@ -728,7 +746,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     class="navigation-drawer drawer-dots"
     color="surface"
   >
-    <v-list density="default" base-color="onSurface" class="pa-2">
+    <v-list density="default" base-color="on-surface" class="pa-2">
       <template v-for="item in dotsItems" :key="item.title">
         <!-- Items without children (single items) -->
         <v-list-item
@@ -736,7 +754,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           @click="item.action"
           rounded="lg"
           color="primary"
-          base-color="onSurface"
+          base-color="on-surface"
         >
           <template v-slot:prepend>
             <v-icon :icon="item.icon"></v-icon>
@@ -747,7 +765,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         <!-- Items with children (groups) -->
         <v-list-group v-else>
           <template v-slot:activator="{ props }">
-            <v-list-item v-bind="props" rounded="lg" base-color="onSurface">
+            <v-list-item v-bind="props" rounded="lg" base-color="on-surface">
               <template v-slot:prepend>
                 <v-icon :icon="item.icon"></v-icon>
               </template>
@@ -762,7 +780,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             @click="child.action"
             rounded="lg"
             color="primary"
-            base-color="onSurface"
+            base-color="on-surface"
           >
             <template v-slot:prepend>
               <v-icon :icon="child.icon"></v-icon>

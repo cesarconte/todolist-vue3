@@ -37,6 +37,5 @@ header {
 }
 main {
   min-height: 80vh;
-  background-color: #fafafa;
 }
 </style>
