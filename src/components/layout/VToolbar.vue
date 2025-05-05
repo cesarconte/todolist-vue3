@@ -281,7 +281,7 @@ const handleInvalidProject = () => {
 /************************************
  * Vuetify Display
  ************************************/
-const { xs, smAndUp, mdAndDown, mdAndUp, mobile } = useDisplay() // Accesses display breakpoints from Vuetify
+const { xs, sm, smAndUp, mdAndDown, md, mdAndUp, lg, xl, mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
 /************************************
  * Theme Toggle
@@ -363,6 +363,7 @@ onMounted(() => {
   if (userStore.isLoggedIn) {
     notificationsStore.loadSettings()
   }
+  console.log('User ' + userStore.isLoggedIn + ' is logged in')
 })
 
 // Corrige: pasar el ref directamente, no una función
@@ -428,7 +429,6 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     <v-spacer></v-spacer>
     
     <template v-if="mdAndUp">
-      <!-- Orden reorganizado: notificaciones, tema, settings, login, avatar -->
       
       <!-- 1. Notificaciones (primero para mayor accesibilidad) -->
       <v-tooltip location="bottom">
@@ -446,7 +446,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
                 <v-badge
                   :dot="unreadNotificationsCount === 0"
                   :content="unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined"
-                  :color="unreadNotificationsCount > 0 ? 'error' : 'transparent'"
+                  :color="unreadNotificationsCount > 0 ? 'error' : 'success'"
                   overlap
                 >
                   <v-icon icon="mdi-bell-outline" color="on-primary"></v-icon>
@@ -530,7 +530,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         <v-avatar 
           class="mr-2" 
           variant="elevated"
-          :size="xs ? 24 : sm ? 28 : md ? 32 : lg ? 36 : xl ? 40 : 32"
+          :size="xs ? 24 : sm ? 28 : md ? 32 : lg ? 32 : xl ? 32 : 32"
           color="white"
         >
           <v-img

@@ -19,6 +19,7 @@ import VTaskForm from '@/components/tasks/VTaskForm.vue'
 import VProjectForm from '@/components/projects/VProjectForm.vue'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 import VEmptyState from '@/components/tasks/VEmptyState.vue'
+import { useMotivationalProgress } from '@/composables/ui/useMotivationalProgress.js'
 
 const userStore = useUserStore()
 const projectStore = useProjectStore()
@@ -91,6 +92,8 @@ const progressPercentage = computed(() => {
     return 0
   }
 })
+
+const { color: motivationalColor } = useMotivationalProgress(progressPercentage)
 
 const handleAddTaskClick = () => {
   if (!userStore.isLoggedIn) {
@@ -233,6 +236,15 @@ const { btnsForm } = useFormBtnActions(
 btnsForm[0].text = 'Update Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
+// Botones para el formulario de edición de proyecto usando el composable
+const { btnsForm: btnsFormEditProject } = useFormBtnActions(
+  submitEditedProject,
+  resetEditProject,
+  () => (dialogEditProject.value = false)
+)
+btnsFormEditProject[0].text = 'Save Edit'
+btnsFormEditProject[0].icon = 'mdi-check'
+
 // Define the buttons Project array
 const btnsProject = [
   {
@@ -260,40 +272,6 @@ const btnsProject = [
         console.error('Project not found:', projectStore.selectedProjectTitle)
       }
     }
-  }
-]
-
-// Define the buttons Form Project array
-const btnsFormProject = [
-  {
-    type: 'submit',
-    text: 'Save Edit',
-    icon: 'mdi-check',
-    variant: 'elevated',
-    rounded: 'lg',
-    size: 'large',
-    color: 'primary',
-    function: submitEditedProject
-  },
-  {
-    type: 'button',
-    text: 'Reset Form',
-    icon: 'mdi-refresh',
-    variant: 'tonal',
-    rounded: 'lg',
-    size: 'large',
-    color: 'surface',
-    function: reset
-  },
-  {
-    type: 'button',
-    text: 'Close',
-    icon: 'mdi-close',
-    variant: 'text',
-    rounded: 'lg',
-    size: 'large',
-    color: 'surface',
-    function: () => (dialogEditProject.value = false)
   }
 ]
 
@@ -339,10 +317,9 @@ const confirmDeleteAndClose = () => {
 </script>
 
 <template>
-  <v-container fluid class="my-6">
+  <v-container :class="xs ? '' : 'pa-4'" fluid>
     <v-responsive
       class="tasksByProject-container mx-auto"
-      :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-dialog
@@ -359,7 +336,7 @@ const confirmDeleteAndClose = () => {
           rounded="lg"
         >
           <v-card-title
-            class="card-title card-title-create-task text-onSurface"
+            class="card-title card-title-create-task mb-8"
             :class="mobile ? 'px-1' : ''"
           >
             <span class="text-h6">Add new task</span>
@@ -377,7 +354,7 @@ const confirmDeleteAndClose = () => {
             >
             </VTaskForm>
           </v-card-text>
-          <v-card-actions class="justify-end px-4 pb-4">
+          <v-card-actions class="justify-center px-4 pb-4">
             <VActionButtons :buttons="btnsNewTaskForm" />
           </v-card-actions>
         </v-card>
@@ -395,7 +372,7 @@ const confirmDeleteAndClose = () => {
           elevation="2"
           rounded="lg"
         >
-          <v-card-title class="card-title card-title-edit-project text-onSurface">
+          <v-card-title class="card-title card-title-edit-project mb-8">
             <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
           </v-card-title>
           <v-card-text>
@@ -408,8 +385,8 @@ const confirmDeleteAndClose = () => {
               @submit="submitEditedProject"
             />
           </v-card-text>
-          <v-card-actions class="justify-end px-4 pb-4">
-            <VActionButtons :buttons="btnsFormProject" />
+          <v-card-actions class="justify-center px-4 pb-4">
+            <VActionButtons :buttons="btnsFormEditProject" />
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -474,15 +451,22 @@ const confirmDeleteAndClose = () => {
         </v-card>
       </v-dialog>
       <v-row>
-        <v-col cols="12" class="d-flex justify-content-between align-items-center mb-8">
-          <h2 class="text-left text-h4 font-weight-bold text-primary d-flex align-self-center">
-            {{ projectStore.selectedProjectTitle }} project tasks
+        <v-col
+          cols="12"
+          class="d-flex justify-content-between align-items-center"
+          :class="xs ? 'my-4' : mobile ? 'my-6' : 'my-8'"
+        >
+          <h2
+            class="text-left font-weight-bold d-flex align-self-center"
+            :class="xs ? 'text-h5' : sm ? 'text-h4' : 'text-h3'"
+          >
+            {{ projectStore.selectedProjectTitle }} tasks
           </h2>
           <v-spacer></v-spacer>
           <!-- Botón Delete all tasks in project con color terciario -->
           <v-btn
             icon
-            variant="outlined"
+            variant="text"
             color="error"
             class="delete-project-btn me-2"
             @click="confirmDeleteAllTasks"
@@ -501,7 +485,7 @@ const confirmDeleteAndClose = () => {
             :offset="8"
           >
             <template v-slot:activator="{ props }">
-              <v-btn icon v-bind="props" class="menu-project-btn" variant="text" color="primary">
+              <v-btn icon v-bind="props" class="menu-project-btn" variant="text">
                 <v-icon>mdi-dots-vertical</v-icon>
                 <v-tooltip activator="parent" location="bottom" class="menu-project-tooltip"
                   >Project options</v-tooltip
@@ -527,22 +511,16 @@ const confirmDeleteAndClose = () => {
                   :ripple="true"
                   :active="false"
                   :hover="true"
-                  :color="btn.text.includes('Delete') ? 'tertiary' : 'primary'"
                   variant="text"
                 >
                   <template v-slot:prepend>
                     <v-icon
-                      :color="btn.text.includes('Delete') ? 'tertiary' : 'primary'"
+                      :color="btn.text.includes('Delete') ? 'error' : 'primary'"
                       class="me-2"
                       >{{ btn.icon }}</v-icon
                     >
                   </template>
-                  <v-list-item-title
-                    :class="{
-                      'text-tertiary': btn.text.includes('Delete'),
-                      'text-primary': !btn.text.includes('Delete')
-                    }"
-                  >
+                  <v-list-item-title>
                     {{ btn.text }}
                   </v-list-item-title>
                 </v-list-item>
@@ -563,20 +541,12 @@ const confirmDeleteAndClose = () => {
             'col-xl-7': xl
           }"
         >
-          <v-card color="surfaceVariant" rounded="lg" elevation="1" :class="xs ? 'pa-3' : 'pa-4'">
+          <v-card variant="flat" rounded="lg" class="bg-surface-container-low" :class="xs ? 'pa-3' : 'pa-4'">
             <!-- Primera fila: Total con icono + botón añadir -->
             <v-row class="d-flex align-center" :class="xs ? 'py-1' : 'py-2'">
               <v-col cols="auto" class="d-flex align-center">
-                <v-icon
-                  :icon="totalTasksIcon"
-                  class="me-3"
-                  color="primary"
-                  :size="xs ? 28 : sm ? 32 : 36"
-                ></v-icon>
-                <span
-                  class="text-primary font-weight-bold"
-                  :class="xs ? 'text-h6' : sm ? 'text-h5' : 'text-h4'"
-                >
+                <v-icon :icon="totalTasksIcon" class="me-3" :size="xs ? 28 : sm ? 32 : 36"></v-icon>
+                <span class="font-weight-bold" :class="xs ? 'text-h6' : sm ? 'text-h5' : 'text-h4'">
                   Total: {{ taskStore.totalFilteredTasksInProject }}
                 </span>
               </v-col>
@@ -588,8 +558,8 @@ const confirmDeleteAndClose = () => {
                     <v-btn
                       v-bind="tooltipProps"
                       icon="mdi-plus"
-                      elevation="2"
                       color="primary"
+                      elevation="3"
                       class="action-btn-animated"
                       size="default"
                       @click="handleAddTaskClick"
@@ -603,7 +573,7 @@ const confirmDeleteAndClose = () => {
                   v-else
                   color="primary"
                   variant="tonal"
-                  rounded="lg"
+                  rounded
                   size="large"
                   prepend-icon="mdi-plus"
                   class="action-btn-animated text-none text-button"
@@ -622,12 +592,7 @@ const confirmDeleteAndClose = () => {
               <v-row dense class="mb-2">
                 <!-- Columna Remaining -->
                 <v-col cols="6" class="d-flex align-center">
-                  <v-icon
-                    icon="mdi-calendar-clock-outline"
-                    class="me-2"
-                    color="primary"
-                    size="22"
-                  ></v-icon>
+                  <v-icon icon="mdi-calendar-clock-outline" class="me-2" size="22"></v-icon>
                   <span class="text onSurfaceVariant font-weight-medium text-body-2">
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
                   </span>
@@ -635,12 +600,7 @@ const confirmDeleteAndClose = () => {
 
                 <!-- Columna Completed -->
                 <v-col cols="6" class="d-flex align-center">
-                  <v-icon
-                    :icon="completedTasksIcon"
-                    class="me-2"
-                    color="primary"
-                    size="22"
-                  ></v-icon>
+                  <v-icon :icon="completedTasksIcon" class="me-2" size="22"></v-icon>
                   <span class="text onSurfaceVariant font-weight-medium text-body-2">
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
                   </span>
@@ -651,13 +611,13 @@ const confirmDeleteAndClose = () => {
               <v-row dense class="pb-2">
                 <v-col cols="12">
                   <div class="d-flex flex-column align-center mt-2">
-                    <span class="text-body-2 font-weight-medium text-primary mb-2">Progress:</span>
+                    <span class="text-body-2 font-weight-medium mb-2">Progress:</span>
                     <v-progress-circular
                       v-model="progressPercentage"
                       :size="64"
                       :width="6"
                       :value="progressPercentage"
-                      color="primary"
+                      :color="motivationalColor"
                     >
                       <!-- Texto del porcentaje más visible -->
                       <span class="text-body-1 font-weight-medium">{{ progressPercentage }}%</span>
@@ -675,7 +635,6 @@ const confirmDeleteAndClose = () => {
                   <v-icon
                     icon="mdi-calendar-clock-outline"
                     class="me-2"
-                    color="primary"
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
@@ -690,7 +649,6 @@ const confirmDeleteAndClose = () => {
                   <v-icon
                     :icon="completedTasksIcon"
                     class="me-2"
-                    color="primary"
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
@@ -706,13 +664,13 @@ const confirmDeleteAndClose = () => {
                 <!-- Progreso inline para sm+ -->
                 <v-col cols="auto">
                   <div class="d-flex align-center">
-                    <span class="text-body-2 font-weight-medium text-primary mr-3">Progress:</span>
+                    <span class="text-body-2 font-weight-medium mr-3">Progress:</span>
                     <v-progress-circular
                       v-model="progressPercentage"
                       :size="sm ? 56 : computedProgressSize"
                       :width="sm ? 5 : computedProgressWidth"
                       :value="progressPercentage"
-                      color="primary"
+                      :color="motivationalColor"
                     >
                       <span class="text-body-2 font-weight-medium">{{ progressPercentage }}%</span>
                     </v-progress-circular>
@@ -812,7 +770,7 @@ const confirmDeleteAndClose = () => {
             <v-btn
               color="primary"
               variant="tonal"
-              rounded="lg"
+              rounded
               size="large"
               prepend-icon="mdi-plus"
               class="mt-6 action-btn-animated"

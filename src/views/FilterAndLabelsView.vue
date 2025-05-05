@@ -6,6 +6,7 @@ import VCardTask from '@/components/tasks/VCardTask.vue'
 import VPagination from '@/components/tasks/VPagination.vue'
 import VTaskForm from '@/components/tasks/VTaskForm.vue'
 import VEmptyState from '@/components/tasks/VEmptyState.vue'
+import VBackButton from '@/components/ui/VBackButton.vue'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useResetForm } from '@/composables/forms/useResetForm'
 import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
@@ -128,17 +129,16 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 </script>
 
 <template>
-  <v-container fluid class="my-6 bg-background">
+  <v-container :class="xs ? '' : 'pa-4'" fluid>
     <v-responsive
       class="tasksFiltered-container mx-auto"
-      :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
           <h2
-            class="text-center font-weight-bold text-primary"
-            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h4 mb-8'"
+            class="text-center text-on-surface font-weight-bold"
+            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h3 my-8'"
           >
             Filter and Label Tasks
           </h2>
@@ -146,13 +146,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
       </v-row>
 
       <!-- Filtros -->
-      <v-card
-        class="mb-8 mx-2 filters-card"
-        :class="xs ? 'pa-2' : 'pa-4'"
-        variant="elevated"
-        rounded="lg"
-        color="surface"
-      >
+      <v-card class="mb-8 mx-2 search-card" :class="xs ? '' : 'pa-4'" variant="text">
         <v-card-title
           class="d-flex align-center justify-space-between pb-2 mb-2"
           :class="xs ? 'px-2' : 'px-4'"
@@ -161,8 +155,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             class="filter-header"
             :class="xs ? 'pa-1' : 'pa-2'"
             rounded="lg"
-            color="surfaceVariant"
-            elevation="1"
+            color="surface-container"
           >
             <div class="d-flex align-center">
               <v-icon
@@ -196,10 +189,10 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-primary text-center mb-4"
+          class="text-subtitle-1 font-weight-medium py-2 text-center mb-4"
           :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-icon icon="mdi-tune" class="mr-2" color="primary" :size="xs ? 18 : 24"></v-icon>
+          <v-icon icon="mdi-tune" class="mr-2" :size="xs ? 18 : 24"></v-icon>
           <span :class="xs ? 'text-body-2' : ''">Choose your filters</span>
         </v-card-subtitle>
 
@@ -219,6 +212,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 item-value="value"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -265,6 +259,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 item-value="title"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -336,6 +331,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 item-value="title"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -382,6 +378,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 item-value="title"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -426,6 +423,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 class="date-picker"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -450,6 +448,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 class="date-picker"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -480,6 +479,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
                 item-value="value"
                 variant="outlined"
                 color="primary"
+                bg-color="surface-container"
                 density="comfortable"
                 rounded
                 clearable
@@ -549,7 +549,6 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 
         <v-card-actions class="justify-center pt-4 pb-8 mt-4">
           <v-btn
-            color="primary"
             variant="tonal"
             rounded
             size="large"
@@ -559,7 +558,6 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             class="text-none text-button"
             @click="taskStore.resetFilters()"
             :disabled="!hasActiveFilters()"
-            elevation="1"
           >
             Clear All Filters
           </v-btn>
@@ -617,7 +615,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
         <v-col cols="12">
           <div class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
-            <span class="text-h6 font-weight-medium text-primary">Filtered Tasks</span>
+            <span class="text-h6 font-weight-medium">Filtered Tasks</span>
             <v-divider class="ml-4"></v-divider>
           </div>
           <div class="d-flex align-center justify-end">
@@ -730,21 +728,16 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
 
       <!-- Botón para regresar -->
       <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-8">
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <v-btn
-            @click="goBack"
-            color="primary"
-            variant="flat"
-            rounded
-            :size="xs ? 'default' : 'large'"
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end'">
+          <VBackButton
             :block="xs ? true : false"
-            prepend-icon="mdi-chevron-left"
+            :size="xs ? 'default' : 'large'"
             :class="xs ? 'px-4 py-2' : 'px-8'"
-            class="text-none text-button"
+            @click="goBack"
             aria-label="Go back to previous page"
           >
             Back
-          </v-btn>
+          </VBackButton>
         </v-col>
       </v-row>
 

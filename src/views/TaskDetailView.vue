@@ -12,6 +12,7 @@ import { useResetForm } from '@/composables/forms/useResetForm'
 import VActionButtons from '@/components/tasks/VActionButtons.vue'
 import VTaskForm from '@/components/tasks/VTaskForm.vue'
 import { useDisplay } from 'vuetify'
+import VBackButton from '@/components/ui/VBackButton.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -131,20 +132,15 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
       </v-row>
       <v-row>
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <v-btn
-            @click="goBack"
-            color="primary"
-            variant="tonal"
-            rounded="lg"
-            :size="xs ? 'default' : 'large'"
+          <VBackButton
             :block="xs ? true : false"
-            prepend-icon="mdi-chevron-left"
+            :size="xs ? 'default' : 'large'"
             :class="xs ? 'px-4 py-2' : 'px-8'"
-            class="text-none text-button"
+            @click="goBack"
             aria-label="Go back to previous page"
           >
             Back
-          </v-btn>
+          </VBackButton>
         </v-col>
       </v-row>
     </v-responsive>

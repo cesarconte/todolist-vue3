@@ -82,17 +82,19 @@ onUnmounted(() => {
 </style>
 
 <template>
-  <v-form class="form pa-6" ref="formProject" @submit.prevent="$emit('submit')">
+  <v-form class="form" ref="formProject" @submit.prevent="$emit('submit')">
     <v-select
       v-model="formData.title"
       label="Title"
       prepend-inner-icon="mdi-format-title"
       variant="outlined"
       color="primary"
+      rounded
       :rules="titleRules"
       clearable
       required
       class="mb-6"
+      bg-color="surface-container"
       :items="projectTemplates"
     >
       <template v-slot:item="{ props, item }">
@@ -110,11 +112,13 @@ onUnmounted(() => {
       prepend-inner-icon="mdi-shape-outline"
       variant="outlined"
       color="primary"
+      rounded
       :items="icons"
       :rules="iconRules"
       clearable
       required
       class="mb-6"
+      bg-color="surface-container"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props" :prepend-icon="item.value" :title="item.value"></v-list-item>
@@ -131,11 +135,13 @@ onUnmounted(() => {
       prepend-inner-icon="mdi-palette"
       variant="outlined"
       color="primary"
+      rounded
       :rules="colorRules"
       clearable
       required
       :items="colors"
       class="mb-6"
+      bg-color="surface-container"
     >
       <template v-slot:item="{ props, item }">
         <v-list-item v-bind="props">

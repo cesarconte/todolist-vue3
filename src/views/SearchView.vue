@@ -14,6 +14,7 @@ import VCardTask from '@/components/tasks/VCardTask.vue'
 import VActionButtons from '@/components/tasks/VActionButtons.vue'
 import VTaskForm from '@/components/tasks/VTaskForm.vue'
 import VEmptyState from '@/components/tasks/VEmptyState.vue'
+import VBackButton from '@/components/ui/VBackButton.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -116,7 +117,7 @@ const tasksToShow = computed(() => {
   return taskStore.allFilteredTasks
 })
 
-const { xs, sm, smAndDown, md, lg, xl } = useDisplay()
+const { xs, sm, smAndDown, mobile, md, lg, xl } = useDisplay()
 
 onMounted(() => {
   // Asegurarse de que searchTitle sea null al iniciar
@@ -135,17 +136,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-container fluid class="my-6">
+  <v-container :class="xs ? '' : 'pa-4'" fluid>
     <v-responsive
       class="tasksByProject-container mx-auto"
-      :class="xs ? 'pa-1' : ''"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
           <h2
-            class="text-center font-weight-bold text-primary"
-            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h4 mb-8'"
+            class="text-center text-on-surface font-weight-bold"
+            :class="xs ? 'text-h5 my-4' : mobile ? 'text-h4 my-6' : 'text-h3 my-8'"
           >
             Search Tasks
           </h2>
@@ -153,13 +153,7 @@ onMounted(() => {
       </v-row>
 
       <!-- Búsqueda -->
-      <v-card
-        class="mb-8 mx-2 search-card"
-        :class="xs ? 'pa-2' : 'pa-4'"
-        variant="elevated"
-        rounded="lg"
-        color="surface"
-      >
+      <v-card class="mb-8 mx-2 search-card" :class="xs ? '' : 'pa-4'" variant="text">
         <v-card-title
           class="d-flex align-center justify-space-between pb-2 mb-2"
           :class="xs ? 'px-2' : 'px-4'"
@@ -168,8 +162,7 @@ onMounted(() => {
             class="search-header"
             :class="xs ? 'pa-1' : 'pa-2'"
             rounded="lg"
-            color="surfaceVariant"
-            elevation="1"
+            color="surface-container"
           >
             <div class="d-flex align-center">
               <v-icon
@@ -204,10 +197,10 @@ onMounted(() => {
           </v-chip>
         </v-card-title>
         <v-card-subtitle
-          class="text-subtitle-1 font-weight-medium py-2 text-primary text-center mb-4"
+          class="text-subtitle-1 font-weight-medium py-2 text-center mb-4"
           :class="xs ? 'px-2' : 'px-4'"
         >
-          <v-icon icon="mdi-magnify" class="mr-2" color="primary" :size="xs ? 18 : 24"></v-icon>
+          <v-icon icon="mdi-magnify" class="mr-2" :size="xs ? 18 : 24"></v-icon>
           <span :class="xs ? 'text-body-2' : ''">Search your task by title</span>
         </v-card-subtitle>
         <v-divider class="mb-4"></v-divider>
@@ -225,6 +218,7 @@ onMounted(() => {
                 rounded
                 :density="xs ? 'default' : 'comfortable'"
                 color="primary"
+                bg-color="surface-container"
                 hide-details
                 :disabled="!userStore.isLoggedIn"
                 @click="handleSearchClick"
@@ -323,7 +317,6 @@ onMounted(() => {
         </v-card-text>
         <v-card-actions class="justify-center pt-4 pb-8 mt-4 mb-2" :class="xs ? 'px-2' : 'px-4'">
           <v-btn
-            color="primary"
             variant="tonal"
             rounded
             size="large"
@@ -333,7 +326,6 @@ onMounted(() => {
             class="text-none text-button"
             @click="searchTitle = null"
             :disabled="!searchTitle"
-            elevation="1"
             aria-label="Clear search input"
           >
             Clear Search
@@ -446,21 +438,16 @@ onMounted(() => {
         </template>
       </v-row>
       <v-row v-if="showSearchResults">
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <v-btn
-            @click="goBack"
-            color="primary"
-            variant="tonal"
-            rounded="lg"
-            :size="xs ? 'default' : 'large'"
+        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end'">
+          <VBackButton
             :block="xs ? true : false"
-            prepend-icon="mdi-chevron-left"
+            :size="xs ? 'default' : 'large'"
             :class="xs ? 'px-4 py-2' : 'px-8'"
-            class="text-none text-button"
+            @click="goBack"
             aria-label="Go back to previous page"
           >
             Back
-          </v-btn>
+          </VBackButton>
         </v-col>
       </v-row>
 

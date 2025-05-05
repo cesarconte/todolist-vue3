@@ -2,7 +2,7 @@
   <v-footer class="d-flex flex-column pa-8" color="surface-variant">
     <v-row>
       <v-col cols="auto" class="mt-4">
-        <section class="rounded-lg px-6 py-3" :class="'bg-primary'">
+        <section class="rounded-pill px-6 py-3" :class="'bg-primary'">
           <p class="text-h5 text-weight-bold text-on-primary">
             todolist
             <v-icon class="icon todolist-logo text-on-primary"
@@ -18,7 +18,7 @@
     <v-row class="mt-4 w-auto d-flex justify-space-between">
       <v-col cols="auto" md="4">
         <h5 class="text-h6 text-weight-bold text-on-surface">ABOUT ME</h5>
-        <v-divider class="mb-4"></v-divider>
+        <v-divider class="mb-4" color="surface"></v-divider>
         <p class="text-on-surface-variant">
           Developed by César, a web developer passionate about crafting elegant and efficient web
           applications using Vue.js, Vuetify, and Firebase.
@@ -26,7 +26,7 @@
       </v-col>
       <v-col cols="auto" md="4">
         <h5 class="text-h6 text-weight-bold text-on-surface">CONTACT INFO</h5>
-        <v-divider class="mb-4"></v-divider>
+        <v-divider class="mb-4" color="surface"></v-divider>
         <p class="text-on-surface-variant">
           <v-icon start color="primary">mdi-map-marker</v-icon> Your Address
         </p>

@@ -132,6 +132,8 @@ onUnmounted(() => {
       clearable
       required
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -153,6 +155,8 @@ onUnmounted(() => {
       clearable
       required
       class="mb-6"
+      bg-color="surface-container"
+      rounded="xl"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -174,6 +178,8 @@ onUnmounted(() => {
       item-value="id"
       :rules="projectRules"
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -195,6 +201,8 @@ onUnmounted(() => {
       item-value="value"
       :rules="labelRules"
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -216,6 +224,8 @@ onUnmounted(() => {
       item-value="value"
       :rules="priorityRules"
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -237,6 +247,8 @@ onUnmounted(() => {
       item-value="value"
       :rules="statusRules"
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
@@ -255,6 +267,8 @@ onUnmounted(() => {
       prepend-inner-icon="mdi-calendar"
       color="primary"
       class="date-create-task mb-6"
+      bg-color="surface-container"
+      rounded
       :rules="startDateRules"
       :disabled="
         projects.length === 0 ||
@@ -275,6 +289,8 @@ onUnmounted(() => {
       prepend-inner-icon="mdi-calendar"
       color="primary"
       class="date-create-task mb-6"
+      bg-color="surface-container"
+      rounded
       :rules="endDateRules"
       :disabled="
         projects.length === 0 ||
@@ -297,6 +313,8 @@ onUnmounted(() => {
       :focused="menuStart"
       color="primary"
       class="mb-6"
+      bg-color="surface-container"
+      rounded
       @click="menuStart = true"
       :disabled="
         projects.length === 0 ||
@@ -336,6 +354,8 @@ onUnmounted(() => {
       variant="outlined"
       readonly
       clearable
+      bg-color="surface-container"
+      rounded
       :active="menuEnd"
       :focused="menuEnd"
       @click="menuEnd = true"

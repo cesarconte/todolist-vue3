@@ -1,5 +1,4 @@
 // src/composables/useToolbarNav.js
-import { computed } from 'vue' // Importar computed
 import useThemeToggle from '@/composables/ui/useThemeToggle' // Importar el composable del tema
 
 export function useToolbarNav({
@@ -18,14 +17,6 @@ export function useToolbarNav({
 
   // Usar el composable del tema
   const { isDarkMode, toggleTheme } = useThemeToggle()
-
-  // Propiedades computadas para el botón de tema
-  const themeToggleTitle = computed(() =>
-    isDarkMode.value ? 'Switch to Light Mode' : 'Switch to Dark Mode'
-  )
-  const themeToggleIcon = computed(() =>
-    isDarkMode.value ? 'mdi-weather-sunny' : 'mdi-weather-night'
-  )
 
   const navItems = [
     {
@@ -68,17 +59,22 @@ export function useToolbarNav({
     }
   ]
 
+  // Elementos para el menú de puntos (dots) en la versión móvil
+  // Reorganizados para mantener exactamente el mismo orden que en el VToolbar
   const dotsItems = [
-    {
-      title: themeToggleTitle.value, // Usar computed property
-      icon: themeToggleIcon.value, // Usar computed property
-      action: toggleTheme // Llamar a la función de toggle
-    },
+    // 1. Notificaciones
     {
       title: 'Notifications',
       icon: 'mdi-bell-outline',
       action: handleNotificationsClick
     },
+    // 2. Tema (mismo que el botón de tema en la barra)
+    {
+      title: isDarkMode.value ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+      icon: isDarkMode.value ? 'mdi-weather-sunny' : 'mdi-weather-night',
+      action: toggleTheme
+    },
+    // 3. Settings (configuración)
     {
       title: 'Settings',
       icon: 'mdi-cog-outline',
@@ -90,8 +86,9 @@ export function useToolbarNav({
         }
       ]
     },
+    // 4. Login/Logout
     {
-      title: loginLogoutText.value,
+      title: loginLogoutText,
       icon: loginLogoutIcon.value,
       action: handleLoginLogout
     }
