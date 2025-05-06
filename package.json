@@ -10,9 +10,7 @@
     "test:unit": "vitest",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "deploy-gh-pages": "vite build && gh-pages -d dist",
-    "deploy-firebase": "firebase deploy --only hosting",
-    "deploy": "npm run deploy-gh-pages && npm run deploy-firebase"
+    "deploy-firebase": "firebase deploy --only hosting"
   },
   "dependencies": {
     "firebase": "^11.4.0",
