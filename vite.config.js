@@ -12,5 +12,5 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
-  base: 'https://cesarconte.github.io/'
+  base: '/todolist-vue3/'
 })
