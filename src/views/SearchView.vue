@@ -469,7 +469,7 @@ onMounted(() => {
           rounded="lg"
         >
           <v-card-title
-            class="card-title card-title-edit-task text-primary"
+            class="card-title card-title-edit-task"
             :class="xs ? 'text-subtitle-1 py-2' : 'text-h6 py-3'"
             :id="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
           >
@@ -549,7 +549,4 @@ onMounted(() => {
   }
 }
 
-:deep(.v-card-title) {
-  line-height: 1.5;
-}
 </style>

@@ -20,6 +20,7 @@ import VProjectForm from '@/components/projects/VProjectForm.vue'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 import VEmptyState from '@/components/tasks/VEmptyState.vue'
 import { useMotivationalProgress } from '@/composables/ui/useMotivationalProgress.js'
+import VBackButton from '@/components/ui/VBackButton.vue'
 
 const userStore = useUserStore()
 const projectStore = useProjectStore()
@@ -314,6 +315,10 @@ const confirmDeleteAndClose = () => {
   confirmDialog.value = false
   showSnackbar(notificationsStore, 'All tasks deleted from project', 'success', 'mdi-delete-sweep')
 }
+
+const goBack = () => {
+  router.back()
+}
 </script>
 
 <template>
@@ -430,20 +435,27 @@ const confirmDeleteAndClose = () => {
             <p>Are you sure you want to delete all tasks in this project?</p>
             <p class="text-caption text-tertiary mt-2">This action cannot be undone.</p>
           </v-card-text>
-          <v-card-actions class="justify-end pt-3">
+          <v-card-actions
+            class="justify-end pt-3"
+            :class="mobile ? 'd-flex flex-column align-stretch w-100 ga-4' : ''"
+          >
             <v-btn
-              color="surface"
-              variant="text"
+              color="on-surface"
+              variant="outlined"
+              rounded
               @click="confirmDialog = false"
-              class="text-button mr-2"
+              class="text-button text-none mr-2"
+              prepend-icon="mdi-close"
             >
               Cancel
             </v-btn>
             <v-btn
-              color="tertiary"
+              color="error"
               variant="flat"
+              rounded
               @click="confirmDeleteAndClose"
-              class="text-button"
+              class="text-button text-none"
+              prepend-icon="mdi-delete"
             >
               Delete All
             </v-btn>
@@ -541,7 +553,12 @@ const confirmDeleteAndClose = () => {
             'col-xl-7': xl
           }"
         >
-          <v-card variant="flat" rounded="lg" class="bg-surface-container-low" :class="xs ? 'pa-3' : 'pa-4'">
+          <v-card
+            variant="flat"
+            rounded="lg"
+            class="bg-surface-container-low"
+            :class="xs ? 'pa-3' : 'pa-4'"
+          >
             <!-- Primera fila: Total con icono + botón añadir -->
             <v-row class="d-flex align-center" :class="xs ? 'py-1' : 'py-2'">
               <v-col cols="auto" class="d-flex align-center">
@@ -560,7 +577,6 @@ const confirmDeleteAndClose = () => {
                       icon="mdi-plus"
                       color="primary"
                       elevation="3"
-                      class="action-btn-animated"
                       size="default"
                       @click="handleAddTaskClick"
                       aria-label="Add Task"
@@ -576,7 +592,7 @@ const confirmDeleteAndClose = () => {
                   rounded
                   size="large"
                   prepend-icon="mdi-plus"
-                  class="action-btn-animated text-none text-button"
+                  class="text-none text-button"
                   @click="handleAddTaskClick"
                 >
                   Add Task
@@ -593,7 +609,7 @@ const confirmDeleteAndClose = () => {
                 <!-- Columna Remaining -->
                 <v-col cols="6" class="d-flex align-center">
                   <v-icon icon="mdi-calendar-clock-outline" class="me-2" size="22"></v-icon>
-                  <span class="text onSurfaceVariant font-weight-medium text-body-2">
+                  <span class="text on-surface-variant font-weight-medium text-body-2">
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -601,7 +617,7 @@ const confirmDeleteAndClose = () => {
                 <!-- Columna Completed -->
                 <v-col cols="6" class="d-flex align-center">
                   <v-icon :icon="completedTasksIcon" class="me-2" size="22"></v-icon>
-                  <span class="text onSurfaceVariant font-weight-medium text-body-2">
+                  <span class="text on-surface-variant font-weight-medium text-body-2">
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -638,7 +654,7 @@ const confirmDeleteAndClose = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text-onSurfaceVariant font-weight-medium"
+                    class="text-on-surface-variant font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
@@ -652,7 +668,7 @@ const confirmDeleteAndClose = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text onSurfaceVariant font-weight-medium"
+                    class="text on-surface-variant font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
@@ -773,7 +789,7 @@ const confirmDeleteAndClose = () => {
               rounded
               size="large"
               prepend-icon="mdi-plus"
-              class="mt-6 action-btn-animated"
+              class="mt-6  text-none text-button"
               @click="handleAddTaskClick"
             >
               Add Task
@@ -812,20 +828,15 @@ const confirmDeleteAndClose = () => {
       <!-- Botón para regresar -->
       <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-8">
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <v-btn
-            @click="router.back()"
-            color="primary"
-            variant="tonal"
-            rounded
-            :size="xs ? 'default' : 'large'"
+          <VBackButton
             :block="xs ? true : false"
-            prepend-icon="mdi-chevron-left"
+            :size="xs ? 'default' : 'large'"
             :class="xs ? 'px-4 py-2' : 'px-8'"
-            class="text-none text-button"
+            @click="goBack"
             aria-label="Go back to previous page"
           >
             Back
-          </v-btn>
+          </VBackButton>
         </v-col>
       </v-row>
     </v-responsive>

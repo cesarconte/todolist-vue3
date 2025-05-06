@@ -456,8 +456,8 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             'action-btn',
             mobile ? 'w-100' : 'mx-2 mb-2'
           ]"
-          :color="i === 0 ? 'primary' : i === 1 ? 'error' : 'surface-variant'"
-          :variant="i === 0 ? 'flat' : i === 1 ? 'tonal' : 'outlined'"
+          :color="i === 0 ? 'primary' : 'surface-variant'"
+          :variant="i === 0 ? 'flat' : 'tonal'"
           density="comfortable"
           size="small"
           rounded

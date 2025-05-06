@@ -44,7 +44,7 @@ const switchLabel = computed(() =>
     : 'Notifications disabled'
 ) // Sets the label for the notification switch
 const switchColor = computed(() =>
-  notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
+  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
 ) // Sets the color of the notification switch using semantic MD3 colors
 const isDisabled = computed(() => !notificationsStore.hasFullSupport || !userStore.isLoggedIn) // Determines if the notification switch should be disabled
 
@@ -159,7 +159,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             : 'd-flex align-center justify-space-between px-6 py-4'
         "
       >
-        <span class="text-h6 textOnSurface font-weight-medium">Notifications Settings</span>
+        <span class="text-h6 text-on-surface font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
           <template v-slot:activator="{ props }">
             <v-icon
@@ -183,7 +183,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             </span>
           </span>
         </v-tooltip>
-        <v-btn icon @click="closeDialog" variant="text" color="onSurfaceVariant">
+        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
@@ -275,7 +275,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
             variant="outlined"
             bg-color="surface-container"
             :color="
-              notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
+              notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
             "
             :disabled="!notificationsStore.notificationSettings.enabled || isDisabled"
             multiple
@@ -291,7 +291,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               <v-chip
                 v-if="index < 2"
                 :color="
-                  notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
+                  notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
                 "
                 class="ma-1"
                 label
@@ -300,7 +300,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
               >
                 {{ item.title }}
               </v-chip>
-              <span v-if="index === 2" class="textOnSurfaceVariant text-caption ml-1">
+              <span v-if="index === 2" class="text-on-surface-variant text-caption ml-1">
                 +{{ notificationsStore.notificationSettings.time.length - 2 }} more
               </span>
             </template>
@@ -311,7 +311,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           <v-row class="text-caption">
             <v-col cols="auto" class="d-flex align-center">
               <v-icon icon="mdi-clock-outline" class="mr-1" size="small" />
-              <span class="textOnSurfaceVariant">
+              <span class="text-on-surface-variant">
                 Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
               </span>
             </v-col>
