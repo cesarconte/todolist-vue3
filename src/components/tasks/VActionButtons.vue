@@ -32,7 +32,6 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :type="button.type"
       :text="button.text"
       :aria-label="button.text || button.ariaLabel || 'Action'"
-      :style="{ marginInlineStart: '0' }"
       :width="xs ? '100%' : sm ? '66%' : md ? '49%' : '10rem'"
       :height="button.height"
       :prepend-icon="button.icon"
@@ -41,7 +40,7 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :size="button.size || 'large'"
       :color="button.color || 'primary'"
       :disabled="button.disabled"
-      class="text-none text-button transition-swing action-btn-animated my-2"
+      class="text-none text-button my-2"
       @click="button.function"
     >
       {{ button.text }}
@@ -55,13 +54,3 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
     </v-btn>
   </div>
 </template>
-
-<style scoped>
-.action-btn-animated {
-  transition: transform 0.2s ease-in-out;
-}
-
-.action-btn-animated:hover {
-  transform: translateY(-2px);
-}
-</style>

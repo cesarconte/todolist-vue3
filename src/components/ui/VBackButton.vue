@@ -2,7 +2,7 @@
   <v-btn
     :to="to"
     variant="tonal"
-    color="primary"
+    color="surface-variant"
     class="v-back-btn d-inline-flex align-center"
     rounded
     size="large"

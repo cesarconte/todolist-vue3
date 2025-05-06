@@ -156,7 +156,7 @@ onUnmounted(() => {
       required
       class="mb-6"
       bg-color="surface-container"
-      rounded="xl"
+      rounded="lg"
       :disabled="
         projects.length === 0 ||
         priorities.length === 0 ||
