@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-// import { useDisplay } from 'vuetify'
+import { useDisplay } from 'vuetify'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js'
 
 /************************************
@@ -137,21 +137,28 @@ const notificationTimeOptions = [
   { title: '15 minutes before', value: 0.25 }
 ]
 
-// const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
+const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 </script>
 
 <template>
   <v-dialog
     v-model="showNotificationsSettings"
-    max-width="600px"
+    :max-width="xs ? 'calc(100vw - 32px)' : '37.5rem'"
+    :width="xs ? undefined : undefined"
     class="dialog dialog-notifications-settings"
   >
     <v-card
-      class="notification-settings-card pa-4 rounded-lg elevation-2 d-flex flex-column"
+      class="notification-settings-card rounded-lg elevation-2 d-flex flex-column"
       color="surface"
       density="comfortable"
     >
-      <v-card-title class="d-flex align-center justify-space-between mb-2">
+      <v-card-title
+        :class="
+          xs
+            ? 'd-flex align-center justify-space-between px-2 py-3'
+            : 'd-flex align-center justify-space-between px-6 py-4'
+        "
+      >
         <span class="text-h6 textOnSurface font-weight-medium">Notifications Settings</span>
         <v-tooltip v-if="!hasFullSupport" location="right">
           <template v-slot:activator="{ props }">
@@ -180,14 +187,14 @@ const notificationTimeOptions = [
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle class="textOnSurfaceVariant pb-2">
+      <v-card-subtitle :class="xs ? 'px-2 py-3' : 'px-6 py-4'">
         <v-icon icon="mdi-bell-cog" size="small" class="mr-1"></v-icon>
-        Configure when you want to receive notifications</v-card-subtitle
-      >
+        Configure when you want to receive notifications
+      </v-card-subtitle>
 
-      <v-divider class="my-4" />
+      <v-divider class="my-6" />
 
-      <v-card-text class="px-4 pt-0 pb-4">
+      <v-card-text :class="xs ? 'px-2 pt-0 pb-2' : 'px-6 pt-0 pb-2'">
         <v-alert
           v-if="!userStore.isLoggedIn"
           type="warning"
@@ -195,7 +202,7 @@ const notificationTimeOptions = [
           variant="tonal"
           rounded="lg"
           border="start"
-          class="mb-4"
+          class="mb-6"
           icon="mdi-account-alert"
         >
           <template v-slot:title>Sign in required</template>
@@ -208,7 +215,7 @@ const notificationTimeOptions = [
           density="compact"
           variant="tonal"
           border="start"
-          class="mb-4"
+          class="mb-6"
         >
           {{ saveError }}
         </v-alert>
@@ -219,13 +226,13 @@ const notificationTimeOptions = [
           density="compact"
           variant="tonal"
           border="start"
-          class="mb-4"
+          class="mb-6"
         >
           <template v-slot:title> Limited Browser Support </template>
           Some notification features are not available in your current browser.
         </v-alert>
 
-        <v-card-item class="pt-0">
+        <v-card-item :class="xs ? 'px-0 mb-6' : 'px-0 mb-6'">
           <v-tooltip
             :text="
               notificationsStore.notificationSettings.enabled
@@ -252,7 +259,13 @@ const notificationTimeOptions = [
           </v-tooltip>
         </v-card-item>
 
-        <v-card-item class="d-flex flex-column align-stretch">
+        <v-card-item
+          :class="
+            xs
+              ? 'd-flex flex-column align-stretch px-0 mb-6'
+              : 'd-flex flex-column align-stretch px-0 mb-6'
+          "
+        >
           <v-select
             v-model="notificationsStore.notificationSettings.time"
             :items="notificationTimeOptions"
@@ -260,6 +273,7 @@ const notificationTimeOptions = [
             item-title="title"
             label="Notification Times"
             variant="outlined"
+            bg-color="surface-container"
             :color="
               notificationsStore.notificationSettings.enabled ? 'primary' : 'onSurfaceVariant'
             "
@@ -269,7 +283,7 @@ const notificationTimeOptions = [
             chips
             closable-chips
             hide-details
-            rounded="lg"
+            rounded
             class="mt-2"
             density="comfortable"
           >
@@ -293,10 +307,10 @@ const notificationTimeOptions = [
           </v-select>
         </v-card-item>
 
-        <v-card-item class="mb-2 mt-2">
+        <v-card-item :class="xs ? 'px-0 mb-6' : 'px-0 mb-6'">
           <v-row class="text-caption">
             <v-col cols="auto" class="d-flex align-center">
-              <v-icon icon="mdi-clock-outline" class="mr-2" color="onSurfaceVariant" size="small" />
+              <v-icon icon="mdi-clock-outline" class="mr-1" size="small" />
               <span class="textOnSurfaceVariant">
                 Next check: {{ notificationsStore.nextScheduledCheck || 'Not scheduled' }}
               </span>
@@ -305,17 +319,20 @@ const notificationTimeOptions = [
         </v-card-item>
       </v-card-text>
 
-      <v-divider class="mb-4" />
+      <v-divider class="my-6" />
 
-      <v-card-actions class="justify-end px-4 pb-4">
+      <v-card-actions
+        :class="xs ? 'justify-end px-2 pb-3' : 'justify-end px-6 pb-4'"
+      >
         <v-btn
           :disabled="isDisabled || !notificationsStore.notificationSettings.enabled"
-          color="primary"
-          variant="elevated"
+          color="surface-variant"
+          variant="tonal"
           rounded
           size="large"
           prepend-icon="mdi-bell-alert-outline"
-          class="text-none"
+          class="text-none text-button"
+          :block="xs"
           @click="notificationsStore.sendTestNotification()"
         >
           Test Notification
@@ -324,13 +341,3 @@ const notificationTimeOptions = [
     </v-card>
   </v-dialog>
 </template>
-
-<style scoped>
-:deep(.v-chip--selected) {
-  border: 1px solid currentColor;
-}
-
-:deep(.v-field--disabled) {
-  opacity: 0.6;
-}
-</style>
