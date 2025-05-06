@@ -189,6 +189,20 @@ const notificationTimeOptions = [
 
       <v-card-text class="px-4 pt-0 pb-4">
         <v-alert
+          v-if="!userStore.isLoggedIn"
+          type="warning"
+          density="compact"
+          variant="tonal"
+          rounded="lg"
+          border="start"
+          class="mb-4"
+          icon="mdi-account-alert"
+        >
+          <template v-slot:title>Sign in required</template>
+          You must be logged in to modify your notification settings.
+        </v-alert>
+
+        <v-alert
           v-if="saveError"
           type="error"
           density="compact"
