@@ -47,14 +47,14 @@ const closeDialog = () => {
     max-width="600px"
     class="dialog-notifications-list"
   >
-    <v-card class="notification-list-card pa-4 rounded-lg elevation-2" color="surface">
+    <v-card class="notification-list-card pa-4">
       <v-card-title class="d-flex align-center justify-space-between mb-2">
-        <span class="text-h6 textOnSurface font-weight-medium">Notifications</span>
-        <v-btn icon @click="closeDialog" variant="text" color="onSurfaceVariant">
+        <span class="text-h6 font-weight-medium">Notifications</span>
+        <v-btn icon @click="closeDialog" variant="text">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      <v-card-subtitle class="textOnSurfaceVariant pb-2">
+      <v-card-subtitle class="pb-2">
         <v-icon icon="mdi-bell-badge" size="small" class="mr-1"></v-icon>
         You have {{ notificationsStore.unreadCount }} unread notifications
       </v-card-subtitle>
@@ -69,44 +69,33 @@ const closeDialog = () => {
               :key="item.id"
               rounded="lg"
               class="mb-4"
-              :bg-color="item.read ? 'surfaceVariant' : 'primaryContainer'"
             >
               <template v-slot:prepend>
                 <v-checkbox
                   :model-value="item.read"
                   @click.stop="handleCheckboxChange(item)"
-                  color="primary"
                   hide-details
-                  density="compact"
-                  class="mt-0 pt-0"
+                  density="comfortable"
+                  class="notification-checkbox"
                 />
               </template>
 
               <template v-slot:default>
-                <v-row align="center">
+                <div class="d-flex align-center">
                   <v-icon
                     :icon="item.icon"
-                    :color="item.read ? 'onSurfaceVariant' : 'primary'"
-                    class="ml-4"
                     size="large"
+                    class="mr-4"
                   />
-                  <v-col>
-                    <v-list-item-title
-                      lines="one"
-                      class="text-body-1 font-weight-medium mb-2"
-                      :class="item.read ? 'textOnSurfaceVariant' : 'textOnPrimaryContainer'"
-                    >
+                  <div>
+                    <v-list-item-title lines="one" class="text-body-1 font-weight-medium mb-2">
                       {{ item.message }}
                     </v-list-item-title>
-                    <v-list-item-subtitle
-                      lines="one"
-                      class="mb-2"
-                      :class="item.read ? 'textOnSurfaceVariant' : ''"
-                    >
+                    <v-list-item-subtitle lines="one" class="mb-2">
                       {{ formatDate(item.timestamp) }}
                     </v-list-item-subtitle>
-                  </v-col>
-                </v-row>
+                  </div>
+                </div>
               </template>
             </v-list-item>
           </template>
@@ -115,14 +104,10 @@ const closeDialog = () => {
               <VEmptyState
                 icon="mdi-checkbox-marked-circle-auto-outline"
                 :icon-size="96"
-                icon-color="onSurfaceVariant"
                 title="All caught up!"
                 subtitle="No new notifications"
-                text-color="textOnSurfaceVariant"
               >
-                <p class="text-caption textOnSurfaceVariant mt-2">
-                  Check back later for new notifications
-                </p>
+                <p class="text-caption mt-2">Check back later for new notifications</p>
               </VEmptyState>
             </v-container>
           </template>
@@ -137,12 +122,11 @@ const closeDialog = () => {
             <v-btn
               v-bind="props"
               :disabled="notificationsStore.unreadCount === 0"
-              color="primary"
-              variant="elevated"
+              variant="tonal"
               rounded
               size="large"
               prepend-icon="mdi-check-all"
-              class="text-none"
+              class="text-none text-button"
               @click="notificationsStore.markAllAsRead()"
             >
               <template v-slot:loader>

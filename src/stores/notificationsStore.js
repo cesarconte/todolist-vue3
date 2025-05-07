@@ -206,7 +206,8 @@ export const useNotificationsStore = defineStore('notifications', {
         await addDocument(collection(db, 'users', userId, 'notifications'), {
           message: 'Test notification',
           timestamp: new Date().toISOString(),
-          read: false
+          read: false,
+          icon: 'mdi-bell-ring-outline'
         })
 
         // Create system notification

@@ -479,7 +479,6 @@ const goBack = () => {
           <v-btn
             icon
             variant="text"
-            color="error"
             class="delete-project-btn me-2"
             @click="confirmDeleteAllTasks"
             aria-label="Delete all tasks in project"
@@ -527,7 +526,6 @@ const goBack = () => {
                 >
                   <template v-slot:prepend>
                     <v-icon
-                      :color="btn.text.includes('Delete') ? 'error' : 'primary'"
                       class="me-2"
                       >{{ btn.icon }}</v-icon
                     >
@@ -609,7 +607,7 @@ const goBack = () => {
                 <!-- Columna Remaining -->
                 <v-col cols="6" class="d-flex align-center">
                   <v-icon icon="mdi-calendar-clock-outline" class="me-2" size="22"></v-icon>
-                  <span class="text on-surface-variant font-weight-medium text-body-2">
+                  <span class="font-weight-medium text-body-2">
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -617,7 +615,7 @@ const goBack = () => {
                 <!-- Columna Completed -->
                 <v-col cols="6" class="d-flex align-center">
                   <v-icon :icon="completedTasksIcon" class="me-2" size="22"></v-icon>
-                  <span class="text on-surface-variant font-weight-medium text-body-2">
+                  <span class="font-weight-medium text-body-2">
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -654,7 +652,7 @@ const goBack = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text-on-surface-variant font-weight-medium"
+                    class="font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
@@ -668,7 +666,7 @@ const goBack = () => {
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
                   <span
-                    class="text on-surface-variant font-weight-medium"
+                    class="font-weight-medium"
                     :class="sm ? 'text-body-2' : 'text-body-1'"
                   >
                     Completed: {{ taskStore.completedFilteredTasksInProject }}

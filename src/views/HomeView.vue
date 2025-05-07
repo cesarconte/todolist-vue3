@@ -235,7 +235,7 @@ watch(
                 rounded="lg"
                 variant="tonal"
                 class="upcoming-panel"
-                :color="upcomingDeadlinesTotal > 0 ? 'warning' : 'secondary'"
+                :color="upcomingDeadlinesTotal > 0 ? 'warning' : 'success'"
               >
                 <v-card-item :class="xs ? 'pa-4 pb-2' : 'pa-8 pb-4'">
                   <template v-slot:prepend>
@@ -459,7 +459,7 @@ watch(
                 variant="tonal"
                 rounded="lg"
                 class="overdue-panel"
-                :color="overdueTasksTotal > 0 ? 'error' : 'surface'"
+                :color="overdueTasksTotal > 0 ? 'error' : 'success'"
               >
                 <v-card-item :class="xs ? 'pa-4 pb-2' : 'pa-8 pb-4'">
                   <template v-slot:prepend>
