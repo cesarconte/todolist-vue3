@@ -83,17 +83,21 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
 </script>
 
 <template>
-  <v-container fluid class="mt-6 bg-background">
+  <v-container :class="xs ? '' : 'pa-4'" fluid>
     <v-responsive
       class="task-detail-container mx-auto"
       :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
     >
       <v-row>
         <v-col cols="12">
-          <h2 v-if="task" class="text-h5 font-weight-bold mb-4 text-primary">
+          <h2
+            v-if="task"
+            class="text-left text-on-surface font-weight-bold"
+            :class="xs ? 'text-h5 my-4' : mobile ? 'text-h4 my-6' : 'text-h3 my-8'"
+          >
             Task {{ task.title }}
           </h2>
-          <v-divider color="primary" :thickness="1" class="mx-auto border-opacity-75"></v-divider>
+          <v-divider></v-divider>
         </v-col>
       </v-row>
       <v-row>
@@ -122,9 +126,9 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
               />
             </template>
             <template #fallback>
-              <v-card flat color="surfaceVariant" rounded="lg" class="pa-6 text-center">
+              <v-card flat color="surface-variant" rounded="lg" class="pa-6 text-center">
                 <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                <div class="text-body-1 mt-4 text-onSurfaceVariant">Loading task details...</div>
+                <div class="text-body-1 mt-4 text-on-surface-variant">Loading task details...</div>
               </v-card>
             </template>
           </Suspense>
@@ -149,9 +153,10 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
     v-model="taskStore.dialogEditTask"
     :max-width="xs ? '100vw' : smAndUp ? '600px' : ''"
     class="dialog dialog-edit-task"
+    scrollable
   >
-    <v-card class="card card-edit-task pa-6" rounded="lg" color="surface" elevation="4">
-      <v-card-title class="card-title card-title-edit-task text-primary">
+    <v-card class="card card-edit-task pa-6" rounded="lg" elevation="4">
+      <v-card-title class="card-title card-title-edit-task">
         <span class="text-h6">Edit task {{ taskStore.editedTask.title }}</span>
       </v-card-title>
       <v-card-text>

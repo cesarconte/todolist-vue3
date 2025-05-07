@@ -91,12 +91,55 @@ const router = useRouter() // Accesses the Vue Router
 /************************************
  * Computed Properties
  ************************************/
+const cardDynamicClasses = computed(() => {
+  const classes = []
+  if (mobile.value) {
+    classes.push('ma-4')
+  } else {
+    classes.push('ma-8', 'pa-8')
+  }
+  return classes
+})
+
+const completedTextClass = computed(() => {
+  return props.completed ? 'text-decoration-line-through text-medium-emphasis' : 'text-on-surface'
+})
+
+const completedEmphasisColor = computed(() => (props.completed ? 'medium-emphasis' : 'on-surface'))
+
+const completedEmphasisClass = computed(() =>
+  props.completed ? 'text-medium-emphasis' : 'text-on-surface'
+)
+
+const priorityChipColor = computed(() => {
+  if (props.completed) return 'default'
+  switch (props.priority) {
+    case 'High':
+      return 'error'
+    case 'Medium':
+      return 'warning'
+    default:
+      return 'success'
+  }
+})
+
+const statusChipColor = computed(() => {
+  if (props.completed) return 'default'
+  switch (props.status) {
+    case 'Done':
+      return 'success'
+    case 'In Progress':
+      return 'info'
+    case 'Pending':
+      return 'warning'
+    default:
+      return 'on-surface-variant'
+  }
+})
+
 const completedButton = computed(() => {
-  // Defines the completed button's icon, label, and function
   return {
-    icon: props.completed
-      ? 'mdi-check-circle text-success'
-      : `mdi-circle-outline`,
+    icon: props.completed ? 'mdi-check-circle' : `mdi-circle-outline`,
     label: props.completed ? 'Completed' : 'Complete',
     tooltipText: props.completed ? 'Task completed' : 'Not completed task',
     function: completeTask
@@ -104,28 +147,30 @@ const completedButton = computed(() => {
 })
 
 const btnsTasks = computed(() => {
-  // Defines the array of task buttons
   return [
     {
       icon: 'mdi-pencil',
       label: 'Edit',
-      function: editTask
+      function: editTask,
+      color: 'primary',
+      variant: props.completed ? 'outlined' : 'flat'
     },
     {
       icon: 'mdi-delete',
       label: 'Delete',
-      function: deleteTask
+      function: deleteTask,
+      variant: props.completed ? 'outlined' : 'tonal'
     },
     {
       icon: completedButton.value.icon,
       label: completedButton.value.label,
-      function: completedButton.value.function
+      function: completedButton.value.function,
+      variant: 'outlined'
     }
   ]
 })
 
 const tooltips = computed(() => [
-  // Defines the tooltips for the task buttons
   {
     text: 'Edit task',
     location: 'bottom',
@@ -143,36 +188,30 @@ const tooltips = computed(() => [
   }
 ])
 
-const cardColor = computed(() => (props.completed ? 'surface-container-highest opacity-50' : 'surface'))
-const textColorClass = computed(() => (props.completed ? 'text-medium-emphasis' : 'text-on-surface'))
-const dateCardColor = computed(() => (props.completed ? 'surface-container-highest' : 'on-surface'))
-const dateTextColorClass = computed(() =>
-  props.completed ? 'text-medium-emphasis' : 'text-on-surface'
+const cardColor = computed(() =>
+  props.completed ? 'surface-container-highest opacity-50' : 'surface'
 )
+
+const dateCardColor = computed(() => (props.completed ? 'surface-container-highest' : 'on-surface'))
+
 const dateIconColor = (baseColor) => (props.completed ? 'medium-emphasis' : baseColor)
 
 /************************************
  * Methods / Functions
  ************************************/
 const deleteTask = () => {
-  // Emits the deleteTask event with the task's ID
   emit('deleteTask', props.project.id, props.id)
 }
 
-// Define the editTask function
 const editTask = () => {
-  // Emits the editTask event with the task's ID
   emit('editTask', props.project.id, props.id)
 }
 
-// Define the completedTask function
 const completeTask = () => {
-  // Emits the completeTask event with the task's ID
   emit('completeTask', props.project.id, props.id)
 }
 
 const navigateToTaskDetail = () => {
-  // Navigates to the task detail page
   router.push({ name: 'task-detail', params: { taskId: props.id } })
 }
 
@@ -186,12 +225,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
   <v-card
     :variant="props.completed ? 'flat' : 'elevated'"
     :color="cardColor"
-    :class="[
-      'card card-task-view',
-      'rounded-lg',
-      mobile ? 'ma-4' : 'ma-8 pa-8',
-      props.completed ? 'bg-surfaceContainerHighest' : 'bg-surfaceContainer'
-    ]"
+    :class="['card card-task-view', 'rounded-lg', ...cardDynamicClasses]"
   >
     <v-card-title
       class="card-title card-title-task-view mb-4"
@@ -199,10 +233,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
     >
       <template v-if="mobile">
         <div class="d-flex flex-row align-center justify-space-between w-100">
-          <span
-            class="text-h5 text-truncate"
-            :class="props.completed ? 'text-decoration-line-through text-medium-emphasis' : 'text-on-surface'"
-          >
+          <span class="text-h5 text-truncate" :class="completedTextClass">
             {{ title }}
           </span>
           <v-btn
@@ -210,7 +241,6 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             aria-label="View task details"
             variant="text"
             class="btn btn-task-view ml-2"
-            :color="props.completed ? 'medium-emphasis' : 'primary'"
             icon
             @click="navigateToTaskDetail"
             :disabled="props.completed"
@@ -235,10 +265,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       </template>
       <template v-else>
         <div class="d-flex align-center text-truncate w-100">
-          <span
-            class="text-h5"
-            :class="props.completed ? 'text-decoration-line-through text-medium-emphasis' : 'text-on-surface'"
-          >
+          <span class="text-h5" :class="completedTextClass">
             {{ title }}
           </span>
           <v-chip
@@ -258,7 +285,6 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           aria-label="View task details"
           variant="text"
           class="btn btn-task-view"
-          :color="props.completed ? 'medium-emphasis' : 'primary'"
           icon
           @click="navigateToTaskDetail"
           :disabled="props.completed"
@@ -268,20 +294,17 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
         </v-btn>
       </template>
     </v-card-title>
-    <v-card-subtitle
-      class="mb-4"
-      :class="props.completed ? 'text-medium-emphasis' : 'text-onSurfaceVariant'"
-    >
+    <v-card-subtitle class="mb-4" :class="completedEmphasisClass">
       <v-chip
         :color="color === 'default' ? 'primary' : color"
         :variant="props.completed ? 'outlined' : 'flat'"
         size="small"
         class="font-weight-medium"
         prepend-icon="mdi-folder-outline"
-        :class="props.completed ? 'text-medium-emphasis' : ''"
+        :class="completedEmphasisClass"
       >
         <template v-slot:prepend>
-          <v-icon :color="props.completed ? 'medium-emphasis' : ''"></v-icon>
+          <v-icon :color="completedEmphasisColor"></v-icon>
         </template>
         {{ project.title || project }}
       </v-chip>
@@ -291,13 +314,10 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <!-- Descripción -->
       <v-row class="my-4">
         <v-col cols="12">
-          <p class="text-subtitle-1 font-weight-medium mb-4" :class="textColorClass">
+          <p class="text-subtitle-1 font-weight-medium mb-4" :class="completedEmphasisClass">
             Description:
           </p>
-          <p
-            class="text-body-1 py-2 px-4 bg-surfaceContainerHighest rounded-lg"
-            :class="textColorClass"
-          >
+          <p class="text-body-1 py-2 px-4 rounded-lg" :class="completedTextClass">
             {{ description }}
           </p>
         </v-col>
@@ -307,7 +327,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <v-row class="mt-4 mb-4">
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Label:</span
             >
             <v-chip
@@ -315,9 +335,9 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
               size="small"
               class="font-weight-medium"
               :variant="props.completed ? 'outlined' : 'tonal'"
-              :class="props.completed ? 'text-medium-emphasis' : ''"
+              :class="completedEmphasisClass"
             >
-              <v-icon size="16" class="mr-1" :color="props.completed ? 'medium-emphasis' : ''">{{
+              <v-icon size="16" class="mr-1" :color="completedEmphasisColor">{{
                 labelIcons[label] || 'mdi-tag'
               }}</v-icon>
               {{ label }}
@@ -327,15 +347,15 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Priority:</span
             >
             <v-chip
-              :color="priority === 'High' ? 'error' : priority === 'Medium' ? 'warning' : 'success'"
+              :color="priorityChipColor"
               size="small"
               class="font-weight-medium"
               :variant="props.completed ? 'outlined' : 'tonal'"
-              :class="props.completed ? 'text-medium-emphasis' : ''"
+              :class="completedEmphasisClass"
             >
               <v-icon size="16" class="mr-1">
                 {{
@@ -353,23 +373,15 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
 
         <v-col cols="12" sm="6" md="4">
           <div class="d-flex align-center">
-            <span class="text-subtitle-1 font-weight-medium mr-2" :class="textColorClass"
+            <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Status:</span
             >
             <v-chip
-              :color="
-                status === 'Done'
-                  ? 'success'
-                  : status === 'In Progress'
-                    ? 'info'
-                    : status === 'Pending'
-                      ? 'warning'
-                      : 'on-surface-variant'
-              "
+              :color="statusChipColor"
               size="small"
               class="font-weight-medium"
               :variant="props.completed ? 'outlined' : 'tonal'"
-              :class="props.completed ? 'text-medium-emphasis' : ''"
+              :class="completedEmphasisClass"
             >
               <v-icon size="16" class="mr-1">
                 {{
@@ -391,14 +403,20 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <!-- Fechas con mejor visualización -->
       <v-row class="mt-4 mb-4">
         <v-col cols="12" sm="6">
-          <v-card variant="flat" rounded="lg" class="pa-4 bg-surface-container" :color="dateCardColor" flat>
+          <v-card
+            variant="flat"
+            rounded="lg"
+            class="pa-4 bg-surface-container"
+            :color="dateCardColor"
+            flat
+          >
             <div class="d-flex align-center">
               <v-icon :color="dateIconColor('primary')" class="mr-3">mdi-calendar-start</v-icon>
               <div>
-                <div class="text-subtitle-2 font-weight-medium" :class="dateTextColorClass">
+                <div class="text-subtitle-2 font-weight-medium" :class="completedEmphasisClass">
                   Start Date
                 </div>
-                <div class="text-body-2" :class="dateTextColorClass">
+                <div class="text-body-2" :class="completedTextClass">
                   <template v-if="startDate">
                     {{ formatDate(startDate) }}
                     <span v-if="props.startDateHour" class="ml-1">
@@ -406,7 +424,6 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
                     </span>
                   </template>
                   <span v-else class="text-medium-emphasis">Not specified</span>
-                  <!-- Keep emphasis low -->
                 </div>
               </div>
             </div>
@@ -414,16 +431,22 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
         </v-col>
 
         <v-col cols="12" sm="6">
-          <v-card variant="flat" rounded="lg" class="pa-4 bg-surface-container" :color="dateCardColor" flat>
+          <v-card
+            variant="flat"
+            rounded="lg"
+            class="pa-4 bg-surface-container"
+            :color="dateCardColor"
+            flat
+          >
             <div class="d-flex align-center due-date-icon">
               <v-icon :color="dateIconColor(props.completed ? 'success' : 'error')" class="mr-3">
                 {{ props.completed ? 'mdi-calendar-check' : 'mdi-calendar-end' }}
               </v-icon>
               <div>
-                <div class="text-subtitle-2 font-weight-medium" :class="dateTextColorClass">
+                <div class="text-subtitle-2 font-weight-medium" :class="completedEmphasisClass">
                   Due Date
                 </div>
-                <div class="text-body-2" :class="dateTextColorClass">
+                <div class="text-body-2" :class="completedTextClass">
                   <template v-if="endDate">
                     {{ formatDate(endDate) }}
                     <span v-if="props.endDateHour" class="ml-1">
@@ -431,7 +454,6 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
                     </span>
                   </template>
                   <span v-else class="text-medium-emphasis">Not specified</span>
-                  <!-- Keep emphasis low -->
                 </div>
               </div>
             </div>
@@ -445,19 +467,18 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <v-spacer v-if="!mobile"></v-spacer>
       <div
         class="button-container"
-        :class="mobile ? 'd-flex flex-column align-stretch w-100 ga-4' : 'd-flex flex-wrap justify-end'"
+        :class="
+          mobile ? 'd-flex flex-column align-stretch w-100 ga-4' : 'd-flex flex-wrap justify-end'
+        "
       >
         <v-btn
           v-for="(btn, i) in btnsTasks"
           :key="i"
           @click="btn.function"
           :aria-label="btn.label"
-          :class="[
-            'action-btn',
-            mobile ? 'w-100' : 'mx-2 mb-2'
-          ]"
-          :color="i === 0 ? 'primary' : 'surface-variant'"
-          :variant="i === 0 ? 'flat' : 'tonal'"
+          :class="[mobile ? 'w-100' : 'mx-2 mb-2']"
+          :color="btn.color"
+          :variant="btn.variant"
           density="comfortable"
           size="small"
           rounded
@@ -469,13 +490,25 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             start
             :size="18"
             class="mr-1"
-            :color="props.completed && i !== 2 ? 'medium-emphasis' : ''"
+            :color="
+              props.completed && i === 2
+                ? completedEmphasisColor
+                : props.completed && i !== 2
+                  ? 'medium-emphasis'
+                  : btn.iconColor || ''
+            "
           >
             {{ btn.icon }}
           </v-icon>
           <span
             class="text-body-2 font-weight-medium"
-            :class="props.completed && i !== 2 ? 'text-medium-emphasis' : ''"
+            :class="
+              props.completed && i === 2
+                ? completedEmphasisClass
+                : props.completed && i !== 2
+                  ? 'text-medium-emphasis'
+                  : btn.labelClass || ''
+            "
           >
             {{ btn.label }}
           </span>
