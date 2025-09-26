@@ -17,7 +17,46 @@ const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
 const { labelIcons } = useLabelIcons()
 
-const { xs, sm, md, lg, lgAndUp, xl, mobile, smAndDown } = useDisplay()
+const { xs, sm, md, smAndDown, lgAndUp, name } = useDisplay() // Added name here
+
+// --- Responsive computed properties for template clarity ---
+const responsiveContainerWidth = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return '100vw'
+    case 'sm':
+      return 600
+    case 'md':
+      return 840
+    case 'lg':
+      return 1140
+    case 'xl':
+    default: // Includes xxl or any larger custom breakpoints if they existed
+      return 1440
+  }
+})
+
+const pageTitleClass = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return 'text-h5 my-4'
+    case 'sm':
+      return 'text-h4 my-8' // mobile.value is true for xs and sm
+    case 'md':
+    case 'lg':
+    case 'xl':
+    default:
+      return 'text-h3 my-8'
+  }
+})
+
+const sectionColPaddingClass = computed(() => (xs.value || sm.value ? '' : 'pa-4'))
+
+const panelItemPaddingClass = computed(() => (xs.value ? 'pa-4 pb-2' : 'pa-8 pb-4'))
+
+const panelBadgeMarginClass = computed(() => (xs.value ? 'me-2' : 'me-4'))
+
+const panelTitleColClass = computed(() => (md.value ? 'mt-2 align-self-end' : ''))
 
 // --- Dashboard statistics ---
 const pendingTasks = computed(() => (taskStore.tasksData || []).filter((task) => !task.completed))
@@ -205,17 +244,11 @@ watch(
 <template>
   <!-- Contenedor principal -->
   <v-container :class="xs ? '' : 'pa-4'" fluid>
-    <v-responsive
-      class="homeView-container mx-auto"
-      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
-    >
+    <v-responsive class="homeView-container mx-auto" :max-width="responsiveContainerWidth">
       <!-- Título de la página -->
       <v-row>
         <v-col cols="12">
-          <h2
-            class="text-center text-on-surface font-weight-bold"
-            :class="xs ? 'text-h5 my-4' : mobile ? 'text-h4 my-8' : 'text-h3 my-8'"
-          >
+          <h2 class="text-center text-on-surface font-weight-bold" :class="pageTitleClass">
             Vuetify Todolist
           </h2>
         </v-col>
@@ -224,20 +257,16 @@ watch(
       <!-- Panel estadístico -->
       <v-expand-transition>
         <v-sheet class="bg-surface-container-low rounded-lg" elevation="0">
-          <v-row
-            v-if="userStore.isLoggedIn && totalTasks"
-            align="start"
-            class="ma-0"
-          >
+          <v-row v-if="userStore.isLoggedIn && totalTasks" align="start" class="ma-0">
             <!-- Upcoming Deadlines -->
-            <v-col cols="12" md="4" :class="xs || sm ? '' : 'pa-4'">
+            <v-col cols="12" md="4" :class="sectionColPaddingClass">
               <v-card
                 rounded="lg"
                 variant="tonal"
                 class="upcoming-panel"
                 :color="upcomingDeadlinesTotal > 0 ? 'warning' : 'success'"
               >
-                <v-card-item :class="xs ? 'pa-4 pb-2' : 'pa-8 pb-4'">
+                <v-card-item :class="panelItemPaddingClass">
                   <template v-slot:prepend>
                     <v-icon color="on-surface" icon="mdi-clock-alert"></v-icon>
                   </template>
@@ -250,7 +279,7 @@ watch(
                       :content="upcomingDeadlinesTotal"
                       color="warning"
                       floating
-                      :class="xs ? 'me-2' : 'me-4'"
+                      :class="panelBadgeMarginClass"
                     ></v-badge>
                   </template>
                 </v-card-item>
@@ -291,7 +320,7 @@ watch(
                         <v-col
                           cols="auto"
                           class="text-caption text-medium-emphasis me-2 text-on-surface"
-                          :class="md ? 'mt-2 align-self-end' : ''"
+                          :class="panelTitleColClass"
                         >
                           {{ isDeadlinesPanelExpanded ? 'Hide' : 'Show all' }}
                           <v-btn
@@ -374,7 +403,7 @@ watch(
             </v-col>
 
             <!-- Porcentaje de completadas -->
-            <v-col cols="12" md="4" :class="xs || sm ? '' : 'pa-4'">
+            <v-col cols="12" md="4" :class="sectionColPaddingClass">
               <v-card variant="flat" class="w-100 mx-auto">
                 <v-card-text class="d-flex flex-column align-center justify-center pa-8">
                   <v-fade-transition>
@@ -454,14 +483,14 @@ watch(
             </v-col>
 
             <!-- Overdue Tasks -->
-            <v-col cols="12" md="4" :class="xs || sm ? '' : 'pa-4'">
+            <v-col cols="12" md="4" :class="sectionColPaddingClass">
               <v-card
                 variant="tonal"
                 rounded="lg"
                 class="overdue-panel"
                 :color="overdueTasksTotal > 0 ? 'error' : 'success'"
               >
-                <v-card-item :class="xs ? 'pa-4 pb-2' : 'pa-8 pb-4'">
+                <v-card-item :class="panelItemPaddingClass">
                   <template v-slot:prepend>
                     <v-icon color="on-surface" icon="mdi-alarm"></v-icon>
                   </template>
@@ -474,7 +503,7 @@ watch(
                       :content="overdueTasksTotal"
                       color="error"
                       floating
-                      :class="xs ? 'me-2' : 'me-4'"
+                      :class="panelBadgeMarginClass"
                     ></v-badge>
                   </template>
                 </v-card-item>
@@ -515,7 +544,7 @@ watch(
                         <v-col
                           cols="auto"
                           class="text-caption text-medium-emphasis me-2 text-on-surface"
-                          :class="md ? 'mt-2 align-self-end' : ''"
+                          :class="panelTitleColClass"
                         >
                           {{ isOverduePanelExpanded ? 'Hide' : 'Show all' }}
                           <v-btn
@@ -603,7 +632,7 @@ watch(
 
       <!-- Controles del calendario -->
       <v-row align="center" justify="center" class="ma-0">
-        <v-col :cols="xs || sm ? 12 : 6" md="5" lg="4" xl="3" :class="xs || sm ? 'pa-2' : 'pa-4'">
+        <v-col :cols="xs || sm ? 12 : 6" md="5" lg="4" xl="3" :class="sectionColPaddingClass">
           <v-select
             v-model="type"
             :items="types"
@@ -623,7 +652,7 @@ watch(
           ></v-select>
         </v-col>
 
-        <v-col :cols="xs || sm ? 12 : 6" md="5" lg="4" xl="3" :class="xs || sm ? 'pa-2' : 'pa-4'">
+        <v-col :cols="xs || sm ? 12 : 6" md="5" lg="4" xl="3" :class="sectionColPaddingClass">
           <v-select
             v-model="weekday"
             :items="weekdays"

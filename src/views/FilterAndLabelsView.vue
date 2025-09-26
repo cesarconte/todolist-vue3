@@ -125,35 +125,142 @@ const filterAppliedText = computed(() => {
   return count === 1 ? 'Filter applied' : 'Filters applied'
 })
 
-const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
+const { xs, smAndDown, mdAndUp, name } = useDisplay()
+
+// --- Computed properties for responsive layout and classes ---
+
+const responsiveContainerWidth = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return '100vw'
+    case 'sm':
+      return 600
+    case 'md':
+      return 840
+    case 'lg':
+      return 1140
+    case 'xl':
+    default:
+      return 1440
+  }
+})
+
+const pageTitleClass = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return 'text-h5 my-4'
+    case 'sm':
+      return 'text-h4 my-6'
+    default:
+      return 'text-h3 my-8'
+  }
+})
+
+const filterCardPaddingClass = computed(() => (xs.value ? '' : 'pa-4'))
+
+const filterTitlePaddingClass = computed(() => (xs.value ? 'px-2' : 'px-4'))
+
+const filterHeaderSheetPaddingClass = computed(() => (xs.value ? 'pa-1' : 'pa-2'))
+
+const filterHeaderIconSize = computed(() => (xs.value ? '28' : '40'))
+
+const filterOptionsTitleClass = computed(() => (xs.value ? 'text-subtitle-1' : ''))
+
+const filterSubtitleText = computed(() =>
+  xs.value ? 'Find matching tasks' : 'Filter tasks using multiple criteria'
+)
+
+const appliedFilterChipClass = computed(() => (xs.value ? 'px-2 py-1' : ''))
+
+const chooseFiltersSubtitlePaddingClass = computed(() => (xs.value ? 'px-2' : 'px-4'))
+const chooseFiltersIconSize = computed(() => (xs.value ? 18 : 24))
+const chooseFiltersTextClass = computed(() => (xs.value ? 'text-body-2' : ''))
+
+const emptyStateIconSize = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return 60
+    case 'sm':
+      return 70
+    default:
+      return 80
+  }
+})
+const emptyStateTitle = computed(() =>
+  xs.value ? 'Use filters above' : 'Use the filters above to search for tasks'
+)
+const emptyStateSubtitle = computed(() =>
+  xs.value ? 'Choose your criteria' : 'Select different filtering options to find your tasks.'
+)
+
+const sharedButtonResponsiveClass = computed(() => (xs.value ? 'px-4 py-2' : 'px-8'))
+const sharedButtonResponsiveBlock = computed(() => xs.value)
+
+const loginAlertWidth = computed(() => (xs.value ? '90%' : '32rem'))
+const loginAlertText = computed(() =>
+  xs.value ? 'Please, log in...' : 'Please, log in to use the filters'
+)
+
+const skeletonLoaderClass = computed(() => (xs.value ? 'my-4' : 'my-8'))
+const skeletonLoaderWidth = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return '95%'
+    case 'sm':
+      return '90%'
+    default:
+      return '85%'
+  }
+})
+
+const taskCardColClass = computed(() => (xs.value ? 'mx-auto my-2' : 'mx-auto my-4'))
+
+const backBtnSize = computed(() => (xs.value ? 'default' : 'large'))
+
+const editDialogMaxWidth = computed(() => {
+  switch (name.value) {
+    case 'xs':
+      return '100%'
+    case 'sm':
+      return '90%'
+    default:
+      return '600px'
+  }
+})
+
+const editDialogCardClass = computed(() => (xs.value ? 'pa-2' : 'pa-4'))
+
+const editDialogTitleClass = computed(() => (xs.value ? 'text-subtitle-1 py-2' : 'text-h6 py-3'))
+
+const editDialogContentClass = computed(() => (xs.value ? 'px-1 py-2' : ''))
+
+const editDialogActionsClass = computed(() =>
+  smAndDown.value
+    ? 'd-flex flex-column align-center py-2 gap-3'
+    : 'd-flex flex-wrap justify-space-around py-3'
+)
 </script>
 
 <template>
   <v-container :class="xs ? '' : 'pa-4'" fluid>
-    <v-responsive
-      class="tasksFiltered-container mx-auto"
-      :max-width="xs ? '100vw' : sm ? 600 : md ? 840 : lg ? 1140 : xl ? 1440 : 1600"
-    >
+    <v-responsive class="tasksFiltered-container mx-auto" :max-width="responsiveContainerWidth">
       <v-row>
         <v-col cols="12">
-          <h2
-            class="text-center text-on-surface font-weight-bold"
-            :class="xs ? 'text-h5 my-4' : sm ? 'text-h4 my-6' : 'text-h3 my-8'"
-          >
+          <h2 class="text-center text-on-surface font-weight-bold" :class="pageTitleClass">
             Filter and Label Tasks
           </h2>
         </v-col>
       </v-row>
 
       <!-- Filtros -->
-      <v-card class="mb-8 mx-2 search-card" :class="xs ? '' : 'pa-4'" variant="text">
+      <v-card class="mb-8 mx-2 search-card" :class="filterCardPaddingClass" variant="text">
         <v-card-title
           class="d-flex align-center justify-space-between pb-2 mb-2"
-          :class="xs ? 'px-2' : 'px-4'"
+          :class="filterTitlePaddingClass"
         >
           <v-sheet
             class="filter-header"
-            :class="xs ? 'pa-1' : 'pa-2'"
+            :class="filterHeaderSheetPaddingClass"
             rounded="lg"
             color="surface-container"
           >
@@ -161,18 +268,18 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
               <v-icon
                 icon="mdi-filter-variant"
                 color="primary"
-                :size="xs ? '28' : '40'"
+                :size="filterHeaderIconSize"
                 class="mr-1"
               ></v-icon>
               <div class="ml-0">
                 <div
                   class="text-h6 font-weight-medium text-onSurfaceVariant"
-                  :class="xs ? 'text-subtitle-1' : ''"
+                  :class="filterOptionsTitleClass"
                 >
                   Filter Options
                 </div>
                 <div class="text-caption text-onSurfaceVariant mt-1 text-wrap">
-                  {{ xs ? 'Find matching tasks' : 'Filter tasks using multiple criteria' }}
+                  {{ filterSubtitleText }}
                 </div>
               </div>
             </div>
@@ -183,17 +290,17 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             size="small"
             prepend-icon="mdi-filter-outline"
             class="font-weight-medium mx-2"
-            :class="xs ? 'px-2 py-1' : ''"
+            :class="appliedFilterChipClass"
           >
             {{ filterAppliedText }}
           </v-chip>
         </v-card-title>
         <v-card-subtitle
           class="text-subtitle-1 font-weight-medium py-2 text-center mb-4"
-          :class="xs ? 'px-2' : 'px-4'"
+          :class="chooseFiltersSubtitlePaddingClass"
         >
-          <v-icon icon="mdi-tune" class="mr-2" :size="xs ? 18 : 24"></v-icon>
-          <span :class="xs ? 'text-body-2' : ''">Choose your filters</span>
+          <v-icon icon="mdi-tune" class="mr-2" :size="chooseFiltersIconSize"></v-icon>
+          <span :class="chooseFiltersTextClass">Choose your filters</span>
         </v-card-subtitle>
 
         <v-divider class="mb-4"></v-divider>
@@ -535,13 +642,9 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           <v-col>
             <VEmptyState
               icon="mdi-filter-outline"
-              :icon-size="xs ? 60 : sm ? 70 : 80"
-              :title="xs ? 'Use filters above' : 'Use the filters above to search for tasks'"
-              :subtitle="
-                xs
-                  ? 'Choose your criteria'
-                  : 'Select different filtering options to find your tasks.'
-              "
+              :icon-size="emptyStateIconSize"
+              :title="emptyStateTitle"
+              :subtitle="emptyStateSubtitle"
               class="empty-state-container"
             />
           </v-col>
@@ -553,8 +656,8 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             rounded
             size="large"
             prepend-icon="mdi-refresh"
-            :class="xs ? 'px-4 py-2' : 'px-8'"
-            :block="xs"
+            :class="sharedButtonResponsiveClass"
+            :block="sharedButtonResponsiveBlock"
             class="text-none text-button"
             @click="taskStore.resetFilters()"
             :disabled="!hasActiveFilters()"
@@ -586,12 +689,12 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
         outlined
         closable
         height="4rem"
-        :width="xs ? '90%' : '32rem'"
+        :width="loginAlertWidth"
         class="alert mt-8"
         aria-live="polite"
       >
         <span>
-          {{ xs ? 'Please, log in...' : 'Please, log in to use the filters' }}
+          {{ loginAlertText }}
         </span>
         <v-btn
           icon
@@ -646,8 +749,8 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
           <v-col cols="12" class="d-flex justify-center align-center">
             <v-skeleton-loader
               type="card"
-              :class="xs ? 'my-4' : 'my-8'"
-              :width="xs ? '95%' : sm ? '90%' : '85%'"
+              :class="skeletonLoaderClass"
+              :width="skeletonLoaderWidth"
             />
           </v-col>
         </template>
@@ -660,7 +763,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
             md="10"
             lg="9"
             xl="8"
-            :class="xs ? 'mx-auto my-2' : 'mx-auto my-4'"
+            :class="taskCardColClass"
           >
             <Suspense>
               <template #default>
@@ -730,9 +833,9 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
       <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-8">
         <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end'">
           <VBackButton
-            :block="xs ? true : false"
-            :size="xs ? 'default' : 'large'"
-            :class="xs ? 'px-4 py-2' : 'px-8'"
+            :block="sharedButtonResponsiveBlock"
+            :size="backBtnSize"
+            :class="sharedButtonResponsiveClass"
             @click="goBack"
             aria-label="Go back to previous page"
           >
@@ -744,7 +847,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
       <!-- Diálogo de edición -->
       <v-dialog
         v-model="taskStore.dialogEditTask"
-        :max-width="xs ? '100%' : sm ? '90%' : md ? '600px' : '600px'"
+        :max-width="editDialogMaxWidth"
         class="dialog dialog-edit-task"
         role="dialog"
         aria-modal="true"
@@ -752,18 +855,18 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
       >
         <v-card
           class="card card-edit-task"
-          :class="xs ? 'pa-2' : 'pa-4'"
+          :class="editDialogCardClass"
           variant="elevated"
           elevation="3"
         >
           <v-card-title
             class="card-title card-title-edit-task"
-            :class="xs ? 'text-subtitle-1 py-2' : 'text-h6 py-3'"
+            :class="editDialogTitleClass"
             :id="`edit-task-dialog-title-${taskStore.editedTask?.id}`"
           >
             <span>Edit task: {{ taskStore.editedTask?.title }}</span>
           </v-card-title>
-          <v-card-text :class="xs ? 'px-1 py-2' : ''">
+          <v-card-text :class="editDialogContentClass">
             <VTaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
@@ -775,13 +878,7 @@ const { xs, sm, smAndDown, md, mdAndUp, lg, xl } = useDisplay()
               @submit="submitEditedTask"
             ></VTaskForm>
           </v-card-text>
-          <v-card-actions
-            :class="
-              smAndDown
-                ? 'd-flex flex-column align-center py-2 gap-3'
-                : 'd-flex flex-wrap justify-space-around py-3'
-            "
-          >
+          <v-card-actions :class="editDialogActionsClass">
             <VActionButtons :buttons="btnsForm" />
           </v-card-actions>
         </v-card>
