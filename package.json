@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "BROWSER=\"/usr/lib/firefox-developer-edition/firefox\" vite dev --open 5173",
+    "dev": "BROWSER=\"/usr/lib/firefox\" vite dev --open 5173",
     "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
@@ -17,7 +17,7 @@
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0",
-    "vuetify": "^3.8.3"
+    "vuetify": "^3.10.3"
   },
   "devDependencies": {
     "@mdi/font": "^7.4.47",
