@@ -563,7 +563,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
 
   <v-navigation-drawer
     v-model="menus.drawer"
-    :location="mobile ? 'bottom' : undefined"
+    :location="xs ? 'bottom' : 'left'"
     temporary
     class="navigation-drawer drawer"
     width="300"

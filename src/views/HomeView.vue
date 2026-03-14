@@ -51,7 +51,7 @@ const WEEKDAY_MODES = [
 // --- Responsive Layout Computed Properties ---
 const responsiveContainerWidth = computed(() => {
   switch (name.value) {
-    case 'xs': return '100vw'
+    case 'xs': return '100%'
     case 'sm': return 600
     case 'md': return 840
     case 'lg': return 1140
@@ -60,13 +60,13 @@ const responsiveContainerWidth = computed(() => {
 })
 
 const pageTitleClass = computed(() => {
-  if (xs.value) return 'text-h5 my-4'
-  if (sm.value) return 'text-h4 my-8'
+  if (xs.value) return 'text-h5 my-4 mb-2'
+  if (sm.value) return 'text-h4 my-6'
   return 'text-h3 my-8'
 })
 
-const sectionColPaddingClass = computed(() => (xs.value || sm.value ? '' : 'pa-4'))
-const mainContainerClass = computed(() => (xs.value ? '' : 'pa-4'))
+const sectionColPaddingClass = computed(() => (xs.value ? 'pa-1' : sm.value ? 'pa-2' : 'pa-4'))
+const mainContainerClass = computed(() => (xs.value ? 'pa-2' : 'pa-4'))
 const calendarCssClass = computed(() => (xs.value ? 'calendar-xs' : ''))
 
 // --- Task Data Computed Properties ---
@@ -340,28 +340,28 @@ watch(
 
             <!-- Progress Circular Card -->
             <v-col cols="12" md="4" :class="sectionColPaddingClass">
-              <v-card rounded="xl" variant="flat" border class="h-100 d-flex align-center justify-center pa-6">
+              <v-card rounded="xl" variant="flat" border class="h-100 d-flex align-center justify-center" :class="xs ? 'pa-4' : 'pa-6'">
                 <v-card-text class="d-flex flex-column align-center justify-center pa-0">
                   <v-progress-circular
                     :model-value="taskCompletionPercentage"
                     :color="motivationalColor"
-                    :width="12"
-                    :size="130"
-                    class="mb-6"
+                    :width="xs ? 8 : 12"
+                    :size="xs ? 90 : 130"
+                    :class="xs ? 'mb-4' : 'mb-6'"
                     :rotate="-90"
                   >
-                    <span class="text-h4 font-weight-black text-on-surface">{{ taskCompletionPercentage }}%</span>
+                    <span :class="xs ? 'text-h5' : 'text-h4'" class="font-weight-black text-on-surface">{{ taskCompletionPercentage }}%</span>
                   </v-progress-circular>
 
                   <v-sheet color="transparent" class="text-center">
-                    <v-sheet color="transparent" class="text-h6 font-weight-black text-orange-darken-3 mb-1">
-                      {{ completedTasksCount }} / {{ totalTasksCount }} Tasks Completed
+                    <v-sheet color="transparent" class="font-weight-black text-orange-darken-3 mb-1" :class="xs ? 'text-subtitle-2' : 'text-h6'">
+                      {{ completedTasksCount }} / {{ totalTasksCount }} Tasks
                     </v-sheet>
-                    <v-sheet color="transparent" class="text-body-2 font-weight-medium text-medium-emphasis mb-4">
+                    <v-sheet color="transparent" class="text-caption font-weight-medium text-medium-emphasis" :class="xs ? 'mb-2' : 'mb-4'">
                       {{ pendingTasks.length }} remaining
                     </v-sheet>
-                    <v-sheet color="transparent" class="d-flex align-center justify-center font-weight-black text-orange-darken-3">
-                      <v-icon :icon="activeMotivationalInfo.icon" class="me-2" size="24"></v-icon>
+                    <v-sheet color="transparent" class="d-flex align-center justify-center font-weight-black text-orange-darken-3" :class="xs ? 'text-caption' : ''">
+                      <v-icon :icon="activeMotivationalInfo.icon" class="me-2" :size="xs ? 18 : 24"></v-icon>
                       {{ activeMotivationalInfo.label }}
                     </v-sheet>
                   </v-sheet>
@@ -442,60 +442,83 @@ watch(
       </v-expand-transition>
 
       <!-- Calendar Header (Navigation & Controls) -->
-      <v-row align="center" class="ma-0 mb-6 bg-surface px-4 py-2 rounded-lg border ga-4 ga-md-0">
-        <!-- Navigation Buttons -->
-        <v-col cols="12" md="4" class="d-flex justify-center justify-md-start">
-          <v-sheet border rounded="lg" class="d-flex align-center overflow-hidden">
-            <v-btn variant="text" size="small" icon="mdi-chevron-double-left" @click="navigateToPreviousYear" aria-label="Previous Year"></v-btn>
-            <v-divider vertical></v-divider>
-            <v-btn variant="text" size="small" icon="mdi-chevron-left" @click="navigateToPreviousMonth" aria-label="Previous Month"></v-btn>
-            <v-divider vertical></v-divider>
-            <v-btn variant="text" size="small" class="text-none px-4 font-weight-bold" @click="goToToday">Today</v-btn>
-            <v-divider vertical></v-divider>
-            <v-btn variant="text" size="small" icon="mdi-chevron-right" @click="navigateToNextMonth" aria-label="Next Month"></v-btn>
-            <v-divider vertical></v-divider>
-            <v-btn variant="text" size="small" icon="mdi-chevron-double-right" @click="navigateToNextYear" aria-label="Next Year"></v-btn>
-          </v-sheet>
+      <v-row no-gutters class="mx-0 mb-6 bg-surface rounded-xl border overflow-hidden">
+        <!-- Row 1: Navigation Arrows and Month/Year Title -->
+        <v-col cols="12" class="d-flex align-center justify-space-between pa-4 border-b">
+          <div class="d-flex align-center ga-1">
+            <v-btn variant="text" icon="mdi-chevron-double-left" @click="navigateToPreviousYear" aria-label="Previous Year" density="comfortable"></v-btn>
+            <v-btn variant="text" icon="mdi-chevron-left" @click="navigateToPreviousMonth" aria-label="Previous Month" density="comfortable"></v-btn>
+          </div>
+          
+          <v-chip
+            variant="flat"
+            color="primary"
+            class="text-h6 font-weight-black px-6"
+            rounded="pill"
+            label
+          >
+            <v-icon start icon="mdi-calendar-month" class="me-2"></v-icon>
+            {{ formattedCalendarTitle }}
+          </v-chip>
+          
+          <div class="d-flex align-center ga-1">
+            <v-btn variant="text" icon="mdi-chevron-right" @click="navigateToNextMonth" aria-label="Next Month" density="comfortable"></v-btn>
+            <v-btn variant="text" icon="mdi-chevron-double-right" @click="navigateToNextYear" aria-label="Next Year" density="comfortable"></v-btn>
+          </div>
         </v-col>
 
-        <!-- Current Calendar Title -->
-        <v-col cols="12" md="4" class="d-flex justify-center">
-          <v-sheet border rounded="pill" class="d-inline-flex align-center px-8 py-2 bg-surface-container-low shadow-sm">
-            <v-icon color="primary" class="me-2">mdi-calendar-month</v-icon>
-            <h3 class="text-h6 font-weight-black text-on-surface">
-              {{ formattedCalendarTitle }}
-            </h3>
-          </v-sheet>
-        </v-col>
+        <!-- Row 2: Today, View Mode, and Weekdays Controls -->
+        <v-col cols="12" class="pa-4 bg-grey-lighten-5">
+          <v-row align="center" justify="center" class="ga-4 ga-md-8">
+            <!-- 1. Today Button -->
+            <v-col cols="auto">
+              <v-btn 
+                variant="outlined" 
+                class="text-none px-6 font-weight-bold" 
+                rounded="lg"
+                @click="goToToday"
+                color="primary"
+              >
+                Today
+              </v-btn>
+            </v-col>
 
-        <!-- View Controls (Selectors) -->
-        <v-col cols="12" md="4" class="d-flex justify-center justify-md-end align-center ga-4">
-          <v-select
-            v-model="currentCalendarType"
-            :items="CALENDAR_VIEW_TYPES"
-            label="VIEW MODE"
-            variant="outlined"
-            density="compact"
-            hide-details
-            rounded="lg"
-            class="font-weight-bold custom-select"
-            item-title="text"
-            item-value="value"
-            style="max-width: 160px;"
-          ></v-select>
-          <v-select
-            v-model="currentWeekdayMode"
-            :items="WEEKDAY_MODES"
-            item-title="title"
-            item-value="title"
-            label="WEEKDAYS"
-            variant="outlined"
-            density="compact"
-            hide-details
-            rounded="lg"
-            class="font-weight-bold custom-select"
-            style="max-width: 160px;"
-          ></v-select>
+            <!-- 2. View Mode Selector -->
+            <v-col cols="12" sm="auto">
+              <v-select
+                v-model="currentCalendarType"
+                :items="CALENDAR_VIEW_TYPES"
+                item-title="text"
+                item-value="value"
+                label="VIEW MODE"
+                hide-details
+                density="compact"
+                variant="outlined"
+                rounded="lg"
+                bg-color="surface"
+                class="font-weight-bold"
+                style="min-width: 160px;"
+              ></v-select>
+            </v-col>
+
+            <!-- 3. Weekdays Selector -->
+            <v-col cols="12" sm="auto">
+              <v-select
+                v-model="currentWeekdayMode"
+                :items="WEEKDAY_MODES"
+                item-title="title"
+                item-value="title"
+                label="WEEKDAYS"
+                hide-details
+                density="compact"
+                variant="outlined"
+                rounded="lg"
+                bg-color="surface"
+                class="font-weight-bold"
+                style="min-width: 160px;"
+              ></v-select>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
 
