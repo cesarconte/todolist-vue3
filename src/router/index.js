@@ -52,15 +52,11 @@ const router = createRouter({
     //   component: () => import('../views/NotFoundView.vue')
     // }
   ],
-  scrollBehavior(to, from, savedPosition) {
-    // Si hay una posición guardada (usando el botón de atrás/adelante del navegador), úsala
-    if (savedPosition) {
-      return savedPosition
-    } else {
-      // De lo contrario, desplázate siempre al principio de la página
-      return { top: 0, behavior: 'smooth' }
-    }
-  }
+  // scrollBehavior() {
+  //   // Siempre nos desplazamos al principio de la página para que la vista sea limpia
+  //   // Incluso si hay una posición guardada, el usuario prefiere ver el Dashboard/Detalle desde arriba.
+  //   return { top: 0, behavior: 'smooth' }
+  // }
 })
 
 // Navigation Guard
