@@ -16,15 +16,11 @@ onMounted(() => {
 
 <template>
   <v-app>
-    <header>
-      <VToolbar />
-    </header>
+    <VToolbar />
     <v-main>
       <RouterView />
     </v-main>
-    <v-footer>
-      <VFooter />
-    </v-footer>
+    <VFooter />
     <VNotifications />
     <VBaseSnackbar />
   </v-app>

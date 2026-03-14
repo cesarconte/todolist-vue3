@@ -1,5 +1,6 @@
 // src/composables/useToolbarNav.js
-import useThemeToggle from '@/composables/ui/useThemeToggle' // Importar el composable del tema
+import { computed } from 'vue'
+import useThemeToggle from '@/composables/ui/useThemeToggle'
 
 export function useToolbarNav({
   userStore,
@@ -12,15 +13,15 @@ export function useToolbarNav({
   loginLogoutText,
   loginLogoutIcon
 }) {
-  // Helper para el título del usuario
-  const getUserTitle = () => (userStore.isLoggedIn ? userStore.userName : 'User')
-
   // Usar el composable del tema
   const { isDarkMode, toggleTheme } = useThemeToggle()
 
-  const navItems = [
+  // Helper para el título del usuario
+  const userTitle = computed(() => (userStore.isLoggedIn ? userStore.userName : 'User'))
+
+  const navItems = computed(() => [
     {
-      title: getUserTitle(),
+      title: userTitle.value,
       value: 'user',
       color: 'blue-accent-4',
       permission: 'user',
@@ -57,22 +58,21 @@ export function useToolbarNav({
       permission: 'filter_task',
       function: () => router.push({ name: 'filter-and-labels' })
     }
-  ]
+  ])
 
   // Elementos para el menú de puntos (dots) en la versión móvil
-  // Reorganizados para mantener exactamente el mismo orden que en el VToolbar
-  const dotsItems = [
+  const dotsItems = computed(() => [
     // 1. Notificaciones
     {
       title: 'Notifications',
       icon: 'mdi-bell-outline',
-      action: handleNotificationsClick
+      handler: handleNotificationsClick
     },
-    // 2. Tema (mismo que el botón de tema en la barra)
+    // 2. Tema
     {
       title: isDarkMode.value ? 'Switch to Light Mode' : 'Switch to Dark Mode',
       icon: isDarkMode.value ? 'mdi-weather-sunny' : 'mdi-weather-night',
-      action: toggleTheme
+      handler: toggleTheme
     },
     // 3. Settings (configuración)
     {
@@ -82,17 +82,17 @@ export function useToolbarNav({
         {
           title: 'Notification Settings',
           icon: 'mdi-bell-cog-outline',
-          action: handleNotificationsSettingsClick
+          handler: handleNotificationsSettingsClick
         }
       ]
     },
     // 4. Login/Logout
     {
-      title: loginLogoutText,
+      title: loginLogoutText.value,
       icon: loginLogoutIcon.value,
-      action: handleLoginLogout
+      handler: handleLoginLogout
     }
-  ]
+  ])
 
   return { navItems, dotsItems }
 }

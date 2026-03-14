@@ -750,7 +750,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         <!-- Items without children (single items) -->
         <v-list-item
           v-if="!item.children"
-          @click="item.action"
+          @click="item.handler"
           rounded="lg"
           color="primary"
           base-color="on-surface"
@@ -776,7 +776,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           <v-list-item
             v-for="child in item.children"
             :key="child.title"
-            @click="child.action"
+            @click="child.handler"
             rounded="lg"
             color="primary"
             base-color="on-surface"
