@@ -51,11 +51,16 @@ const WEEKDAY_MODES = [
 // --- Responsive Layout Computed Properties ---
 const responsiveContainerWidth = computed(() => {
   switch (name.value) {
-    case 'xs': return '100%'
-    case 'sm': return 600
-    case 'md': return 840
-    case 'lg': return 1140
-    default: return 1440
+    case 'xs':
+      return '100%'
+    case 'sm':
+      return 600
+    case 'md':
+      return 840
+    case 'lg':
+      return 1140
+    default:
+      return 1440
   }
 })
 
@@ -76,8 +81,8 @@ const completedTasksCount = computed(() => allTasks.value.filter((task) => task.
 const totalTasksCount = computed(() => allTasks.value.length)
 
 const taskCompletionPercentage = computed(() =>
-  totalTasksCount.value === 0 
-    ? 0 
+  totalTasksCount.value === 0
+    ? 0
     : Math.round((completedTasksCount.value / totalTasksCount.value) * 100)
 )
 
@@ -88,7 +93,10 @@ const upcomingDeadlinesList = computed(() => {
   const now = new Date()
   return pendingTasks.value
     .filter((task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) >= now)
-    .sort((a, b) => combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour))
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
     .slice(0, 3)
 })
 
@@ -104,7 +112,10 @@ const overdueTasksList = computed(() => {
   const now = new Date()
   return pendingTasks.value
     .filter((task) => task.endDate && combineDateTime(task.endDate, task.endDateHour) < now)
-    .sort((a, b) => combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour))
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
     .slice(0, 3)
 })
 
@@ -117,29 +128,23 @@ const overdueTasksCount = computed(() => {
 
 // --- Appearance Computed Properties (UI State Logic) ---
 
-const upcomingCardClass = computed(() => 
+const upcomingCardClass = computed(() =>
   upcomingDeadlinesCount.value > 0 ? 'bg-orange-lighten-5' : 'bg-green-lighten-5'
 )
 
-const upcomingIconColor = computed(() => 
+const upcomingIconColor = computed(() =>
   upcomingDeadlinesCount.value > 0 ? 'orange-darken-2' : 'success'
 )
 
-const overdueCardClass = computed(() => 
+const overdueCardClass = computed(() =>
   overdueTasksCount.value > 0 ? 'bg-red-lighten-5' : 'bg-green-lighten-5'
 )
 
-const overdueIconColor = computed(() => 
-  overdueTasksCount.value > 0 ? 'red-darken-2' : 'success'
-)
+const overdueIconColor = computed(() => (overdueTasksCount.value > 0 ? 'red-darken-2' : 'success'))
 
-const deadlinesActionLabel = computed(() => 
-  isDeadlinesPanelExpanded.value ? 'Hide' : 'Show all'
-)
+const deadlinesActionLabel = computed(() => (isDeadlinesPanelExpanded.value ? 'Hide' : 'Show all'))
 
-const overdueActionLabel = computed(() => 
-  isOverduePanelExpanded.value ? 'Hide' : 'Show all'
-)
+const overdueActionLabel = computed(() => (isOverduePanelExpanded.value ? 'Hide' : 'Show all'))
 
 const activeWeekdayValues = computed(() => {
   const mode = WEEKDAY_MODES.find((m) => m.title === currentWeekdayMode.value)
@@ -150,13 +155,18 @@ const activeWeekdayValues = computed(() => {
 
 const formattedCalendarTitle = computed(() => {
   if (!currentCalendarDate.value) return ''
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentCalendarDate.value)
+  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(
+    currentCalendarDate.value
+  )
 })
 
 const mappedCalendarEvents = computed(() => {
   return allTasks.value
     .slice()
-    .sort((a, b) => combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour))
+    .sort(
+      (a, b) =>
+        combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
+    )
     .map((task) => {
       const start = combineDateTime(task.startDate, task.startDateHour) || task.startDate || null
       const end = combineDateTime(task.endDate, task.endDateHour) || task.endDate || null
@@ -167,7 +177,7 @@ const mappedCalendarEvents = computed(() => {
         end,
         allDay: !task.startDateHour && !task.endDateHour,
         color: task.color,
-        completed: task.completed,
+        completed: task.completed
       }
     })
 })
@@ -213,7 +223,9 @@ const getMotivationalFeedback = (percentage) => {
   return { label: 'Start your first task!', icon: 'mdi-flag-outline', size: 24 }
 }
 
-const activeMotivationalInfo = computed(() => getMotivationalFeedback(taskCompletionPercentage.value))
+const activeMotivationalInfo = computed(() =>
+  getMotivationalFeedback(taskCompletionPercentage.value)
+)
 
 // --- Lifecycle & Side Effects ---
 
@@ -267,7 +279,11 @@ watch(
       <!-- Statistics Row -->
       <v-expand-transition>
         <v-sheet color="transparent" class="mb-4">
-          <v-row v-if="userStore.isLoggedIn && totalTasksCount" class="ma-0 ga-4 ga-md-0" align="stretch">
+          <v-row
+            v-if="userStore.isLoggedIn && totalTasksCount"
+            class="ma-0 ga-4 ga-md-0"
+            align="stretch"
+          >
             <!-- Upcoming Deadlines Card -->
             <v-col cols="12" md="4" :class="sectionColPaddingClass">
               <v-card
@@ -280,12 +296,14 @@ watch(
                 <v-card-item class="pa-0">
                   <v-card-title class="d-flex align-center justify-space-between pb-4">
                     <v-sheet color="transparent" class="d-flex align-center">
-                      <v-icon 
-                        :color="upcomingIconColor" 
+                      <v-icon
+                        :color="upcomingIconColor"
                         icon="mdi-clock-outline"
                         class="me-2"
                       ></v-icon>
-                      <span class="text-subtitle-1 font-weight-black text-orange-darken-4">Upcoming Deadlines</span>
+                      <span class="text-subtitle-1 font-weight-black text-orange-darken-4"
+                        >Upcoming Deadlines</span
+                      >
                     </v-sheet>
                     <v-badge
                       v-if="upcomingDeadlinesCount > 0"
@@ -300,7 +318,11 @@ watch(
 
                 <!-- Tasks List (Expandable) -->
                 <v-expand-transition>
-                  <v-list v-if="isDeadlinesPanelExpanded && upcomingDeadlinesList.length" bg-color="transparent" class="px-0 py-2">
+                  <v-list
+                    v-if="isDeadlinesPanelExpanded && upcomingDeadlinesList.length"
+                    bg-color="transparent"
+                    class="px-0 py-2"
+                  >
                     <v-list-item
                       v-for="task in upcomingDeadlinesList"
                       :key="task.id"
@@ -311,16 +333,26 @@ watch(
                       lines="one"
                     >
                       <template v-slot:prepend>
-                        <v-icon :color="task.color || 'primary'" size="small">{{ labelIcons[task.label] || 'mdi-circle-medium' }}</v-icon>
+                        <v-icon :color="task.color || 'primary'" size="small">{{
+                          labelIcons[task.label] || 'mdi-circle-medium'
+                        }}</v-icon>
                       </template>
-                      <v-list-item-title class="text-caption font-weight-bold text-on-surface">{{ task.title }}</v-list-item-title>
+                      <v-list-item-title class="text-caption font-weight-bold text-on-surface">{{
+                        task.title
+                      }}</v-list-item-title>
                     </v-list-item>
                   </v-list>
                 </v-expand-transition>
 
                 <v-card-actions class="pa-0 pt-auto">
-                  <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
-                    <v-sheet color="transparent" class="d-flex align-center text-caption font-weight-medium text-orange-darken-3">
+                  <v-sheet
+                    color="transparent"
+                    class="d-flex align-center justify-space-between w-100"
+                  >
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex align-center text-caption font-weight-medium text-orange-darken-3"
+                    >
                       <v-icon size="small" class="me-2">mdi-calendar-clock</v-icon>
                       {{ upcomingDeadlinesCount }} tasks with upcoming deadline
                     </v-sheet>
@@ -328,7 +360,9 @@ watch(
                       variant="text"
                       size="small"
                       class="text-none font-weight-bold"
-                      :append-icon="isDeadlinesPanelExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                      :append-icon="
+                        isDeadlinesPanelExpanded ? 'mdi-chevron-up' : 'mdi-chevron-down'
+                      "
                       @click="isDeadlinesPanelExpanded = !isDeadlinesPanelExpanded"
                     >
                       {{ deadlinesActionLabel }}
@@ -340,7 +374,13 @@ watch(
 
             <!-- Progress Circular Card -->
             <v-col cols="12" md="4" :class="sectionColPaddingClass">
-              <v-card rounded="xl" variant="flat" border class="h-100 d-flex align-center justify-center" :class="xs ? 'pa-4' : 'pa-6'">
+              <v-card
+                rounded="xl"
+                variant="flat"
+                border
+                class="h-100 d-flex align-center justify-center"
+                :class="xs ? 'pa-4' : 'pa-6'"
+              >
                 <v-card-text class="d-flex flex-column align-center justify-center pa-0">
                   <v-progress-circular
                     :model-value="taskCompletionPercentage"
@@ -350,18 +390,38 @@ watch(
                     :class="xs ? 'mb-4' : 'mb-6'"
                     :rotate="-90"
                   >
-                    <span :class="xs ? 'text-h5' : 'text-h4'" class="font-weight-black text-on-surface">{{ taskCompletionPercentage }}%</span>
+                    <span
+                      :class="xs ? 'text-h5' : 'text-h4'"
+                      class="font-weight-black text-on-surface"
+                      >{{ taskCompletionPercentage }}%</span
+                    >
                   </v-progress-circular>
 
                   <v-sheet color="transparent" class="text-center">
-                    <v-sheet color="transparent" class="font-weight-black text-orange-darken-3 mb-1" :class="xs ? 'text-subtitle-2' : 'text-h6'">
+                    <v-sheet
+                      color="transparent"
+                      class="font-weight-black text-orange-darken-3 mb-1"
+                      :class="xs ? 'text-subtitle-2' : 'text-h6'"
+                    >
                       {{ completedTasksCount }} / {{ totalTasksCount }} Tasks
                     </v-sheet>
-                    <v-sheet color="transparent" class="text-caption font-weight-medium text-medium-emphasis" :class="xs ? 'mb-2' : 'mb-4'">
+                    <v-sheet
+                      color="transparent"
+                      class="text-caption font-weight-medium text-medium-emphasis"
+                      :class="xs ? 'mb-2' : 'mb-4'"
+                    >
                       {{ pendingTasks.length }} remaining
                     </v-sheet>
-                    <v-sheet color="transparent" class="d-flex align-center justify-center font-weight-black text-orange-darken-3" :class="xs ? 'text-caption' : ''">
-                      <v-icon :icon="activeMotivationalInfo.icon" class="me-2" :size="xs ? 18 : 24"></v-icon>
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex align-center justify-center font-weight-black text-orange-darken-3"
+                      :class="xs ? 'text-caption' : ''"
+                    >
+                      <v-icon
+                        :icon="activeMotivationalInfo.icon"
+                        class="me-2"
+                        :size="xs ? 18 : 24"
+                      ></v-icon>
                       {{ activeMotivationalInfo.label }}
                     </v-sheet>
                   </v-sheet>
@@ -381,12 +441,14 @@ watch(
                 <v-card-item class="pa-0">
                   <v-card-title class="d-flex align-center justify-space-between pb-4">
                     <v-sheet color="transparent" class="d-flex align-center">
-                      <v-icon 
-                        :color="overdueIconColor" 
+                      <v-icon
+                        :color="overdueIconColor"
                         icon="mdi-alert-circle-outline"
                         class="me-2"
                       ></v-icon>
-                      <span class="text-subtitle-1 font-weight-black text-red-darken-4">Overdue Tasks</span>
+                      <span class="text-subtitle-1 font-weight-black text-red-darken-4"
+                        >Overdue Tasks</span
+                      >
                     </v-sheet>
                     <v-badge
                       v-if="overdueTasksCount > 0"
@@ -400,7 +462,11 @@ watch(
                 <v-spacer></v-spacer>
 
                 <v-expand-transition>
-                  <v-list v-if="isOverduePanelExpanded && overdueTasksList.length" bg-color="transparent" class="px-0 py-2">
+                  <v-list
+                    v-if="isOverduePanelExpanded && overdueTasksList.length"
+                    bg-color="transparent"
+                    class="px-0 py-2"
+                  >
                     <v-list-item
                       v-for="task in overdueTasksList"
                       :key="task.id"
@@ -411,16 +477,26 @@ watch(
                       lines="one"
                     >
                       <template v-slot:prepend>
-                        <v-icon :color="task.color || 'primary'" size="small">{{ labelIcons[task.label] || 'mdi-circle-medium' }}</v-icon>
+                        <v-icon :color="task.color || 'primary'" size="small">{{
+                          labelIcons[task.label] || 'mdi-circle-medium'
+                        }}</v-icon>
                       </template>
-                      <v-list-item-title class="text-caption font-weight-bold text-on-surface">{{ task.title }}</v-list-item-title>
+                      <v-list-item-title class="text-caption font-weight-bold text-on-surface">{{
+                        task.title
+                      }}</v-list-item-title>
                     </v-list-item>
                   </v-list>
                 </v-expand-transition>
 
                 <v-card-actions class="pa-0 pt-auto">
-                  <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
-                    <v-sheet color="transparent" class="d-flex align-center text-caption font-weight-medium text-red-darken-3">
+                  <v-sheet
+                    color="transparent"
+                    class="d-flex align-center justify-space-between w-100"
+                  >
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex align-center text-caption font-weight-medium text-red-darken-3"
+                    >
                       <v-icon size="small" class="me-2">mdi-alert-outline</v-icon>
                       {{ overdueTasksCount }} tasks past deadline
                     </v-sheet>
@@ -442,106 +518,160 @@ watch(
       </v-expand-transition>
 
       <!-- Calendar Header (Navigation & Controls) -->
-      <v-row class="ma-0 mb-2">
-        <v-col cols="12" :class="sectionColPaddingClass">
-          <v-sheet border rounded="xl" class="bg-surface overflow-hidden">
-            <!-- Row 1: Navigation Arrows and Month/Year Title -->
-            <v-row no-gutters class="border-b">
-              <v-col cols="12" class="d-flex align-center justify-space-between pa-4">
-                <v-sheet color="transparent" class="d-flex align-center ga-1">
-                  <v-btn variant="text" icon @click="navigateToPreviousYear" aria-label="Previous Year" density="comfortable">
-                    <v-icon>mdi-chevron-double-left</v-icon>
-                    <v-tooltip activator="parent" location="top">Previous Year</v-tooltip>
-                  </v-btn>
-                  <v-btn variant="text" icon @click="navigateToPreviousMonth" aria-label="Previous Month" density="comfortable">
-                    <v-icon>mdi-chevron-left</v-icon>
-                    <v-tooltip activator="parent" location="top">Previous Month</v-tooltip>
-                  </v-btn>
-                </v-sheet>
-                
-                <v-chip
-                  variant="flat"
-                  color="primary"
-                  class="text-h6 font-weight-black px-6"
-                  rounded="pill"
-                  label
-                >
-                  <v-icon start icon="mdi-calendar-month" class="me-2"></v-icon>
-                  {{ formattedCalendarTitle }}
-                </v-chip>
-                
-                <v-sheet color="transparent" class="d-flex align-center ga-1">
-                  <v-btn variant="text" icon @click="navigateToNextMonth" aria-label="Next Month" density="comfortable">
-                    <v-icon>mdi-chevron-right</v-icon>
-                    <v-tooltip activator="parent" location="top">Next Month</v-tooltip>
-                  </v-btn>
-                  <v-btn variant="text" icon @click="navigateToNextYear" aria-label="Next Year" density="comfortable">
-                    <v-icon>mdi-chevron-double-right</v-icon>
-                    <v-tooltip activator="parent" location="top">Next Year</v-tooltip>
-                  </v-btn>
-                </v-sheet>
-              </v-col>
-            </v-row>
+<v-row class="ma-0 mb-4">
+  <v-col cols="12" :class="sectionColPaddingClass">
+    <v-sheet border rounded="xl" class="bg-surface overflow-hidden px-4 py-4">
 
-            <!-- Row 2: Today, View Mode, and Weekdays Controls -->
-            <v-row no-gutters class="pa-4 bg-grey-lighten-5">
-              <v-col cols="12">
-                <v-row align="center" justify="center" class="ga-4 ga-md-8">
-                  <!-- 1. Today Button -->
-                  <v-col cols="auto">
-                    <v-btn 
-                      variant="outlined" 
-                      class="text-none px-6 font-weight-bold" 
-                      rounded="lg"
-                      @click="goToToday"
-                      color="primary"
-                    >
-                      Today
-                      <v-tooltip activator="parent" location="top">Go to today's date</v-tooltip>
-                    </v-btn>
-                  </v-col>
-
-                  <!-- 2. View Mode Selector -->
-                  <v-col cols="12" sm="auto">
-                    <v-select
-                      v-model="currentCalendarType"
-                      :items="CALENDAR_VIEW_TYPES"
-                      item-title="text"
-                      item-value="value"
-                      label="VIEW MODE"
-                      hide-details
-                      density="compact"
-                      variant="outlined"
-                      rounded="lg"
-                      bg-color="surface"
-                      class="font-weight-bold"
-                      style="min-width: 160px;"
-                    ></v-select>
-                  </v-col>
-
-                  <!-- 3. Weekdays Selector -->
-                  <v-col cols="12" sm="auto">
-                    <v-select
-                      v-model="currentWeekdayMode"
-                      :items="WEEKDAY_MODES"
-                      item-title="title"
-                      item-value="title"
-                      label="WEEKDAYS"
-                      hide-details
-                      density="compact"
-                      variant="outlined"
-                      rounded="lg"
-                      bg-color="surface"
-                      class="font-weight-bold"
-                      style="min-width: 160px;"
-                    ></v-select>
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
+      <!-- DESKTOP (sm+): todo en una sola fila -->
+      <v-row no-gutters align="center" class="d-none d-sm-flex">
+        <!-- LEFT: Navigation Buttons -->
+        <v-col class="d-flex align-center">
+          <v-sheet border rounded="pill" class="d-flex align-center bg-surface overflow-hidden">
+            <v-btn variant="text" icon size="small" @click="navigateToPreviousYear" aria-label="Previous Year">
+              <v-icon>mdi-chevron-double-left</v-icon>
+              <v-tooltip activator="parent" location="top">Previous Year</v-tooltip>
+            </v-btn>
+            <v-divider vertical class="my-1"></v-divider>
+            <v-btn variant="text" icon size="small" @click="navigateToPreviousMonth" aria-label="Previous Month">
+              <v-icon>mdi-chevron-left</v-icon>
+              <v-tooltip activator="parent" location="top">Previous Month</v-tooltip>
+            </v-btn>
+            <v-divider vertical class="my-1"></v-divider>
+            <v-btn variant="text" class="text-none font-weight-bold text-primary px-4" rounded="0" @click="goToToday">
+              Today
+              <v-tooltip activator="parent" location="bottom">Go to today's date</v-tooltip>
+            </v-btn>
+            <v-divider vertical class="my-1"></v-divider>
+            <v-btn variant="text" icon size="small" @click="navigateToNextMonth" aria-label="Next Month">
+              <v-icon>mdi-chevron-right</v-icon>
+              <v-tooltip activator="parent" location="top">Next Month</v-tooltip>
+            </v-btn>
+            <v-divider vertical class="my-1"></v-divider>
+            <v-btn variant="text" icon size="small" @click="navigateToNextYear" aria-label="Next Year">
+              <v-icon>mdi-chevron-double-right</v-icon>
+              <v-tooltip activator="parent" location="top">Next Year</v-tooltip>
+            </v-btn>
           </v-sheet>
         </v-col>
+
+        <!-- CENTER: Month Title -->
+        <v-col class="d-flex justify-center">
+          <v-sheet border rounded="pill" class="d-flex align-center px-5 py-2 bg-surface">
+            <v-icon icon="mdi-calendar-month" color="primary" class="me-2" size="small"></v-icon>
+            <span class="font-weight-black text-on-surface text-h6">{{ formattedCalendarTitle }}</span>
+          </v-sheet>
+        </v-col>
+
+        <!-- RIGHT: Selectors -->
+        <v-col class="d-flex justify-end align-center ga-4">
+          <v-select
+            v-model="currentCalendarType"
+            :items="CALENDAR_VIEW_TYPES"
+            item-title="text"
+            item-value="value"
+            label="VIEW MODE"
+            hide-details
+            density="compact"
+            variant="outlined"
+            rounded="lg"
+            bg-color="surface"
+            class="font-weight-bold"
+            style="min-width: 160px"
+          ></v-select>
+          <v-select
+            v-model="currentWeekdayMode"
+            :items="WEEKDAY_MODES"
+            item-title="title"
+            item-value="title"
+            label="WEEKDAYS"
+            hide-details
+            density="compact"
+            variant="outlined"
+            rounded="lg"
+            bg-color="surface"
+            class="font-weight-bold"
+            style="min-width: 160px"
+          ></v-select>
+        </v-col>
       </v-row>
+
+      <!-- MOBILE (xs): tres filas -->
+      <v-row class="d-flex d-sm-none ma-0" no-gutters>
+
+        <!-- Fila 1: Navegación + Título centrado -->
+        <v-col cols="12" class="d-flex align-center justify-space-between mb-3">
+          <v-btn variant="text" icon size="small" @click="navigateToPreviousYear">
+            <v-icon>mdi-chevron-double-left</v-icon>
+          </v-btn>
+          <v-btn variant="text" icon size="small" @click="navigateToPreviousMonth">
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+
+          <span class="font-weight-black text-on-surface text-subtitle-1 flex-grow-1 text-center">
+            {{ formattedCalendarTitle }}
+          </span>
+
+          <v-btn variant="text" icon size="small" @click="navigateToNextMonth">
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+          <v-btn variant="text" icon size="small" @click="navigateToNextYear">
+            <v-icon>mdi-chevron-double-right</v-icon>
+          </v-btn>
+        </v-col>
+
+        <v-divider class="mb-3"></v-divider>
+
+        <!-- Fila 2: Botón Today ancho completo -->
+        <v-col cols="12" class="mb-3">
+          <v-btn
+            block
+            rounded="lg"
+            color="primary"
+            class="text-none font-weight-bold"
+            @click="goToToday"
+          >
+            <v-icon start icon="mdi-calendar-today" class="me-2"></v-icon>
+            Today
+          </v-btn>
+        </v-col>
+
+        <!-- Fila 3: Los dos selects en la misma fila -->
+        <v-col cols="6" class="pe-2">
+          <v-select
+            v-model="currentCalendarType"
+            :items="CALENDAR_VIEW_TYPES"
+            item-title="text"
+            item-value="value"
+            label="VIEW MODE"
+            hide-details
+            density="compact"
+            variant="outlined"
+            rounded="lg"
+            bg-color="surface"
+            class="font-weight-bold"
+          ></v-select>
+        </v-col>
+        <v-col cols="6" class="ps-2">
+          <v-select
+            v-model="currentWeekdayMode"
+            :items="WEEKDAY_MODES"
+            item-title="title"
+            item-value="title"
+            label="WEEKDAYS"
+            hide-details
+            density="compact"
+            variant="outlined"
+            rounded="lg"
+            bg-color="surface"
+            class="font-weight-bold"
+          ></v-select>
+        </v-col>
+
+      </v-row>
+
+    </v-sheet>
+  </v-col>
+</v-row>
 
       <!-- Main Calendar Grid -->
       <v-row justify="center" class="ma-0">
@@ -555,21 +685,29 @@ watch(
                 :type="currentCalendarType"
                 :weekdays="activeWeekdayValues"
                 :class="calendarCssClass"
-                style="height: 600px;"
+                style="height: 600px"
                 aria-label="Tasks Calendar"
                 @click:event="handleEventClick"
               >
                 <template #event="{ event }">
-                  <v-sheet 
+                  <v-sheet
                     color="transparent"
-                    class="px-1 text-white font-weight-bold w-100 h-100 d-flex align-center" 
-                    :class="{ 
-                      'text-decoration-line-through opacity-60 font-weight-regular': event.completed 
+                    class="px-1 text-white font-weight-bold w-100 h-100 d-flex align-center"
+                    :class="{
+                      'text-decoration-line-through opacity-60 font-weight-regular': event.completed
                     }"
-                    style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
+                    style="
+                      font-size: 14px;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                      cursor: pointer;
+                    "
                     @click.stop="handleEventClick(event)"
                   >
-                    <v-icon v-if="event.completed" size="x-small" class="me-1">mdi-check-circle</v-icon>
+                    <v-icon v-if="event.completed" size="x-small" class="me-1"
+                      >mdi-check-circle</v-icon
+                    >
                     {{ event.name }}
                   </v-sheet>
                 </template>
