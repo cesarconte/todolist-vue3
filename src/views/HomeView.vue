@@ -442,83 +442,104 @@ watch(
       </v-expand-transition>
 
       <!-- Calendar Header (Navigation & Controls) -->
-      <v-row no-gutters class="mx-0 mb-6 bg-surface rounded-xl border overflow-hidden">
-        <!-- Row 1: Navigation Arrows and Month/Year Title -->
-        <v-col cols="12" class="d-flex align-center justify-space-between pa-4 border-b">
-          <div class="d-flex align-center ga-1">
-            <v-btn variant="text" icon="mdi-chevron-double-left" @click="navigateToPreviousYear" aria-label="Previous Year" density="comfortable"></v-btn>
-            <v-btn variant="text" icon="mdi-chevron-left" @click="navigateToPreviousMonth" aria-label="Previous Month" density="comfortable"></v-btn>
-          </div>
-          
-          <v-chip
-            variant="flat"
-            color="primary"
-            class="text-h6 font-weight-black px-6"
-            rounded="pill"
-            label
-          >
-            <v-icon start icon="mdi-calendar-month" class="me-2"></v-icon>
-            {{ formattedCalendarTitle }}
-          </v-chip>
-          
-          <div class="d-flex align-center ga-1">
-            <v-btn variant="text" icon="mdi-chevron-right" @click="navigateToNextMonth" aria-label="Next Month" density="comfortable"></v-btn>
-            <v-btn variant="text" icon="mdi-chevron-double-right" @click="navigateToNextYear" aria-label="Next Year" density="comfortable"></v-btn>
-          </div>
-        </v-col>
+      <v-row class="ma-0 mb-2">
+        <v-col cols="12" :class="sectionColPaddingClass">
+          <v-sheet border rounded="xl" class="bg-surface overflow-hidden">
+            <!-- Row 1: Navigation Arrows and Month/Year Title -->
+            <v-row no-gutters class="border-b">
+              <v-col cols="12" class="d-flex align-center justify-space-between pa-4">
+                <v-sheet color="transparent" class="d-flex align-center ga-1">
+                  <v-btn variant="text" icon @click="navigateToPreviousYear" aria-label="Previous Year" density="comfortable">
+                    <v-icon>mdi-chevron-double-left</v-icon>
+                    <v-tooltip activator="parent" location="top">Previous Year</v-tooltip>
+                  </v-btn>
+                  <v-btn variant="text" icon @click="navigateToPreviousMonth" aria-label="Previous Month" density="comfortable">
+                    <v-icon>mdi-chevron-left</v-icon>
+                    <v-tooltip activator="parent" location="top">Previous Month</v-tooltip>
+                  </v-btn>
+                </v-sheet>
+                
+                <v-chip
+                  variant="flat"
+                  color="primary"
+                  class="text-h6 font-weight-black px-6"
+                  rounded="pill"
+                  label
+                >
+                  <v-icon start icon="mdi-calendar-month" class="me-2"></v-icon>
+                  {{ formattedCalendarTitle }}
+                </v-chip>
+                
+                <v-sheet color="transparent" class="d-flex align-center ga-1">
+                  <v-btn variant="text" icon @click="navigateToNextMonth" aria-label="Next Month" density="comfortable">
+                    <v-icon>mdi-chevron-right</v-icon>
+                    <v-tooltip activator="parent" location="top">Next Month</v-tooltip>
+                  </v-btn>
+                  <v-btn variant="text" icon @click="navigateToNextYear" aria-label="Next Year" density="comfortable">
+                    <v-icon>mdi-chevron-double-right</v-icon>
+                    <v-tooltip activator="parent" location="top">Next Year</v-tooltip>
+                  </v-btn>
+                </v-sheet>
+              </v-col>
+            </v-row>
 
-        <!-- Row 2: Today, View Mode, and Weekdays Controls -->
-        <v-col cols="12" class="pa-4 bg-grey-lighten-5">
-          <v-row align="center" justify="center" class="ga-4 ga-md-8">
-            <!-- 1. Today Button -->
-            <v-col cols="auto">
-              <v-btn 
-                variant="outlined" 
-                class="text-none px-6 font-weight-bold" 
-                rounded="lg"
-                @click="goToToday"
-                color="primary"
-              >
-                Today
-              </v-btn>
-            </v-col>
+            <!-- Row 2: Today, View Mode, and Weekdays Controls -->
+            <v-row no-gutters class="pa-4 bg-grey-lighten-5">
+              <v-col cols="12">
+                <v-row align="center" justify="center" class="ga-4 ga-md-8">
+                  <!-- 1. Today Button -->
+                  <v-col cols="auto">
+                    <v-btn 
+                      variant="outlined" 
+                      class="text-none px-6 font-weight-bold" 
+                      rounded="lg"
+                      @click="goToToday"
+                      color="primary"
+                    >
+                      Today
+                      <v-tooltip activator="parent" location="top">Go to today's date</v-tooltip>
+                    </v-btn>
+                  </v-col>
 
-            <!-- 2. View Mode Selector -->
-            <v-col cols="12" sm="auto">
-              <v-select
-                v-model="currentCalendarType"
-                :items="CALENDAR_VIEW_TYPES"
-                item-title="text"
-                item-value="value"
-                label="VIEW MODE"
-                hide-details
-                density="compact"
-                variant="outlined"
-                rounded="lg"
-                bg-color="surface"
-                class="font-weight-bold"
-                style="min-width: 160px;"
-              ></v-select>
-            </v-col>
+                  <!-- 2. View Mode Selector -->
+                  <v-col cols="12" sm="auto">
+                    <v-select
+                      v-model="currentCalendarType"
+                      :items="CALENDAR_VIEW_TYPES"
+                      item-title="text"
+                      item-value="value"
+                      label="VIEW MODE"
+                      hide-details
+                      density="compact"
+                      variant="outlined"
+                      rounded="lg"
+                      bg-color="surface"
+                      class="font-weight-bold"
+                      style="min-width: 160px;"
+                    ></v-select>
+                  </v-col>
 
-            <!-- 3. Weekdays Selector -->
-            <v-col cols="12" sm="auto">
-              <v-select
-                v-model="currentWeekdayMode"
-                :items="WEEKDAY_MODES"
-                item-title="title"
-                item-value="title"
-                label="WEEKDAYS"
-                hide-details
-                density="compact"
-                variant="outlined"
-                rounded="lg"
-                bg-color="surface"
-                class="font-weight-bold"
-                style="min-width: 160px;"
-              ></v-select>
-            </v-col>
-          </v-row>
+                  <!-- 3. Weekdays Selector -->
+                  <v-col cols="12" sm="auto">
+                    <v-select
+                      v-model="currentWeekdayMode"
+                      :items="WEEKDAY_MODES"
+                      item-title="title"
+                      item-value="title"
+                      label="WEEKDAYS"
+                      hide-details
+                      density="compact"
+                      variant="outlined"
+                      rounded="lg"
+                      bg-color="surface"
+                      class="font-weight-bold"
+                      style="min-width: 160px;"
+                    ></v-select>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+          </v-sheet>
         </v-col>
       </v-row>
 
