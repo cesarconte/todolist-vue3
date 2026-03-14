@@ -129,9 +129,14 @@ onMounted(() => {
               />
             </template>
             <template #fallback>
-              <v-card flat color="surface-variant" rounded="lg" class="pa-6 text-center">
-                <v-progress-circular indeterminate color="primary"></v-progress-circular>
-                <div class="text-body-1 mt-4 text-on-surface-variant">Loading task details...</div>
+              <v-card flat color="surface-variant" rounded="lg" class="pa-6 d-flex flex-column align-center justify-center">
+                <v-progress-circular indeterminate color="primary" class="mb-4"></v-progress-circular>
+                <v-sheet 
+                  color="transparent" 
+                  class="text-body-1 text-on-surface-variant"
+                >
+                  Loading task details...
+                </v-sheet>
               </v-card>
             </template>
           </Suspense>

@@ -432,7 +432,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       <!-- 1. Notificaciones (primero para mayor accesibilidad) -->
       <v-tooltip location="bottom">
         <template v-slot:activator="{ props }">
-          <div v-bind="props">
+          <v-sheet v-bind="props" color="transparent">
             <v-btn
               icon
               aria-label="Open notifications"
@@ -455,7 +455,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
                 <v-icon icon="mdi-bell-off-outline" color="on-primary"></v-icon>
               </template>
             </v-btn>
-          </div>
+          </v-sheet>
         </template>
         <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
@@ -660,7 +660,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         </v-list-group>
       </template>
       <template v-else>
-        <div class="pa-3">
+        <v-sheet class="pa-3" color="transparent">
           <p ref="loginParagraph" class="login-paragraph text-on-surface-variant">
             Log in to see your projects
             <v-tooltip text="Login with Google" location="bottom">
@@ -675,7 +675,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
               </template>
             </v-tooltip>
           </p>
-        </div>
+        </v-sheet>
       </template>
     </v-list>
   </v-navigation-drawer>

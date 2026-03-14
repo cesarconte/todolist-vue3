@@ -81,21 +81,21 @@ const closeDialog = () => {
               </template>
 
               <template v-slot:default>
-                <div class="d-flex align-center">
+                <v-sheet color="transparent" class="d-flex align-center">
                   <v-icon
                     :icon="item.icon"
                     size="large"
                     class="mr-4"
                   />
-                  <div>
+                  <v-sheet color="transparent">
                     <v-list-item-title lines="one" class="text-body-1 font-weight-medium mb-2">
-                      {{ item.message }}
+                       {{ item.message }}
                     </v-list-item-title>
                     <v-list-item-subtitle lines="one" class="mb-2">
-                      {{ formatDate(item.timestamp) }}
+                       {{ formatDate(item.timestamp) }}
                     </v-list-item-subtitle>
-                  </div>
-                </div>
+                  </v-sheet>
+                </v-sheet>
               </template>
             </v-list-item>
           </template>

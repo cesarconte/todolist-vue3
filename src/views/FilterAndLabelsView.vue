@@ -262,25 +262,26 @@ const editDialogActionsClass = computed(() =>
             rounded="lg"
             color="surface-container"
           >
-            <div class="d-flex align-center">
+            <v-sheet color="transparent" class="d-flex align-center">
               <v-icon
                 icon="mdi-filter-variant"
                 color="primary"
                 :size="filterHeaderIconSize"
                 class="mr-1"
               ></v-icon>
-              <div class="ml-0">
-                <div
+              <v-sheet color="transparent" class="ml-0">
+                <v-sheet
+                  color="transparent"
                   class="text-h6 font-weight-medium text-onSurfaceVariant"
                   :class="filterOptionsTitleClass"
                 >
                   Filter Options
-                </div>
-                <div class="text-caption text-onSurfaceVariant mt-1 text-wrap">
+                </v-sheet>
+                <v-sheet color="transparent" class="text-caption text-onSurfaceVariant mt-1 text-wrap">
                   {{ filterSubtitleText }}
-                </div>
-              </div>
-            </div>
+                </v-sheet>
+              </v-sheet>
+            </v-sheet>
           </v-sheet>
           <v-chip
             v-if="hasActiveFilters()"
@@ -408,17 +409,17 @@ const editDialogActionsClass = computed(() =>
                 </template>
                 <template v-slot:no-data>
                   <v-list-item class="pa-4">
-                    <div class="d-flex flex-column align-center justify-center pa-2">
-                      <v-icon
-                        icon="mdi-filter-remove"
-                        color="grey-darken-1"
-                        :size="28"
-                        class="mb-3"
-                      ></v-icon>
-                      <span class="text-subtitle-2 text-grey-darken-1 text-center"
-                        >No matching priorities</span
-                      >
-                    </div>
+                  <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
+                    <v-icon
+                      icon="mdi-filter-remove"
+                      color="grey-darken-1"
+                      :size="28"
+                      class="mb-3"
+                    ></v-icon>
+                    <span class="text-subtitle-2 text-grey-darken-1 text-center"
+                      >No matching priorities</span
+                    >
+                  </v-sheet>
                   </v-list-item>
                 </template>
               </v-autocomplete>
@@ -618,17 +619,17 @@ const editDialogActionsClass = computed(() =>
                 </template>
                 <template v-slot:no-data>
                   <v-list-item class="pa-4">
-                    <div class="d-flex flex-column align-center justify-center pa-2">
-                      <v-icon
-                        icon="mdi-filter-remove"
-                        color="grey-darken-1"
-                        :size="28"
-                        class="mb-3"
-                      ></v-icon>
-                      <span class="text-subtitle-2 text-grey-darken-1 text-center">
-                        No matching completion status
-                      </span>
-                    </div>
+                  <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
+                    <v-icon
+                      icon="mdi-filter-remove"
+                      color="grey-darken-1"
+                      :size="28"
+                      class="mb-3"
+                    ></v-icon>
+                    <span class="text-subtitle-2 text-grey-darken-1 text-center">
+                      No matching completion status
+                    </span>
+                  </v-sheet>
                   </v-list-item>
                 </template>
               </v-autocomplete>
@@ -714,12 +715,12 @@ const editDialogActionsClass = computed(() =>
         class="d-flex align-center my-8"
       >
         <v-col cols="12">
-          <div class="d-flex align-center">
+          <v-sheet color="transparent" class="d-flex align-center">
             <v-divider class="mr-4"></v-divider>
             <span class="text-h6 font-weight-medium">Filtered Tasks</span>
             <v-divider class="ml-4"></v-divider>
-          </div>
-          <div class="d-flex align-center justify-end">
+          </v-sheet>
+          <v-sheet color="transparent" class="d-flex align-center justify-end">
             <v-chip
               color="success"
               size="small"
@@ -734,7 +735,7 @@ const editDialogActionsClass = computed(() =>
                   : `${taskStore.totalFilteredTasks} Tasks Found`
               }}
             </v-chip>
-          </div>
+          </v-sheet>
         </v-col>
       </v-row>
 
@@ -789,15 +790,15 @@ const editDialogActionsClass = computed(() =>
                 />
               </template>
               <template #fallback>
-                <div class="fallback" role="status" aria-live="polite">
+                <v-sheet color="transparent" class="fallback d-flex align-center justify-center pa-4" role="status" aria-live="polite">
                   <v-progress-circular
                     indeterminate
                     color="primary"
                     :size="40"
                     class="mr-2"
                   ></v-progress-circular>
-                  Loading...
-                </div>
+                  <span class="text-body-2">Loading...</span>
+                </v-sheet>
               </template>
             </Suspense>
           </v-col>

@@ -40,14 +40,14 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
   <v-card class="rounded-lg pa-8" color="surface">
     <v-row>
       <v-col cols="auto">
-        <div class="rounded-pill bg-primary pa-6 d-flex">
+        <v-sheet class="rounded-pill bg-primary pa-6 d-flex" color="primary">
           <template v-if="!xs">
             <h3 class="text-h5 text-weight-bold text-on-primary mr-8">{{ title }}</h3>
           </template>
           <v-icon class="icon align-self-center text-on-primary" size="x-large"
             >mdi-checkbox-marked-circle-auto-outline</v-icon
           >
-        </div>
+        </v-sheet>
       </v-col>
     </v-row>
     <v-row>

@@ -55,7 +55,8 @@ const { xs, sm } = useDisplay()
 
 <template>
   <v-row :class="xs ? 'pa-2' : sm ? 'pa-4' : 'pa-6'" class="d-flex">
-    <div
+    <v-sheet
+      color="transparent"
       class="container-tasks-title d-flex align-center mx-auto w-100"
       :class="xs ? 'justify-center' : 'justify-space-between'"
     >
@@ -140,6 +141,6 @@ const { xs, sm } = useDisplay()
           Last page
         </v-tooltip>
       </v-btn>
-    </div>
+    </v-sheet>
   </v-row>
 </template>

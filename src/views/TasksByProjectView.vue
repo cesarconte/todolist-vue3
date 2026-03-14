@@ -626,7 +626,7 @@ const confirmDeleteAndClose = () => {
               <!-- Tercera fila: Progress -->
               <v-row dense class="pb-2">
                 <v-col cols="12">
-                  <div class="d-flex flex-column align-center mt-2">
+                  <v-sheet color="transparent" class="d-flex flex-column align-center mt-2">
                     <span class="text-body-2 font-weight-medium mb-2">Progress:</span>
                     <v-progress-circular
                       v-model="progressPercentage"
@@ -638,7 +638,7 @@ const confirmDeleteAndClose = () => {
                       <!-- Texto del porcentaje más visible -->
                       <span class="text-body-1 font-weight-medium">{{ progressPercentage }}%</span>
                     </v-progress-circular>
-                  </div>
+                  </v-sheet>
                 </v-col>
               </v-row>
             </template>
@@ -679,7 +679,7 @@ const confirmDeleteAndClose = () => {
 
                 <!-- Progreso inline para sm+ -->
                 <v-col cols="auto">
-                  <div class="d-flex align-center">
+                  <v-sheet color="transparent" class="d-flex align-center">
                     <span class="text-body-2 font-weight-medium mr-3">Progress:</span>
                     <v-progress-circular
                       v-model="progressPercentage"
@@ -690,7 +690,7 @@ const confirmDeleteAndClose = () => {
                     >
                       <span class="text-body-2 font-weight-medium">{{ progressPercentage }}%</span>
                     </v-progress-circular>
-                  </div>
+                  </v-sheet>
                 </v-col>
               </v-row>
             </template>
@@ -762,9 +762,12 @@ const confirmDeleteAndClose = () => {
               >
               </VCardTask>
             </template>
-            <template #fallback>
-              <div class="fallback">Loading Task...</div>
-            </template>
+              <template #fallback>
+                <v-sheet class="fallback d-flex align-center justify-center pa-4" color="transparent">
+                  <v-progress-circular indeterminate color="primary" size="24" class="me-2"></v-progress-circular>
+                  <span class="text-body-2">Loading Task...</span>
+                </v-sheet>
+              </template>
           </Suspense>
         </v-col>
       </v-row>

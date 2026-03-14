@@ -232,7 +232,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       :class="mobile ? '' : 'd-flex align-center'"
     >
       <template v-if="mobile">
-        <div class="d-flex flex-row align-center justify-space-between w-100">
+        <v-sheet color="transparent" class="d-flex flex-row align-center justify-space-between w-100">
           <span class="text-h5 text-truncate" :class="completedTextClass">
             {{ title }}
           </span>
@@ -248,8 +248,8 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             <v-icon class="icon icon-btn-task-vi">mdi-open-in-new</v-icon>
             <v-tooltip location="bottom" activator="parent"> View task details </v-tooltip>
           </v-btn>
-        </div>
-        <div>
+        </v-sheet>
+        <v-sheet color="transparent">
           <v-chip
             v-if="props.completed"
             color="success"
@@ -261,10 +261,10 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           >
             Completed
           </v-chip>
-        </div>
+        </v-sheet>
       </template>
       <template v-else>
-        <div class="d-flex align-center text-truncate w-100">
+        <v-sheet color="transparent" class="d-flex align-center text-truncate w-100">
           <span class="text-h5" :class="completedTextClass">
             {{ title }}
           </span>
@@ -279,7 +279,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           >
             Completed
           </v-chip>
-        </div>
+        </v-sheet>
         <v-btn
           v-if="props.showViewButton && $route.name !== 'task-detail' && $route.name !== 'search'"
           aria-label="View task details"
@@ -326,7 +326,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       <!-- Metadatos con chips visuales -->
       <v-row class="mt-4 mb-4">
         <v-col cols="12" sm="6" md="4">
-          <div class="d-flex align-center">
+          <v-sheet color="transparent" class="d-flex align-center">
             <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Label:</span
             >
@@ -342,11 +342,11 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
               }}</v-icon>
               {{ label }}
             </v-chip>
-          </div>
+          </v-sheet>
         </v-col>
 
         <v-col cols="12" sm="6" md="4">
-          <div class="d-flex align-center">
+          <v-sheet color="transparent" class="d-flex align-center">
             <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Priority:</span
             >
@@ -368,11 +368,11 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
               </v-icon>
               {{ priority }}
             </v-chip>
-          </div>
+          </v-sheet>
         </v-col>
 
         <v-col cols="12" sm="6" md="4">
-          <div class="d-flex align-center">
+          <v-sheet color="transparent" class="d-flex align-center">
             <span class="text-subtitle-1 font-weight-medium mr-2" :class="completedEmphasisClass"
               >Status:</span
             >
@@ -396,7 +396,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
               </v-icon>
               {{ status }}
             </v-chip>
-          </div>
+          </v-sheet>
         </v-col>
       </v-row>
 
@@ -410,13 +410,17 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             :color="dateCardColor"
             flat
           >
-            <div class="d-flex align-center">
+            <v-sheet color="transparent" class="d-flex align-center pa-4">
               <v-icon :color="dateIconColor('primary')" class="mr-3">mdi-calendar-start</v-icon>
-              <div>
-                <div class="text-subtitle-2 font-weight-medium" :class="completedEmphasisClass">
+              <v-sheet color="transparent">
+                <v-sheet
+                  color="transparent"
+                  class="text-subtitle-2 font-weight-medium"
+                  :class="completedEmphasisClass"
+                >
                   Start Date
-                </div>
-                <div class="text-body-2" :class="completedTextClass">
+                </v-sheet>
+                <v-sheet color="transparent" class="text-body-2" :class="completedTextClass">
                   <template v-if="startDate">
                     {{ formatDate(startDate) }}
                     <span v-if="props.startDateHour" class="ml-1">
@@ -424,9 +428,9 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
                     </span>
                   </template>
                   <span v-else class="text-medium-emphasis">Not specified</span>
-                </div>
-              </div>
-            </div>
+                </v-sheet>
+              </v-sheet>
+            </v-sheet>
           </v-card>
         </v-col>
 
@@ -438,15 +442,19 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             :color="dateCardColor"
             flat
           >
-            <div class="d-flex align-center due-date-icon">
+            <v-sheet color="transparent" class="d-flex align-center pa-4 due-date-icon">
               <v-icon :color="dateIconColor(props.completed ? 'success' : 'error')" class="mr-3">
                 {{ props.completed ? 'mdi-calendar-check' : 'mdi-calendar-end' }}
               </v-icon>
-              <div>
-                <div class="text-subtitle-2 font-weight-medium" :class="completedEmphasisClass">
+              <v-sheet color="transparent">
+                <v-sheet
+                  color="transparent"
+                  class="text-subtitle-2 font-weight-medium"
+                  :class="completedEmphasisClass"
+                >
                   Due Date
-                </div>
-                <div class="text-body-2" :class="completedTextClass">
+                </v-sheet>
+                <v-sheet color="transparent" class="text-body-2" :class="completedTextClass">
                   <template v-if="endDate">
                     {{ formatDate(endDate) }}
                     <span v-if="props.endDateHour" class="ml-1">
@@ -454,9 +462,9 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
                     </span>
                   </template>
                   <span v-else class="text-medium-emphasis">Not specified</span>
-                </div>
-              </div>
-            </div>
+                </v-sheet>
+              </v-sheet>
+            </v-sheet>
           </v-card>
         </v-col>
       </v-row>
@@ -465,7 +473,8 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
     <v-divider class="my-4"></v-divider>
     <v-card-actions class="card-actions py-4">
       <v-spacer v-if="!mobile"></v-spacer>
-      <div
+      <v-sheet
+        color="transparent"
         class="button-container"
         :class="
           mobile ? 'd-flex flex-column align-stretch w-100 ga-4' : 'd-flex flex-wrap justify-end'
@@ -521,7 +530,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
             {{ i === 2 ? completedButton.tooltipText : tooltips[i].text }}
           </v-tooltip>
         </v-btn>
-      </div>
+      </v-sheet>
     </v-card-actions>
   </v-card>
 </template>

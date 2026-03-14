@@ -1,7 +1,8 @@
 <template>
   <v-fade-transition>
-    <div 
+    <v-sheet 
       v-if="isVisible"
+      color="transparent"
       class="v-back-btn-wrapper"
       :class="{ 'is-xs': xs }"
       :style="wrapperStyle"
@@ -19,7 +20,7 @@
       >
         <slot>{{ label }}</slot>
       </v-btn>
-    </div>
+    </v-sheet>
   </v-fade-transition>
 </template>
 

@@ -18,7 +18,8 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
 </script>
 
 <template>
-  <div
+  <v-sheet
+    color="transparent"
     class="action-buttons"
     :class="
       mobile
@@ -52,5 +53,5 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
         {{ button.ariaLabel || button.text || 'Action' }}
       </v-tooltip>
     </v-btn>
-  </div>
+    </v-sheet>
 </template>

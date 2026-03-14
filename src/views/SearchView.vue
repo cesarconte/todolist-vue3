@@ -159,25 +159,26 @@ onMounted(() => {
             rounded="lg"
             color="surface-container"
           >
-            <div class="d-flex align-center">
+            <v-sheet color="transparent" class="d-flex align-center">
               <v-icon
                 icon="mdi-text-search"
                 color="primary"
                 :size="xs ? '28' : '40'"
                 class="mr-1"
               ></v-icon>
-              <div class="ml-0">
-                <div
+              <v-sheet color="transparent" class="ml-0">
+                <v-sheet
+                  color="transparent"
                   class="text-h6 font-weight-medium text-onSurfaceVariant"
                   :class="xs ? 'text-subtitle-1' : ''"
                 >
                   Search Tasks
-                </div>
-                <div class="text-caption text-onSurfaceVariant mt-1 text-wrap">
+                </v-sheet>
+                <v-sheet color="transparent" class="text-caption text-onSurfaceVariant mt-1 text-wrap">
                   {{ xs ? 'Find by title keywords' : 'Find tasks by title or keywords' }}
-                </div>
-              </div>
-            </div>
+                </v-sheet>
+              </v-sheet>
+            </v-sheet>
           </v-sheet>
           <v-chip
             v-if="searchTitle"
@@ -244,7 +245,7 @@ onMounted(() => {
                 <!-- Slot para "no hay resultados" -->
                 <template #no-data>
                   <v-list-item class="pa-4">
-                    <div class="d-flex flex-column align-center justify-center pa-2">
+                    <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
                       <v-icon
                         icon="mdi-magnify-close"
                         color="onSurfaceVariant"
@@ -257,7 +258,7 @@ onMounted(() => {
                       <span class="text-caption text-onSurfaceVariant text-center mt-1">
                         Try different keywords
                       </span>
-                    </div>
+                    </v-sheet>
                   </v-list-item>
                 </template>
               </v-autocomplete>
@@ -418,7 +419,12 @@ onMounted(() => {
                 />
               </template>
               <template #fallback>
-                <div class="fallback bg-surfaceVariant" role="status" aria-live="polite">
+                <v-sheet 
+                  color="surface-container" 
+                  class="fallback d-flex align-center justify-center pa-4 rounded-lg" 
+                  role="status" 
+                  aria-live="polite"
+                >
                   <v-progress-circular
                     indeterminate
                     color="primary"
@@ -426,7 +432,7 @@ onMounted(() => {
                     class="mr-2"
                   ></v-progress-circular>
                   <span class="text-onSurfaceVariant">Loading...</span>
-                </div>
+                </v-sheet>
               </template>
             </Suspense>
           </v-col>

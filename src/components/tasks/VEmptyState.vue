@@ -1,5 +1,6 @@
 <template>
-  <div
+  <v-sheet
+    color="transparent"
     class="empty-state-container text-center d-flex flex-column align-center justify-center py-8"
   >
     <v-icon
@@ -20,10 +21,10 @@
     >
       {{ subtitle }}
     </p>
-    <div class="empty-state-actions">
+    <v-sheet color="transparent" class="empty-state-actions">
       <slot></slot>
-    </div>
-  </div>
+    </v-sheet>
+  </v-sheet>
 </template>
 
 <script setup>
