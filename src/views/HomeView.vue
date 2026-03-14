@@ -175,9 +175,11 @@ const mappedCalendarEvents = computed(() => {
         name: task.title,
         start,
         end,
+        endDateHour: task.endDateHour,
         allDay: !task.startDateHour && !task.endDateHour,
         color: task.color,
-        completed: task.completed
+        completed: task.completed,
+        projectId: task.projectId
       }
     })
 })
@@ -518,160 +520,198 @@ watch(
       </v-expand-transition>
 
       <!-- Calendar Header (Navigation & Controls) -->
-<v-row class="ma-0 mb-4">
-  <v-col cols="12" :class="sectionColPaddingClass">
-    <v-sheet border rounded="xl" class="bg-surface overflow-hidden px-4 py-4">
+      <v-row class="ma-0 mb-4">
+        <v-col cols="12" :class="sectionColPaddingClass">
+          <v-sheet border rounded="xl" class="bg-surface overflow-hidden px-4 py-4">
+            <!-- DESKTOP (sm+): todo en una sola fila -->
+            <v-row no-gutters align="center" class="d-none d-sm-flex">
+              <!-- LEFT: Navigation Buttons -->
+              <v-col class="d-flex align-center">
+                <v-sheet
+                  border
+                  rounded="pill"
+                  class="d-flex align-center bg-surface overflow-hidden"
+                >
+                  <v-btn
+                    variant="text"
+                    icon
+                    size="small"
+                    @click="navigateToPreviousYear"
+                    aria-label="Previous Year"
+                  >
+                    <v-icon>mdi-chevron-double-left</v-icon>
+                    <v-tooltip activator="parent" location="top">Previous Year</v-tooltip>
+                  </v-btn>
+                  <v-divider vertical class="my-1"></v-divider>
+                  <v-btn
+                    variant="text"
+                    icon
+                    size="small"
+                    @click="navigateToPreviousMonth"
+                    aria-label="Previous Month"
+                  >
+                    <v-icon>mdi-chevron-left</v-icon>
+                    <v-tooltip activator="parent" location="top">Previous Month</v-tooltip>
+                  </v-btn>
+                  <v-divider vertical class="my-1"></v-divider>
+                  <v-btn
+                    variant="text"
+                    class="text-none font-weight-bold text-primary px-4"
+                    rounded="0"
+                    @click="goToToday"
+                  >
+                    Today
+                    <v-tooltip activator="parent" location="bottom">Go to today's date</v-tooltip>
+                  </v-btn>
+                  <v-divider vertical class="my-1"></v-divider>
+                  <v-btn
+                    variant="text"
+                    icon
+                    size="small"
+                    @click="navigateToNextMonth"
+                    aria-label="Next Month"
+                  >
+                    <v-icon>mdi-chevron-right</v-icon>
+                    <v-tooltip activator="parent" location="top">Next Month</v-tooltip>
+                  </v-btn>
+                  <v-divider vertical class="my-1"></v-divider>
+                  <v-btn
+                    variant="text"
+                    icon
+                    size="small"
+                    @click="navigateToNextYear"
+                    aria-label="Next Year"
+                  >
+                    <v-icon>mdi-chevron-double-right</v-icon>
+                    <v-tooltip activator="parent" location="top">Next Year</v-tooltip>
+                  </v-btn>
+                </v-sheet>
+              </v-col>
 
-      <!-- DESKTOP (sm+): todo en una sola fila -->
-      <v-row no-gutters align="center" class="d-none d-sm-flex">
-        <!-- LEFT: Navigation Buttons -->
-        <v-col class="d-flex align-center">
-          <v-sheet border rounded="pill" class="d-flex align-center bg-surface overflow-hidden">
-            <v-btn variant="text" icon size="small" @click="navigateToPreviousYear" aria-label="Previous Year">
-              <v-icon>mdi-chevron-double-left</v-icon>
-              <v-tooltip activator="parent" location="top">Previous Year</v-tooltip>
-            </v-btn>
-            <v-divider vertical class="my-1"></v-divider>
-            <v-btn variant="text" icon size="small" @click="navigateToPreviousMonth" aria-label="Previous Month">
-              <v-icon>mdi-chevron-left</v-icon>
-              <v-tooltip activator="parent" location="top">Previous Month</v-tooltip>
-            </v-btn>
-            <v-divider vertical class="my-1"></v-divider>
-            <v-btn variant="text" class="text-none font-weight-bold text-primary px-4" rounded="0" @click="goToToday">
-              Today
-              <v-tooltip activator="parent" location="bottom">Go to today's date</v-tooltip>
-            </v-btn>
-            <v-divider vertical class="my-1"></v-divider>
-            <v-btn variant="text" icon size="small" @click="navigateToNextMonth" aria-label="Next Month">
-              <v-icon>mdi-chevron-right</v-icon>
-              <v-tooltip activator="parent" location="top">Next Month</v-tooltip>
-            </v-btn>
-            <v-divider vertical class="my-1"></v-divider>
-            <v-btn variant="text" icon size="small" @click="navigateToNextYear" aria-label="Next Year">
-              <v-icon>mdi-chevron-double-right</v-icon>
-              <v-tooltip activator="parent" location="top">Next Year</v-tooltip>
-            </v-btn>
+              <!-- CENTER: Month Title -->
+              <v-col class="d-flex justify-center">
+                <v-sheet border rounded="pill" class="d-flex align-center px-5 py-2 bg-surface">
+                  <v-icon
+                    icon="mdi-calendar-month"
+                    color="primary"
+                    class="me-2"
+                    size="small"
+                  ></v-icon>
+                  <span class="font-weight-black text-on-surface text-h6">{{
+                    formattedCalendarTitle
+                  }}</span>
+                </v-sheet>
+              </v-col>
+
+              <!-- RIGHT: Selectors -->
+              <v-col class="d-flex justify-end align-center ga-4">
+                <v-select
+                  v-model="currentCalendarType"
+                  :items="CALENDAR_VIEW_TYPES"
+                  item-title="text"
+                  item-value="value"
+                  label="VIEW MODE"
+                  hide-details
+                  density="compact"
+                  variant="outlined"
+                  rounded="lg"
+                  bg-color="surface"
+                  class="font-weight-bold"
+                  style="min-width: 160px"
+                ></v-select>
+                <v-select
+                  v-model="currentWeekdayMode"
+                  :items="WEEKDAY_MODES"
+                  item-title="title"
+                  item-value="title"
+                  label="WEEKDAYS"
+                  hide-details
+                  density="compact"
+                  variant="outlined"
+                  rounded="lg"
+                  bg-color="surface"
+                  class="font-weight-bold"
+                  style="min-width: 160px"
+                ></v-select>
+              </v-col>
+            </v-row>
+
+            <!-- MOBILE (xs): tres filas -->
+            <v-row class="d-flex d-sm-none ma-0" no-gutters>
+              <!-- Fila 1: Navegación + Título centrado -->
+              <v-col cols="12" class="d-flex align-center justify-space-between mb-3">
+                <v-btn variant="text" icon size="small" @click="navigateToPreviousYear">
+                  <v-icon>mdi-chevron-double-left</v-icon>
+                </v-btn>
+                <v-btn variant="text" icon size="small" @click="navigateToPreviousMonth">
+                  <v-icon>mdi-chevron-left</v-icon>
+                </v-btn>
+
+                <span
+                  class="font-weight-black text-on-surface text-subtitle-1 flex-grow-1 text-center"
+                >
+                  {{ formattedCalendarTitle }}
+                </span>
+
+                <v-btn variant="text" icon size="small" @click="navigateToNextMonth">
+                  <v-icon>mdi-chevron-right</v-icon>
+                </v-btn>
+                <v-btn variant="text" icon size="small" @click="navigateToNextYear">
+                  <v-icon>mdi-chevron-double-right</v-icon>
+                </v-btn>
+              </v-col>
+
+              <v-divider class="mb-3"></v-divider>
+
+              <!-- Fila 2: Botón Today ancho completo -->
+              <v-col cols="12" class="mb-3">
+                <v-btn
+                  block
+                  rounded="lg"
+                  color="primary"
+                  class="text-none font-weight-bold"
+                  @click="goToToday"
+                >
+                  <v-icon start icon="mdi-calendar-today" class="me-2"></v-icon>
+                  Today
+                </v-btn>
+              </v-col>
+
+              <!-- Fila 3: Los dos selects en la misma fila -->
+              <v-col cols="6" class="pe-2">
+                <v-select
+                  v-model="currentCalendarType"
+                  :items="CALENDAR_VIEW_TYPES"
+                  item-title="text"
+                  item-value="value"
+                  label="VIEW MODE"
+                  hide-details
+                  density="compact"
+                  variant="outlined"
+                  rounded="lg"
+                  bg-color="surface"
+                  class="font-weight-bold"
+                ></v-select>
+              </v-col>
+              <v-col cols="6" class="ps-2">
+                <v-select
+                  v-model="currentWeekdayMode"
+                  :items="WEEKDAY_MODES"
+                  item-title="title"
+                  item-value="title"
+                  label="WEEKDAYS"
+                  hide-details
+                  density="compact"
+                  variant="outlined"
+                  rounded="lg"
+                  bg-color="surface"
+                  class="font-weight-bold"
+                ></v-select>
+              </v-col>
+            </v-row>
           </v-sheet>
         </v-col>
-
-        <!-- CENTER: Month Title -->
-        <v-col class="d-flex justify-center">
-          <v-sheet border rounded="pill" class="d-flex align-center px-5 py-2 bg-surface">
-            <v-icon icon="mdi-calendar-month" color="primary" class="me-2" size="small"></v-icon>
-            <span class="font-weight-black text-on-surface text-h6">{{ formattedCalendarTitle }}</span>
-          </v-sheet>
-        </v-col>
-
-        <!-- RIGHT: Selectors -->
-        <v-col class="d-flex justify-end align-center ga-4">
-          <v-select
-            v-model="currentCalendarType"
-            :items="CALENDAR_VIEW_TYPES"
-            item-title="text"
-            item-value="value"
-            label="VIEW MODE"
-            hide-details
-            density="compact"
-            variant="outlined"
-            rounded="lg"
-            bg-color="surface"
-            class="font-weight-bold"
-            style="min-width: 160px"
-          ></v-select>
-          <v-select
-            v-model="currentWeekdayMode"
-            :items="WEEKDAY_MODES"
-            item-title="title"
-            item-value="title"
-            label="WEEKDAYS"
-            hide-details
-            density="compact"
-            variant="outlined"
-            rounded="lg"
-            bg-color="surface"
-            class="font-weight-bold"
-            style="min-width: 160px"
-          ></v-select>
-        </v-col>
       </v-row>
-
-      <!-- MOBILE (xs): tres filas -->
-      <v-row class="d-flex d-sm-none ma-0" no-gutters>
-
-        <!-- Fila 1: Navegación + Título centrado -->
-        <v-col cols="12" class="d-flex align-center justify-space-between mb-3">
-          <v-btn variant="text" icon size="small" @click="navigateToPreviousYear">
-            <v-icon>mdi-chevron-double-left</v-icon>
-          </v-btn>
-          <v-btn variant="text" icon size="small" @click="navigateToPreviousMonth">
-            <v-icon>mdi-chevron-left</v-icon>
-          </v-btn>
-
-          <span class="font-weight-black text-on-surface text-subtitle-1 flex-grow-1 text-center">
-            {{ formattedCalendarTitle }}
-          </span>
-
-          <v-btn variant="text" icon size="small" @click="navigateToNextMonth">
-            <v-icon>mdi-chevron-right</v-icon>
-          </v-btn>
-          <v-btn variant="text" icon size="small" @click="navigateToNextYear">
-            <v-icon>mdi-chevron-double-right</v-icon>
-          </v-btn>
-        </v-col>
-
-        <v-divider class="mb-3"></v-divider>
-
-        <!-- Fila 2: Botón Today ancho completo -->
-        <v-col cols="12" class="mb-3">
-          <v-btn
-            block
-            rounded="lg"
-            color="primary"
-            class="text-none font-weight-bold"
-            @click="goToToday"
-          >
-            <v-icon start icon="mdi-calendar-today" class="me-2"></v-icon>
-            Today
-          </v-btn>
-        </v-col>
-
-        <!-- Fila 3: Los dos selects en la misma fila -->
-        <v-col cols="6" class="pe-2">
-          <v-select
-            v-model="currentCalendarType"
-            :items="CALENDAR_VIEW_TYPES"
-            item-title="text"
-            item-value="value"
-            label="VIEW MODE"
-            hide-details
-            density="compact"
-            variant="outlined"
-            rounded="lg"
-            bg-color="surface"
-            class="font-weight-bold"
-          ></v-select>
-        </v-col>
-        <v-col cols="6" class="ps-2">
-          <v-select
-            v-model="currentWeekdayMode"
-            :items="WEEKDAY_MODES"
-            item-title="title"
-            item-value="title"
-            label="WEEKDAYS"
-            hide-details
-            density="compact"
-            variant="outlined"
-            rounded="lg"
-            bg-color="surface"
-            class="font-weight-bold"
-          ></v-select>
-        </v-col>
-
-      </v-row>
-
-    </v-sheet>
-  </v-col>
-</v-row>
 
       <!-- Main Calendar Grid -->
       <v-row justify="center" class="ma-0">
@@ -708,6 +748,11 @@ watch(
                     <v-icon v-if="event.completed" size="x-small" class="me-1"
                       >mdi-check-circle</v-icon
                     >
+                    <v-icon v-else size="x-small" class="me-1">{{
+                      event.projectId
+                        ? projectStore.projects.find((p) => p.id === event.projectId).icon
+                        : 'mdi-circle-outline'
+                    }}</v-icon>
                     {{ event.name }}
                   </v-sheet>
                 </template>
