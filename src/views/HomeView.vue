@@ -706,10 +706,14 @@ watch(
               >
                 <template #event="{ event }">
                   <div 
-                    class="px-1 text-white font-weight-bold w-100 h-100" 
+                    class="px-1 text-white font-weight-bold w-100 h-100 d-flex align-center" 
+                    :class="{ 
+                      'text-decoration-line-through opacity-60 font-weight-regular': event.completed 
+                    }"
                     style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
                     @click.stop="onEventClick(event)"
                   >
+                    <v-icon v-if="event.completed" size="x-small" class="me-1">mdi-check-circle</v-icon>
                     {{ event.name }}
                   </div>
                 </template>
