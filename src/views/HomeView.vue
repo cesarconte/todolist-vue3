@@ -134,7 +134,7 @@ const weekdays = ref([
   { title: 'Mon - Sun', value: [1, 2, 3, 4, 5, 6, 0] },
   { title: 'Mon - Fri', value: [1, 2, 3, 4, 5] }
 ])
-const value = ref([new Date()])
+const value = ref(new Date()) // Fixed: used a single Date instead of an array
 const calendarEvents = computed(() => {
   return (taskStore.tasksData || [])
     .slice()
@@ -142,20 +142,26 @@ const calendarEvents = computed(() => {
       (a, b) =>
         combineDateTime(a.endDate, a.endDateHour) - combineDateTime(b.endDate, b.endDateHour)
     )
-    .map((task) => ({
-      id: task.id,
-      title: task.title,
-      start: task.startDate || null,
-      end: task.endDate || null,
-      allDay: false,
-      color: task.color,
-      label: task.label,
-      completed: task.completed,
-      extendedProps: {
-        project: task.project,
-        description: task.description
+    .map((task) => {
+      const start = combineDateTime(task.startDate, task.startDateHour) || task.startDate || null
+      const end = combineDateTime(task.endDate, task.endDateHour) || task.endDate || null
+      const isAllDay = !task.startDateHour && !task.endDateHour
+
+      return {
+        id: task.id,
+        name: task.title,
+        start,
+        end,
+        allDay: isAllDay,
+        color: task.color,
+        label: task.label,
+        completed: task.completed,
+        extendedProps: {
+          project: task.project,
+          description: task.description
+        }
       }
-    }))
+    })
 })
 
 // --- Helpers ---
@@ -164,6 +170,12 @@ const formatDisplayDate = (date) => (date ? formatDate(date, 'MMM DD, YYYY') : '
 const getWeekdays = (title) => {
   const found = weekdays.value.find((item) => item.title === title)
   return found ? found.value : [0, 1, 2, 3, 4, 5, 6]
+}
+
+const handleEventClick = ({ event }) => {
+  if (event && event.id) {
+    router.push({ name: 'task-detail', params: { taskId: event.id } })
+  }
 }
 
 // --- Motivational (adaptado a MD3) ---
@@ -682,11 +694,27 @@ watch(
                 ref="calendar"
                 v-model="value"
                 :events="calendarEvents"
-                :view-mode="type"
+                :type="type"
                 :weekdays="getWeekdays(weekday)"
                 :class="xs ? 'calendar-xs' : ''"
+                style="height: 600px;"
                 aria-label="Tasks Calendar"
+                @click:event="handleEventClick"
               >
+                <template #event="{ event }">
+                  <div
+                    class="px-1 text-white font-weight-bold"
+                    style="
+                      font-size: 14px;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                      cursor: pointer;
+                    "
+                  >
+                    {{ event.name }}
+                  </div>
+                </template>
               </v-calendar>
             </template>
             <template #fallback>

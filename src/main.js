@@ -10,17 +10,14 @@ import '@mdi/font/css/materialdesignicons.css'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import { VDateInput } from 'vuetify/labs/VDateInput'
-import { VCalendar } from 'vuetify/labs/VCalendar'
-// import { VTimePicker } from 'vuetify/lib/labs/components.mjs'
-// import { VTreeview } from 'vuetify/labs/VTreeview'
+
+// Important: CSS for labs or complex components must be imported manually if not using the vite-plugin
+import 'vuetify/dist/vuetify-labs.css'
 
 const vuetify = createVuetify({
   components: {
     ...components,
     VDateInput,
-    VCalendar,
-    // VTimePicker,
-    // VTreeview
   },
   theme: {
     defaultTheme: 'light',

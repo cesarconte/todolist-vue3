@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "BROWSER=\"/usr/lib/firefox\" vite dev --open 5173",
+    "dev": "BROWSER=\"/usr/bin/firefox\" vite dev --open 5173",
     "build": "vite build",
     "preview": "vite preview",
     "test:unit": "vitest",
