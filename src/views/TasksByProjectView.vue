@@ -316,9 +316,6 @@ const confirmDeleteAndClose = () => {
   showSnackbar(notificationsStore, 'All tasks deleted from project', 'success', 'mdi-delete-sweep')
 }
 
-const goBack = () => {
-  router.back()
-}
 </script>
 
 <template>
@@ -474,6 +471,11 @@ const goBack = () => {
           >
             {{ projectStore.selectedProjectTitle }} tasks
           </h2>
+          <VBackButton
+            v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending"
+            to="/"
+            aria-label="Back to Home"
+          />
           <v-spacer></v-spacer>
           <!-- Botón Delete all tasks in project con color terciario -->
           <v-btn
@@ -823,20 +825,6 @@ const goBack = () => {
         </VPagination>
       </v-row>
 
-      <!-- Botón para regresar -->
-      <v-row v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending" class="mt-8">
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <VBackButton
-            :block="xs ? true : false"
-            :size="xs ? 'default' : 'large'"
-            :class="xs ? 'px-4 py-2' : 'px-8'"
-            @click="goBack"
-            aria-label="Go back to previous page"
-          >
-            Back
-          </VBackButton>
-        </v-col>
-      </v-row>
     </v-responsive>
   </v-container>
 </template>

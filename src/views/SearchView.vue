@@ -4,7 +4,6 @@ import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
-import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
@@ -20,7 +19,6 @@ const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
-const router = useRouter()
 
 const form = ref(null)
 const isFocused = ref(false)
@@ -95,9 +93,6 @@ const { btnsForm } = useFormBtnActions(
 btnsForm[0].text = 'Update Task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
-const goBack = () => {
-  router.back()
-}
 
 const rules = useMaxLengthRule()
 
@@ -145,6 +140,10 @@ onMounted(() => {
           >
             Search Tasks
           </h2>
+          <VBackButton 
+            to="/" 
+            aria-label="Back to Home" 
+          />
         </v-col>
       </v-row>
 
@@ -432,19 +431,6 @@ onMounted(() => {
             </Suspense>
           </v-col>
         </template>
-      </v-row>
-      <v-row v-if="showSearchResults">
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end'">
-          <VBackButton
-            :block="xs ? true : false"
-            :size="xs ? 'default' : 'large'"
-            :class="xs ? 'px-4 py-2' : 'px-8'"
-            @click="goBack"
-            aria-label="Go back to previous page"
-          >
-            Back
-          </VBackButton>
-        </v-col>
       </v-row>
 
       <!-- Diálogo de edición -->

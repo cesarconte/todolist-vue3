@@ -4,7 +4,6 @@ import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
-import { useRouter } from 'vue-router'
 import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
@@ -17,7 +16,6 @@ import VBackButton from '@/components/ui/VBackButton.vue'
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
-const router = useRouter()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
@@ -73,9 +71,6 @@ const { btnsForm } = useFormBtnActions(
 btnsForm[0].text = 'Update Task'
 btnsForm[0].icon = 'mdi-pencil'
 
-const goBack = () => {
-  router.back()
-}
 
 const rules = useMaxLengthRule()
 
@@ -101,6 +96,10 @@ onMounted(() => {
           >
             Task {{ task.title }}
           </h2>
+          <VBackButton 
+            to="/" 
+            aria-label="Back to Home" 
+          />
           <v-divider></v-divider>
         </v-col>
       </v-row>
@@ -136,19 +135,6 @@ onMounted(() => {
               </v-card>
             </template>
           </Suspense>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end mt-8'">
-          <VBackButton
-            :block="xs ? true : false"
-            :size="xs ? 'default' : 'large'"
-            :class="xs ? 'px-4 py-2' : 'px-8'"
-            @click="goBack"
-            aria-label="Go back to previous page"
-          >
-            Back
-          </VBackButton>
         </v-col>
       </v-row>
     </v-responsive>

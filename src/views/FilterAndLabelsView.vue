@@ -17,13 +17,11 @@ import { useTaskStore } from '@/stores/taskStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { onUnmounted, ref, computed } from 'vue'
 import { useDisplay } from 'vuetify'
-import { useRouter } from 'vue-router'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
-const router = useRouter()
 
 const form = ref(null)
 const { submitEditedTask } = useSubmitEditedTask()
@@ -103,10 +101,6 @@ const { btnsForm } = useFormBtnActions(
 btnsForm[0].text = 'Update Task'
 btnsForm[0].icon = 'mdi-pencil'
 
-// Añadir la función goBack para el botón de regreso
-const goBack = () => {
-  router.back()
-}
 
 const rules = useMaxLengthRule()
 
@@ -215,7 +209,7 @@ const skeletonLoaderWidth = computed(() => {
 
 const taskCardColClass = computed(() => (xs.value ? 'mx-auto my-2' : 'mx-auto my-4'))
 
-const backBtnSize = computed(() => (xs.value ? 'default' : 'large'))
+
 
 const editDialogMaxWidth = computed(() => {
   switch (name.value) {
@@ -249,6 +243,10 @@ const editDialogActionsClass = computed(() =>
           <h2 class="text-center text-on-surface font-weight-bold" :class="pageTitleClass">
             Filter and Label Tasks
           </h2>
+          <VBackButton 
+            to="/"
+            aria-label="Go back to Home" 
+          />
         </v-col>
       </v-row>
 
@@ -829,20 +827,6 @@ const editDialogActionsClass = computed(() =>
         </VPagination>
       </v-row>
 
-      <!-- Botón para regresar -->
-      <v-row v-if="hasActiveFilters() && taskStore.tasksPage.length > 0" class="mt-8">
-        <v-col cols="12" :class="xs ? 'd-flex justify-center mt-4' : 'd-flex justify-end'">
-          <VBackButton
-            :block="sharedButtonResponsiveBlock"
-            :size="backBtnSize"
-            :class="sharedButtonResponsiveClass"
-            @click="goBack"
-            aria-label="Go back to previous page"
-          >
-            Back
-          </VBackButton>
-        </v-col>
-      </v-row>
 
       <!-- Diálogo de edición -->
       <v-dialog
