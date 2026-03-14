@@ -25,9 +25,12 @@ const router = useRouter()
 const form = ref(null)
 const isFocused = ref(false)
 const searchTitle = ref(null) // Mantenemos null para inicializar
-const searchItems = computed(() =>
-  userStore.isLoggedIn ? taskStore.tasksData.map((task) => ({ title: task.title })) : []
-)
+const searchItems = computed(() => {
+  if (!userStore.isLoggedIn) return []
+  // Obtenemos solo títulos únicos para las sugerencias de búsqueda
+  const titles = [...new Set(taskStore.tasksData.map((task) => task.title))]
+  return titles.map((title) => ({ title }))
+})
 
 const { submitEditedTask } = useSubmitEditedTask()
 
@@ -105,15 +108,8 @@ const showSearchResults = computed(
   () => hasActiveSearch.value && taskStore.allFilteredTasks.length > 0
 )
 
-const exactTask = computed(() => {
-  if (!taskStore.state.searchTitle) return null
-  return taskStore.tasksData.find(
-    (t) => t.title.trim().toLowerCase() === taskStore.state.searchTitle.trim().toLowerCase()
-  )
-})
-
 const tasksToShow = computed(() => {
-  if (exactTask.value) return [exactTask.value]
+  // Mostramos todas las tareas que coincidan con el término de búsqueda actual
   return taskStore.allFilteredTasks
 })
 

@@ -284,7 +284,17 @@ export const useTaskStore = defineStore('tasks', () => {
       // Obtener todas las tareas filtradas (no paginadas)
       const countQuery = buildQuery('first', true)
       const countSnapshot = await getCollection(countQuery)
-      state.tasks = countSnapshot.map((doc) => mapFirestoreTask(doc, projectStore.getProjectById))
+      
+      // Asegurar unicidad por ID al mapear para evitar duplicados en el estado
+      const taskMap = new Map()
+      countSnapshot.forEach((doc) => {
+        const mappedTask = mapFirestoreTask(doc, projectStore.getProjectById)
+        if (mappedTask && mappedTask.id) {
+          taskMap.set(mappedTask.id, mappedTask)
+        }
+      })
+      
+      state.tasks = Array.from(taskMap.values())
       state.totalTasks = state.tasks.length
 
       // Calcular totalPages después de actualizar totalTasks
