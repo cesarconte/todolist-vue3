@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
@@ -10,7 +11,7 @@ import { formatDate } from '@/utils/date/dateFormat'
 import { combineDateTime } from '@/utils/tasks/taskUtils'
 import { useMotivationalProgress } from '@/composables/ui/useMotivationalProgress.js'
 
-// const router = useRouter()
+const router = useRouter()
 const projectStore = useProjectStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
@@ -164,18 +165,20 @@ const calendarEvents = computed(() => {
     })
 })
 
+const onEventClick = (payload) => {
+  // Manejamos tanto el payload de v-calendar ({ event }) como el directo del slot (task)
+  const task = payload.event || payload
+  if (task && task.id) {
+    router.push({ name: 'task-detail', params: { taskId: task.id } })
+  }
+}
+
 // --- Helpers ---
 const formatDisplayDate = (date) => (date ? formatDate(date, 'MMM DD, YYYY') : 'No date')
 // const getAccessibleColor = (color, isCompleted) => (isCompleted ? 'primary' : color)
 const getWeekdays = (title) => {
   const found = weekdays.value.find((item) => item.title === title)
   return found ? found.value : [0, 1, 2, 3, 4, 5, 6]
-}
-
-const handleEventClick = ({ event }) => {
-  if (event && event.id) {
-    router.push({ name: 'task-detail', params: { taskId: event.id } })
-  }
 }
 
 // --- Motivational (adaptado a MD3) ---
@@ -699,18 +702,13 @@ watch(
                 :class="xs ? 'calendar-xs' : ''"
                 style="height: 600px;"
                 aria-label="Tasks Calendar"
-                @click:event="handleEventClick"
+                @click:event="onEventClick"
               >
                 <template #event="{ event }">
-                  <div
-                    class="px-1 text-white font-weight-bold"
-                    style="
-                      font-size: 14px;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      white-space: nowrap;
-                      cursor: pointer;
-                    "
+                  <div 
+                    class="px-1 text-white font-weight-bold w-100 h-100" 
+                    style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer;"
+                    @click.stop="onEventClick(event)"
                   >
                     {{ event.name }}
                   </div>
