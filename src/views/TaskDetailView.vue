@@ -1,6 +1,6 @@
 <script setup>
 import VCardTask from '@/components/tasks/VCardTask.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
 import { useTaskStore } from '@/stores/taskStore.js'
@@ -79,7 +79,11 @@ const goBack = () => {
 
 const rules = useMaxLengthRule()
 
-const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
+const { xs, sm, smAndDown, mobile, smAndUp, md, lg, xl } = useDisplay()
+
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: 'instant' })
+})
 </script>
 
 <template>
@@ -155,7 +159,7 @@ const { xs, sm, smAndUp, md, lg, xl } = useDisplay()
     class="dialog dialog-edit-task"
     scrollable
   >
-    <v-card class="card card-edit-task pa-6" rounded="lg" elevation="4">
+    <v-card v-if="taskStore.editedTask" class="card card-edit-task pa-6" rounded="lg" elevation="4">
       <v-card-title class="card-title card-title-edit-task">
         <span class="text-h6">Edit task {{ taskStore.editedTask.title }}</span>
       </v-card-title>

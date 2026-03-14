@@ -6,25 +6,11 @@ import { useDisplay } from 'vuetify'
 const userStore = useUserStore()
 const router = useRouter()
 
-const openSettings = () => {
-  console.log('Open settings')
-}
-
-const openAddTeam = () => {
-  console.log('Open add team')
-}
-
-const openPrint = () => {
-  console.log('Open print')
-}
-
-const openUpgradeToPro = () => {
-  console.log('Open upgrade to pro')
-}
-
-const synchronize = () => {
-  console.log('Synchronize')
-}
+const openSettings = () => {}
+const openAddTeam = () => {}
+const openPrint = () => {}
+const openUpgradeToPro = () => {}
+const synchronize = () => {}
 
 const handleLogout = async () => {
   if (userStore.isLoggedIn) {

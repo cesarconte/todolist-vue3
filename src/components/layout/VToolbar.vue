@@ -363,7 +363,6 @@ onMounted(() => {
   if (userStore.isLoggedIn) {
     notificationsStore.loadSettings()
   }
-  console.log('User ' + userStore.isLoggedIn + ' is logged in')
 })
 
 // Corrige: pasar el ref directamente, no una función

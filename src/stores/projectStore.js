@@ -69,7 +69,6 @@ export const useProjectStore = defineStore('projects', () => {
 
   // Actions
   const clearProjectsData = () => {
-    console.log('[clearProjectsData] Clearing projectsData')
     projectsData.value = []
     Object.assign(newProject, getEmptyProject())
     Object.assign(editedProject, getEmptyEditedProject())
@@ -82,10 +81,8 @@ export const useProjectStore = defineStore('projects', () => {
       return
     }
     if (listeners.projects) {
-      console.log('[subscribeToCollection] Listener already active')
       return
     }
-    console.log('[subscribeToCollection] Subscribing to projects...')
     const collectionRef = query(
       collection(db, 'users', userStore.userId, 'projects'),
       orderBy('title', 'asc')
@@ -93,9 +90,7 @@ export const useProjectStore = defineStore('projects', () => {
     listeners.projects = onSnapshot(
       collectionRef,
       (snapshot) => {
-        console.log('[onSnapshot] Projects snapshot size:', snapshot.size)
         projectsData.value = snapshot.docs.map((doc) => mapFirestoreProject(doc))
-        console.log('[onSnapshot] Current projectsData:', projectsData.value)
       },
       (error) => {
         console.error('Error subscribing to projects:', error)
@@ -106,7 +101,6 @@ export const useProjectStore = defineStore('projects', () => {
 
   const unsubscribeAll = () => {
     if (listeners.projects) {
-      console.log('[unsubscribeAll] Removing projects listener')
       listeners.projects()
       listeners.projects = null
     }
@@ -315,7 +309,6 @@ export const useProjectStore = defineStore('projects', () => {
   watch(
     () => userStore.userId,
     (newUserId) => {
-      console.log('[watch userId] newUserId:', newUserId)
       if (newUserId) {
         subscribeToCollection()
       } else {

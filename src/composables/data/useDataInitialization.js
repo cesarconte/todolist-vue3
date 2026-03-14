@@ -14,19 +14,17 @@ export function useDataInitialization() {
   // Function to handle errors consistently
   const handleError = (error, message = 'An error occurred') => {
     console.error(error)
-    showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle') // Use the centralized helper function
+    showSnackbar(notificationsStore, message, 'error', 'mdi-alert-circle')
   }
 
   // Function to initialize tasks and projects
   const initializeData = async () => {
     if (!userStore.userId) {
-      console.log('[useDataInitialization] Waiting for user authentication...')
       return
     }
-    console.log('[useDataInitialization] User authenticated, initializing data...')
     try {
-      taskStore.subscribeToTasks() // Sincronización en tiempo real de tareas
-      projectStore.subscribeToCollection() // Sincronización en tiempo real de proyectos
+      taskStore.subscribeToTasks()
+      projectStore.subscribeToCollection()
     } catch (error) {
       handleError(error, 'Failed to initialize data')
     }
@@ -35,15 +33,12 @@ export function useDataInitialization() {
   // Cleanup function to unsubscribe listeners stored in the stores
   const cleanup = () => {
     try {
-      console.log('[useDataInitialization] Cleaning up listeners...')
-
       // Unsubscribe from taskStore listeners
       if (taskStore.listeners && typeof taskStore.listeners === 'object') {
         Object.keys(taskStore.listeners).forEach((key) => {
           const unsubscribeFn = taskStore.listeners[key]
           if (typeof unsubscribeFn === 'function') {
             try {
-              console.log(`[useDataInitialization] Unsubscribing from taskStore listener: ${key}`)
               unsubscribeFn()
             } catch (err) {
               console.warn(
@@ -51,7 +46,6 @@ export function useDataInitialization() {
                 err
               )
             }
-            // Ensure the store nullifies the listener reference as well
             taskStore.listeners[key] = null
           }
         })
@@ -63,9 +57,6 @@ export function useDataInitialization() {
           const unsubscribeFn = projectStore.listeners[key]
           if (typeof unsubscribeFn === 'function') {
             try {
-              console.log(
-                `[useDataInitialization] Unsubscribing from projectStore listener: ${key}`
-              )
               unsubscribeFn()
             } catch (err) {
               console.warn(
@@ -73,7 +64,6 @@ export function useDataInitialization() {
                 err
               )
             }
-            // Ensure the store nullifies the listener reference as well
             projectStore.listeners[key] = null
           }
         })
@@ -90,14 +80,14 @@ export function useDataInitialization() {
       if (isLoggedIn) {
         initializeData()
       } else {
-        cleanup() // Now only unsubscribes listeners
+        cleanup()
       }
     },
-    { immediate: true } // Ejecuta inmediatamente al montar
+    { immediate: true }
   )
 
   return {
-    initializeData, // Exponer si se necesita llamar manualmente
+    initializeData,
     handleError
   }
 }

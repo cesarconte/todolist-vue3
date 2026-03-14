@@ -211,14 +211,12 @@ export const useNotificationsStore = defineStore('notifications', {
         })
 
         // Create system notification
-        console.log('Creating system notification...')
         new Notification('Test Notification', {
           body: 'This is a test notification from TodoList!',
           icon: 'mdi-bell-ring', // Using mdi icon as requested
           vibrate: [200, 100, 200] // Vibration pattern for mobile devices
         })
 
-        console.log('System notification created successfully.')
         showSnackbar(this, 'Test notification sent successfully', 'success', 'mdi-bell-ring')
       } catch (error) {
         console.error('Error in sendTestNotification:', error)

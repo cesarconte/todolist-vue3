@@ -9,7 +9,12 @@ export default function useThemeToggle() {
   // Toggle entre tema claro y oscuro
   const toggleTheme = () => {
     isDarkMode.value = !isDarkMode.value
-    theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
+    // Actualizado para seguir la recomendación de Vuetify UPGRADE
+    if (typeof theme.change === 'function') {
+      theme.change(isDarkMode.value ? 'dark' : 'light')
+    } else {
+      theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
+    }
     // Guardar preferencia en localStorage
     localStorage.setItem('darkMode', isDarkMode.value)
   }
@@ -30,12 +35,22 @@ export default function useThemeToggle() {
     if (savedMode !== null) {
       // Convertir string a booleano
       isDarkMode.value = savedMode === 'true'
-      theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
+      const target = isDarkMode.value ? 'dark' : 'light'
+      if (typeof theme.change === 'function') {
+        theme.change(target)
+      } else {
+        theme.global.name.value = target
+      }
     } else {
       // Si no hay preferencia guardada, usar la preferencia del sistema
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       isDarkMode.value = prefersDark
-      theme.global.name.value = prefersDark ? 'dark' : 'light'
+      const target = prefersDark ? 'dark' : 'light'
+      if (typeof theme.change === 'function') {
+        theme.change(target)
+      } else {
+        theme.global.name.value = target
+      }
     }
   })
 
