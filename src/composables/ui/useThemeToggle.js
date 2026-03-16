@@ -1,25 +1,43 @@
-// useThemeToggle.js
 import { ref, watch, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
+import { useSettings } from '@/composables/settings/useSettings.js'
 
 export default function useThemeToggle() {
   const theme = useTheme()
+  const { themeSettings } = useSettings()
   const isDarkMode = ref(false)
 
-  // Toggle entre tema claro y oscuro
-  const toggleTheme = () => {
-    isDarkMode.value = !isDarkMode.value
-    // Actualizado para seguir la recomendación de Vuetify UPGRADE
-    if (typeof theme.change === 'function') {
-      theme.change(isDarkMode.value ? 'dark' : 'light')
-    } else {
-      theme.global.name.value = isDarkMode.value ? 'dark' : 'light'
+  const applyTheme = (mode) => {
+    let target = mode
+
+    if (mode === 'system') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      target = prefersDark ? 'dark' : 'light'
     }
-    // Guardar preferencia en localStorage
-    localStorage.setItem('darkMode', isDarkMode.value)
+
+    if (typeof theme.change === 'function') {
+      theme.change(target)
+    } else {
+      theme.global.name.value = target
+    }
   }
 
-  // Actualiza isDarkMode cuando cambia el tema
+  const toggleTheme = () => {
+    if (themeSettings.mode === 'system' || themeSettings.mode === 'manual') {
+      themeSettings.mode = isDarkMode.value ? 'light' : 'dark'
+    } else {
+      themeSettings.mode = isDarkMode.value ? 'light' : 'dark'
+    }
+  }
+
+  watch(
+    () => themeSettings.mode,
+    (newMode) => {
+      applyTheme(newMode)
+      isDarkMode.value = theme.global.name.value === 'dark'
+    }
+  )
+
   watch(
     () => theme.global.name.value,
     (newTheme) => {
@@ -27,35 +45,14 @@ export default function useThemeToggle() {
     }
   )
 
-  // Inicializar el tema basado en la preferencia guardada
   onMounted(() => {
-    // Recuperar la preferencia guardada del usuario
-    const savedMode = localStorage.getItem('darkMode')
-
-    if (savedMode !== null) {
-      // Convertir string a booleano
-      isDarkMode.value = savedMode === 'true'
-      const target = isDarkMode.value ? 'dark' : 'light'
-      if (typeof theme.change === 'function') {
-        theme.change(target)
-      } else {
-        theme.global.name.value = target
-      }
-    } else {
-      // Si no hay preferencia guardada, usar la preferencia del sistema
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      isDarkMode.value = prefersDark
-      const target = prefersDark ? 'dark' : 'light'
-      if (typeof theme.change === 'function') {
-        theme.change(target)
-      } else {
-        theme.global.name.value = target
-      }
-    }
+    applyTheme(themeSettings.mode)
+    isDarkMode.value = theme.global.name.value === 'dark'
   })
 
   return {
     isDarkMode,
-    toggleTheme
+    toggleTheme,
+    applyTheme
   }
 }

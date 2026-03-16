@@ -22,6 +22,9 @@ import NotificationCenter from '@/components/notifications/NotificationCenter.vu
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import ProjectForm from '@/components/projects/ProjectForm.vue'
 import BaseSnackbar from '@/components/notifications/BaseSnackbar.vue'
+import DisplaySettings from '@/components/settings/DisplaySettings.vue'
+import TaskBehaviorSettings from '@/components/settings/TaskBehaviorSettings.vue'
+import ThemeSettings from '@/components/settings/ThemeSettings.vue'
 
 /************************************
  * Stores
@@ -53,6 +56,9 @@ const dialogAddTask = ref(false)
 const dialogAddProject = ref(false)
 const dialogNotificationsList = ref(false)
 const dialogNotificationsSettings = ref(false)
+const dialogDisplaySettings = ref(false)
+const dialogTaskBehaviorSettings = ref(false)
+const dialogThemeSettings = ref(false)
 
 const forms = reactive({
   addTask: ref(null),
@@ -264,6 +270,18 @@ const handleNotificationsSettingsClick = () => {
   dialogNotificationsSettings.value = true
 }
 
+const handleDisplaySettingsClick = () => {
+  dialogDisplaySettings.value = true
+}
+
+const handleTaskBehaviorSettingsClick = () => {
+  dialogTaskBehaviorSettings.value = true
+}
+
+const handleThemeSettingsClick = () => {
+  dialogThemeSettings.value = true
+}
+
 const handleDotsClick = () => {
   // Handles the click on the dots button
   menus.drawerDots = !menus.drawerDots
@@ -351,6 +369,9 @@ const { navItems, dotsItems } = useToolbarNav({
   handleLoginLogout,
   handleNotificationsClick,
   handleNotificationsSettingsClick,
+  handleDisplaySettingsClick,
+  handleTaskBehaviorSettingsClick,
+  handleThemeSettingsClick,
   loginLogoutText,
   loginLogoutIcon
 })
@@ -485,9 +506,80 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         </template>
         <v-list density="compact" class="pa-2" bg-color="surface">
           <v-list-item
-            @click="handleNotificationsSettingsClick"
+            @click="handleDisplaySettingsClick"
             :ripple="true"
             class="rounded-lg mb-2"
+            rounded="pill"
+            color="primary"
+            base-color="on-surface"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-tune-variant" class="mr-3"></v-icon>
+            </template>
+
+            <v-list-item-title class="font-weight-bold"> Display Settings </v-list-item-title>
+
+            <v-list-item-subtitle class="text-caption text-on-surface-variant">
+              Customize how tasks are displayed
+            </v-list-item-subtitle>
+
+            <template v-slot:append>
+              <v-icon icon="mdi-chevron-right" color="on-surface-variant"></v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            @click="handleTaskBehaviorSettingsClick"
+            :ripple="true"
+            class="rounded-lg mb-2"
+            rounded="pill"
+            color="primary"
+            base-color="on-surface"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-hand-back-right-outline" class="mr-3"></v-icon>
+            </template>
+
+            <v-list-item-title class="font-weight-bold"> Task Behavior </v-list-item-title>
+
+            <v-list-item-subtitle class="text-caption text-on-surface-variant">
+              Configure task handling options
+            </v-list-item-subtitle>
+
+            <template v-slot:append>
+              <v-icon icon="mdi-chevron-right" color="on-surface-variant"></v-icon>
+            </template>
+          </v-list-item>
+
+          <v-list-item
+            @click="handleThemeSettingsClick"
+            :ripple="true"
+            class="rounded-lg mb-2"
+            rounded="pill"
+            color="primary"
+            base-color="on-surface"
+          >
+            <template v-slot:prepend>
+              <v-icon icon="mdi-palette-outline" class="mr-3"></v-icon>
+            </template>
+
+            <v-list-item-title class="font-weight-bold"> Theme Settings </v-list-item-title>
+
+            <v-list-item-subtitle class="text-caption text-on-surface-variant">
+              Customize appearance
+            </v-list-item-subtitle>
+
+            <template v-slot:append>
+              <v-icon icon="mdi-chevron-right" color="on-surface-variant"></v-icon>
+            </template>
+          </v-list-item>
+
+          <v-divider class="my-2" />
+
+          <v-list-item
+            @click="handleNotificationsSettingsClick"
+            :ripple="true"
+            class="rounded-lg"
             rounded="pill"
             color="primary"
             base-color="on-surface"
@@ -562,6 +654,12 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
   </v-app-bar>
 
   <NotificationSettings v-model="dialogNotificationsSettings" />
+
+  <DisplaySettings v-model="dialogDisplaySettings" />
+
+  <TaskBehaviorSettings v-model="dialogTaskBehaviorSettings" />
+
+  <ThemeSettings v-model="dialogThemeSettings" />
 
   <NotificationCenter v-model="dialogNotificationsList" />
 

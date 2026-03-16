@@ -1,14 +1,17 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import useLabelIcons from '@/composables/ui/useLabelIcons'
 import { formatDate } from '@/utils/date/dateFormat'
+import { useSettings } from '@/composables/settings/useSettings.js'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
 
 /************************************
  * Composables
  ************************************/
-const { labelIcons } = useLabelIcons() // Accesses label icons from the composable
+const { labelIcons } = useLabelIcons()
+const { taskBehavior } = useSettings() // Accesses label icons from the composable
 
 /************************************
  * Props
@@ -199,8 +202,19 @@ const dateIconColor = (baseColor) => (props.completed ? 'medium-emphasis' : base
 /************************************
  * Methods / Functions
  ************************************/
+const showDeleteConfirm = ref(false)
+
 const deleteTask = () => {
+  if (taskBehavior.confirmOnDelete) {
+    showDeleteConfirm.value = true
+  } else {
+    emit('deleteTask', props.project.id, props.id)
+  }
+}
+
+const confirmDelete = () => {
   emit('deleteTask', props.project.id, props.id)
+  showDeleteConfirm.value = false
 }
 
 const editTask = () => {
@@ -232,7 +246,10 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       :class="mobile ? '' : 'd-flex align-center'"
     >
       <template v-if="mobile">
-        <v-sheet color="transparent" class="d-flex flex-row align-center justify-space-between w-100">
+        <v-sheet
+          color="transparent"
+          class="d-flex flex-row align-center justify-space-between w-100"
+        >
           <span class="text-h5 text-truncate" :class="completedTextClass">
             {{ title }}
           </span>
@@ -533,4 +550,15 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
       </v-sheet>
     </v-card-actions>
   </v-card>
+
+  <ConfirmDialog
+    v-model="showDeleteConfirm"
+    title="Delete Task"
+    message="Are you sure you want to delete this task? This action cannot be undone."
+    confirm-text="Delete"
+    cancel-text="Cancel"
+    confirm-color="error"
+    icon="mdi-delete-alert"
+    @confirm="confirmDelete"
+  />
 </template>

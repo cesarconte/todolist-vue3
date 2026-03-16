@@ -17,11 +17,15 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['delete-task', 'edit-task', 'complete-task'])
+const emit = defineEmits(['delete-task', 'edit-task', 'complete-task', 'view-task'])
 
 const handleDelete = (projectId, taskId) => emit('delete-task', projectId, taskId)
 const handleEdit = (projectId, taskId) => emit('edit-task', projectId, taskId)
 const handleComplete = (projectId, taskId) => emit('complete-task', projectId, taskId)
+
+const handleViewTask = (task) => {
+  emit('view-task', task.id)
+}
 </script>
 
 <template>
@@ -40,6 +44,7 @@ const handleComplete = (projectId, taskId) => emit('complete-task', projectId, t
         @delete-task="handleDelete"
         @edit-task="handleEdit"
         @complete-task="handleComplete"
+        @click="handleViewTask(task)"
       />
     </v-col>
   </v-row>

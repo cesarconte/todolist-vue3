@@ -36,7 +36,10 @@ const userStore = useUserStore() // Accesses the user store
 /************************************
  * Computed Properties
  ************************************/
-const showNotificationsSettings = computed(() => props.modelValue) // Controls the dialog's visibility based on the prop
+const showNotificationsSettings = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 const hasFullSupport = computed(() => Object.values(browserSupport.value).every(Boolean)) // Checks if all required browser features are supported
 const switchLabel = computed(() =>
   notificationsStore.notificationSettings.enabled

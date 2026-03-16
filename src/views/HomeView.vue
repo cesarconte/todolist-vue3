@@ -1,16 +1,20 @@
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProjectStore } from '@/stores/projectStore'
 import { useTaskStore } from '@/stores/taskStore'
 import { useUserStore } from '@/stores/userStore'
 import { useNotificationsStore } from '@/stores/notificationsStore'
+import { useSettings } from '@/composables/settings/useSettings.js'
 import useLabelIcons from '@/composables/ui/useLabelIcons.js'
+import { useFilteredTasks } from '@/composables/tasks/useFilteredTasks.js'
 import { useDisplay } from 'vuetify'
 
 // Components
 import DashboardStats from '@/components/home/DashboardStats.vue'
 import CalendarHeader from '@/components/calendar/CalendarHeader.vue'
 import TaskCalendar from '@/components/calendar/TaskCalendar.vue'
+import TaskList from '@/components/tasks/TaskList.vue'
 
 // Stores
 const projectStore = useProjectStore()
@@ -18,14 +22,26 @@ const taskStore = useTaskStore()
 const userStore = useUserStore()
 const notificationsStore = useNotificationsStore()
 
-// UI Composables
+// Settings
+const { displaySettings } = useSettings()
+
+// Router
+const router = useRouter()
+
+// Composables
 const { labelIcons } = useLabelIcons()
 const { xs, name } = useDisplay()
+const { sortedTasks: filteredTasks } = useFilteredTasks(computed(() => taskStore.tasksData))
 
 // --- State Management ---
 const currentCalendarDate = ref(new Date())
 const currentCalendarType = ref('month')
 const currentWeekdayMode = ref('Sun - Sat')
+
+// --- Task Actions ---
+const handleViewTask = (taskId) => {
+  router.push({ name: 'task-detail', params: { taskId } })
+}
 
 // --- Responsive Layout Computed Properties ---
 const responsiveContainerWidth = computed(() => {
@@ -51,9 +67,12 @@ const pageTitleClass = computed(() => {
 
 const mainContainerClass = computed(() => (xs.value ? 'pa-2' : 'pa-4'))
 
+// --- View Mode ---
+const currentView = computed(() => displaySettings.defaultView)
+
 // --- Calendar Logic ---
 const mappedCalendarEvents = computed(() => {
-  return taskStore.tasksData
+  return filteredTasks.value
     .slice()
     .sort((a, b) => new Date(a.endDate) - new Date(b.endDate))
     .map((task) => {
@@ -149,27 +168,41 @@ watch(
       </v-row>
 
       <!-- Dashboard Statistics -->
-      <DashboardStats :tasks="taskStore.tasksData" :label-icons="labelIcons" />
+      <DashboardStats :tasks="filteredTasks" :label-icons="labelIcons" />
 
-      <!-- Calendar Header -->
-      <CalendarHeader
-        v-model:current-date="currentCalendarDate"
-        v-model:current-view="currentCalendarType"
-        v-model:weekday-mode="currentWeekdayMode"
-        @go-to-today="goToToday"
-        @prev-year="navigateToPreviousYear"
-        @prev-month="navigateToPreviousMonth"
-        @next-month="navigateToNextMonth"
-        @next-year="navigateToNextYear"
-      />
+      <!-- Main Content: Calendar or List View -->
+      <template v-if="currentView === 'calendar'">
+        <!-- Calendar Header -->
+        <CalendarHeader
+          v-model:current-date="currentCalendarDate"
+          v-model:current-view="currentCalendarType"
+          v-model:weekday-mode="currentWeekdayMode"
+          @go-to-today="goToToday"
+          @prev-year="navigateToPreviousYear"
+          @prev-month="navigateToPreviousMonth"
+          @next-month="navigateToNextMonth"
+          @next-year="navigateToNextYear"
+        />
 
-      <!-- Main Calendar Grid -->
-      <TaskCalendar
-        v-model="currentCalendarDate"
-        :events="mappedCalendarEvents"
-        :type="currentCalendarType"
-        :weekdays="[0, 1, 2, 3, 4, 5, 6]"
-      />
+        <!-- Main Calendar Grid -->
+        <TaskCalendar
+          v-model="currentCalendarDate"
+          :events="mappedCalendarEvents"
+          :type="currentCalendarType"
+          :weekdays="[0, 1, 2, 3, 4, 5, 6]"
+        />
+      </template>
+
+      <!-- List View -->
+      <template v-else>
+        <TaskList
+          :tasks="filteredTasks"
+          empty-icon="mdi-checkbox-marked-circle-auto-outline"
+          empty-title="All caught up!"
+          empty-subtitle="No tasks to display"
+          @view-task="handleViewTask"
+        />
+      </template>
     </v-responsive>
   </v-container>
 </template>

@@ -18,6 +18,7 @@ import {
 import { useNotificationsStore } from './notificationsStore.js'
 import { useProjectStore } from './projectStore.js'
 import { useUserStore } from './userStore.js'
+import { useSettings } from '@/composables/settings/useSettings.js'
 import { buildFirestoreFilters } from '@/utils/firestore/firestoreFilters.js'
 import {
   buildPaginationQuery,
@@ -42,6 +43,7 @@ export const useTaskStore = defineStore('tasks', () => {
   const projectStore = useProjectStore()
   const userStore = useUserStore()
   const notificationsStore = useNotificationsStore()
+  const { taskBehavior } = useSettings()
 
   // 3. Estado reactivo
   const state = reactive({
@@ -569,6 +571,20 @@ export const useTaskStore = defineStore('tasks', () => {
         'success',
         newStatus ? 'mdi-check-circle' : 'mdi-progress-clock'
       )
+
+      if (newStatus && taskBehavior.showReminderOnComplete) {
+        showSnackbar(notificationsStore, 'Great job! Keep up the good work!', 'success', 'mdi-star')
+      }
+
+      if (newStatus && taskBehavior.autoArchiveDays > 0) {
+        const days = taskBehavior.autoArchiveDays
+        showSnackbar(
+          notificationsStore,
+          `Task will be archived in ${days} day${days > 1 ? 's' : ''}`,
+          'info',
+          'mdi-archive-outline'
+        )
+      }
 
       // Actualizar la tarea en el array reactivo
       const taskIndex = state.tasks.findIndex((task) => task.id === taskId)
