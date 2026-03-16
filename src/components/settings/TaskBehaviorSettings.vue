@@ -131,9 +131,24 @@ const cancelDialog = () => {
       <v-divider class="my-4" />
 
       <v-card-actions :class="xs ? 'justify-end px-2 pb-3' : 'justify-end px-6 pb-4'">
-        <v-btn variant="text" @click="cancelDialog"> Cancel </v-btn>
-        <v-btn color="primary" variant="tonal" rounded size="large" @click="closeDialog">
-          Done
+        <v-btn
+          variant="text"
+          class="text-none text-button"
+          rounded="xl"
+          size="large"
+          @click="cancelDialog"
+        >
+          cancel
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="tonal"
+          size="large"
+          class="text-none text-button"
+          rounded="xl"
+          @click="closeDialog"
+        >
+          done
         </v-btn>
       </v-card-actions>
     </v-card>

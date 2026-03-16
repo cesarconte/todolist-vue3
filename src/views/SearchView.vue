@@ -90,9 +90,8 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for editing a task
-btnsForm[0].text = 'Update Task' // Set the text for the submit button
+btnsForm[0].text = 'update task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
-
 
 const rules = useMaxLengthRule()
 
@@ -140,10 +139,7 @@ onMounted(() => {
           >
             Search Tasks
           </h2>
-          <BackButton 
-            to="/" 
-            aria-label="Back to Home" 
-          />
+          <BackButton to="/" aria-label="Back to Home" />
         </v-col>
       </v-row>
 
@@ -174,7 +170,10 @@ onMounted(() => {
                 >
                   Search Tasks
                 </v-sheet>
-                <v-sheet color="transparent" class="text-caption text-onSurfaceVariant mt-1 text-wrap">
+                <v-sheet
+                  color="transparent"
+                  class="text-caption text-onSurfaceVariant mt-1 text-wrap"
+                >
                   {{ xs ? 'Find by title keywords' : 'Find tasks by title or keywords' }}
                 </v-sheet>
               </v-sheet>
@@ -245,7 +244,10 @@ onMounted(() => {
                 <!-- Slot para "no hay resultados" -->
                 <template #no-data>
                   <v-list-item class="pa-4">
-                    <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex flex-column align-center justify-center pa-2"
+                    >
                       <v-icon
                         icon="mdi-magnify-close"
                         color="onSurfaceVariant"
@@ -314,17 +316,18 @@ onMounted(() => {
         <v-card-actions class="justify-center pt-4 pb-8 mt-4 mb-2" :class="xs ? 'px-2' : 'px-4'">
           <v-btn
             variant="tonal"
-            rounded
+            color="surface-variant"
             size="large"
             prepend-icon="mdi-refresh"
             :class="xs ? 'px-4 py-2' : 'px-8'"
             :block="xs"
             class="text-none text-button"
+            rounded="xl"
             @click="searchTitle = null"
             :disabled="!searchTitle"
             aria-label="Clear search input"
           >
-            Clear Search
+            clear search
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -419,10 +422,10 @@ onMounted(() => {
                 />
               </template>
               <template #fallback>
-                <v-sheet 
-                  color="surface-container" 
-                  class="fallback d-flex align-center justify-center pa-4 rounded-lg" 
-                  role="status" 
+                <v-sheet
+                  color="surface-container"
+                  class="fallback d-flex align-center justify-center pa-4 rounded-lg"
+                  role="status"
                   aria-live="polite"
                 >
                   <v-progress-circular
@@ -536,5 +539,4 @@ onMounted(() => {
     transform: translateY(5px);
   }
 }
-
 </style>

@@ -60,15 +60,15 @@ const isDeadlinesPanelExpanded = ref(false)
 const isOverduePanelExpanded = ref(false)
 
 const upcomingCardClass = computed(() =>
-  upcomingDeadlinesCount.value > 0 ? 'bg-orange-lighten-5' : 'bg-green-lighten-5'
+  upcomingDeadlinesCount.value > 0 ? 'bg-warning-container' : ''
 )
 const upcomingIconColor = computed(() =>
-  upcomingDeadlinesCount.value > 0 ? 'orange-darken-2' : 'success'
+  upcomingDeadlinesCount.value > 0 ? 'warning' : 'on-surface-variant'
 )
-const overdueCardClass = computed(() =>
-  overdueTasksCount.value > 0 ? 'bg-red-lighten-5' : 'bg-green-lighten-5'
+const overdueCardClass = computed(() => (overdueTasksCount.value > 0 ? 'bg-error-container' : ''))
+const overdueIconColor = computed(() =>
+  overdueTasksCount.value > 0 ? 'error' : 'on-surface-variant'
 )
-const overdueIconColor = computed(() => (overdueTasksCount.value > 0 ? 'red-darken-2' : 'success'))
 
 const deadlinesActionLabel = computed(() => (isDeadlinesPanelExpanded.value ? 'Hide' : 'Show all'))
 const overdueActionLabel = computed(() => (isOverduePanelExpanded.value ? 'Hide' : 'Show all'))
@@ -114,7 +114,7 @@ const activeMotivationalInfo = computed(() =>
               <v-card-title class="d-flex align-center justify-space-between pb-4">
                 <v-sheet color="transparent" class="d-flex align-center">
                   <v-icon :color="upcomingIconColor" icon="mdi-clock-outline" class="me-2" />
-                  <span class="text-subtitle-1 font-weight-black text-orange-darken-4">
+                  <span class="text-subtitle-1 font-weight-black text-warning">
                     Upcoming Deadlines
                   </span>
                 </v-sheet>
@@ -138,7 +138,7 @@ const activeMotivationalInfo = computed(() =>
                   :key="task.id"
                   :to="{ name: 'task-detail', params: { taskId: task.id } }"
                   rounded="lg"
-                  class="mb-2 bg-white-opacity-50"
+                  class="mb-2 surface-variant"
                   density="compact"
                   lines="one"
                 >
@@ -157,7 +157,7 @@ const activeMotivationalInfo = computed(() =>
               <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
                 <v-sheet
                   color="transparent"
-                  class="d-flex align-center text-caption font-weight-medium text-orange-darken-3"
+                  class="d-flex align-center text-caption font-weight-medium text-warning"
                 >
                   <v-icon size="small" class="me-2">mdi-calendar-clock</v-icon>
                   {{ upcomingDeadlinesCount }} tasks with upcoming deadline
@@ -201,7 +201,7 @@ const activeMotivationalInfo = computed(() =>
               <v-sheet color="transparent" class="text-center">
                 <v-sheet
                   color="transparent"
-                  class="font-weight-black text-orange-darken-3 mb-1"
+                  class="font-weight-black text-warning mb-1"
                   :class="xs ? 'text-subtitle-2' : 'text-h6'"
                 >
                   {{ completedTasksCount }} / {{ totalTasksCount }} Tasks
@@ -215,7 +215,7 @@ const activeMotivationalInfo = computed(() =>
                 </v-sheet>
                 <v-sheet
                   color="transparent"
-                  class="d-flex align-center justify-center font-weight-black text-orange-darken-3"
+                  class="d-flex align-center justify-center font-weight-black text-warning"
                   :class="xs ? 'text-caption' : ''"
                 >
                   <v-icon :icon="activeMotivationalInfo.icon" class="me-2" :size="xs ? 18 : 24" />
@@ -239,9 +239,7 @@ const activeMotivationalInfo = computed(() =>
               <v-card-title class="d-flex align-center justify-space-between pb-4">
                 <v-sheet color="transparent" class="d-flex align-center">
                   <v-icon :color="overdueIconColor" icon="mdi-alert-circle-outline" class="me-2" />
-                  <span class="text-subtitle-1 font-weight-black text-red-darken-4">
-                    Overdue Tasks
-                  </span>
+                  <span class="text-subtitle-1 font-weight-black text-error"> Overdue Tasks </span>
                 </v-sheet>
                 <v-badge
                   v-if="overdueTasksCount > 0"
@@ -263,7 +261,7 @@ const activeMotivationalInfo = computed(() =>
                   :key="task.id"
                   :to="{ name: 'task-detail', params: { taskId: task.id } }"
                   rounded="lg"
-                  class="mb-2 bg-white-opacity-50"
+                  class="mb-2 surface-variant"
                   density="compact"
                   lines="one"
                 >
@@ -282,7 +280,7 @@ const activeMotivationalInfo = computed(() =>
               <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
                 <v-sheet
                   color="transparent"
-                  class="d-flex align-center text-caption font-weight-medium text-red-darken-3"
+                  class="d-flex align-center text-caption font-weight-medium text-error"
                 >
                   <v-icon size="small" class="me-2">mdi-alert-outline</v-icon>
                   {{ overdueTasksCount }} tasks past deadline
@@ -305,8 +303,4 @@ const activeMotivationalInfo = computed(() =>
   </v-expand-transition>
 </template>
 
-<style scoped>
-.bg-white-opacity-50 {
-  background-color: rgba(255, 255, 255, 0.4) !important;
-}
-</style>
+<style scoped></style>

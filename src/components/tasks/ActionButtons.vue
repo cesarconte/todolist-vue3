@@ -37,7 +37,7 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
       :height="button.height"
       :prepend-icon="button.icon"
       :variant="button.variant || 'elevated'"
-      :rounded="button.rounded || 'lg'"
+      :rounded="button.rounded || 'xl'"
       :size="button.size || 'large'"
       :color="button.color || 'primary'"
       :disabled="button.disabled"
@@ -53,5 +53,5 @@ const { mobile, xs, sm, md } = useDisplay() // Accesses display breakpoints from
         {{ button.ariaLabel || button.text || 'Action' }}
       </v-tooltip>
     </v-btn>
-    </v-sheet>
+  </v-sheet>
 </template>

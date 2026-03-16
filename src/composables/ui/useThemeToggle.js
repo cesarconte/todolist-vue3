@@ -1,40 +1,41 @@
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { useSettings } from '@/composables/settings/useSettings.js'
 
 export default function useThemeToggle() {
   const theme = useTheme()
   const { themeSettings } = useSettings()
-  const isDarkMode = ref(false)
+
+  const isDarkMode = ref(theme.global.current.value.dark)
+
+  let mediaQuery = null
+
+  const handleSystemThemeChange = (e) => {
+    if (themeSettings.mode === 'system') {
+      theme.global.name.value = e.matches ? 'dark' : 'light'
+    }
+  }
 
   const applyTheme = (mode) => {
-    let target = mode
-
     if (mode === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      target = prefersDark ? 'dark' : 'light'
-    }
-
-    if (typeof theme.change === 'function') {
-      theme.change(target)
-    } else {
-      theme.global.name.value = target
+      theme.global.name.value = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light'
+    } else if (mode === 'light' || mode === 'dark') {
+      theme.global.name.value = mode
     }
   }
 
   const toggleTheme = () => {
-    if (themeSettings.mode === 'system' || themeSettings.mode === 'manual') {
-      themeSettings.mode = isDarkMode.value ? 'light' : 'dark'
-    } else {
-      themeSettings.mode = isDarkMode.value ? 'light' : 'dark'
-    }
+    const newTheme = isDarkMode.value ? 'light' : 'dark'
+    themeSettings.mode = newTheme
+    theme.global.name.value = newTheme
   }
 
   watch(
     () => themeSettings.mode,
     (newMode) => {
       applyTheme(newMode)
-      isDarkMode.value = theme.global.name.value === 'dark'
     }
   )
 
@@ -47,7 +48,15 @@ export default function useThemeToggle() {
 
   onMounted(() => {
     applyTheme(themeSettings.mode)
-    isDarkMode.value = theme.global.name.value === 'dark'
+
+    mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener('change', handleSystemThemeChange)
+  })
+
+  onUnmounted(() => {
+    if (mediaQuery) {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange)
+    }
   })
 
   return {

@@ -342,14 +342,14 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
           :disabled="isDisabled || !notificationsStore.notificationSettings.enabled"
           color="surface-variant"
           variant="tonal"
-          rounded
           size="large"
           prepend-icon="mdi-bell-alert-outline"
           class="text-none text-button"
+          rounded="xl"
           :block="xs"
           @click="notificationsStore.sendTestNotification()"
         >
-          Test Notification
+          test notification
         </v-btn>
       </v-card-actions>
     </v-card>

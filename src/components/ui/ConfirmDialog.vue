@@ -8,7 +8,7 @@ const props = defineProps({
   },
   title: {
     type: String,
-    default: 'Confirm'
+    default: 'confirm'
   },
   message: {
     type: String,
@@ -16,11 +16,11 @@ const props = defineProps({
   },
   confirmText: {
     type: String,
-    default: 'Confirm'
+    default: 'confirm'
   },
   cancelText: {
     type: String,
-    default: 'Cancel'
+    default: 'cancel'
   },
   confirmColor: {
     type: String,
@@ -63,10 +63,16 @@ const handleCancel = () => {
 
       <v-card-actions class="px-4 pb-4 pt-0">
         <v-spacer />
-        <v-btn variant="text" @click="handleCancel">
+        <v-btn variant="text" class="text-none text-button" rounded="xl" @click="handleCancel">
           {{ cancelText }}
         </v-btn>
-        <v-btn :color="confirmColor" variant="flat" @click="handleConfirm">
+        <v-btn
+          :color="confirmColor"
+          variant="tonal"
+          rounded="xl"
+          class="text-none text-button"
+          @click="handleConfirm"
+        >
           {{ confirmText }}
         </v-btn>
       </v-card-actions>

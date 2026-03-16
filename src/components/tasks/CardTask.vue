@@ -156,19 +156,21 @@ const btnsTasks = computed(() => {
       label: 'Edit',
       function: editTask,
       color: 'primary',
-      variant: props.completed ? 'outlined' : 'flat'
+      variant: 'tonal'
     },
     {
       icon: 'mdi-delete',
       label: 'Delete',
       function: deleteTask,
-      variant: props.completed ? 'outlined' : 'tonal'
+      color: 'error',
+      variant: 'tonal'
     },
     {
       icon: completedButton.value.icon,
       label: completedButton.value.label,
       function: completedButton.value.function,
-      variant: 'outlined'
+      color: 'primary',
+      variant: 'tonal'
     }
   ]
 })
@@ -507,7 +509,7 @@ const { mobile } = useDisplay() // Accesses display breakpoints from Vuetify
           :variant="btn.variant"
           density="comfortable"
           size="small"
-          rounded
+          rounded="xl"
           :height="40"
           :min-width="96"
           :disabled="props.completed && i !== 2"

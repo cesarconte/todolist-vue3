@@ -9,16 +9,10 @@
       :color="iconColor || 'onSurfaceVariant'"
       class="mb-4 empty-icon"
     ></v-icon>
-    <h3
-      class="text-h5 font-weight-medium mb-2"
-      :class="textColor || 'text-onSurfaceVariant'"
-    >
+    <h3 class="text-h5 font-weight-medium mb-2" :class="textColor || 'text-onSurfaceVariant'">
       {{ title }}
     </h3>
-    <p
-      class="text-body-1 mb-4"
-      :class="textColor || 'text-onSurfaceVariant'"
-    >
+    <p class="text-body-1 mb-4" :class="textColor || 'text-onSurfaceVariant'">
       {{ subtitle }}
     </p>
     <v-sheet color="transparent" class="empty-state-actions">
@@ -33,10 +27,10 @@ import { toRefs } from 'vue'
 const props = defineProps({
   icon: { type: String, default: 'mdi-magnify' },
   iconSize: { type: [String, Number], default: 80 },
-  iconColor: { type: String, default: 'on-surface' },
+  iconColor: { type: String, default: 'onSurfaceVariant' },
   title: { type: String, required: true },
   subtitle: { type: String, default: '' },
-  textColor: { type: String, default: 'on-surface' }
+  textColor: { type: String, default: 'onSurfaceVariant' }
 })
 
 // Desestructuramos props para que sean reactivas en el template

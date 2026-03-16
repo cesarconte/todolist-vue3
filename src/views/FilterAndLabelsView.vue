@@ -98,7 +98,7 @@ const { btnsForm } = useFormBtnActions(
   reset,
   () => (taskStore.dialogEditTask = false)
 )
-btnsForm[0].text = 'Update Task'
+btnsForm[0].text = 'update task'
 btnsForm[0].icon = 'mdi-pencil'
 
 const rules = useMaxLengthRule()
@@ -412,11 +412,11 @@ const editDialogActionsClass = computed(() =>
                     >
                       <v-icon
                         icon="mdi-filter-remove"
-                        color="grey-darken-1"
+                        color="on-surface-variant"
                         :size="28"
                         class="mb-3"
                       ></v-icon>
-                      <span class="text-subtitle-2 text-grey-darken-1 text-center"
+                      <span class="text-subtitle-2 text-on-surface-variant text-center"
                         >No matching priorities</span
                       >
                     </v-sheet>
@@ -625,11 +625,11 @@ const editDialogActionsClass = computed(() =>
                     >
                       <v-icon
                         icon="mdi-filter-remove"
-                        color="grey-darken-1"
+                        color="on-surface-variant"
                         :size="28"
                         class="mb-3"
                       ></v-icon>
-                      <span class="text-subtitle-2 text-grey-darken-1 text-center">
+                      <span class="text-subtitle-2 text-on-surface-variant text-center">
                         No matching completion status
                       </span>
                     </v-sheet>
@@ -655,16 +655,17 @@ const editDialogActionsClass = computed(() =>
         <v-card-actions class="justify-center pt-4 pb-8 mt-4">
           <v-btn
             variant="tonal"
-            rounded
+            color="surface-variant"
             size="large"
             prepend-icon="mdi-refresh"
             :class="sharedButtonResponsiveClass"
             :block="sharedButtonResponsiveBlock"
             class="text-none text-button"
+            rounded="xl"
             @click="taskStore.resetFilters()"
             :disabled="!hasActiveFilters()"
           >
-            Clear All Filters
+            clear all filters
           </v-btn>
         </v-card-actions>
       </v-card>

@@ -16,29 +16,43 @@ import 'vuetify/dist/vuetify-labs.css'
 const vuetify = createVuetify({
   components: {
     ...components,
-    VDateInput,
+    VDateInput
+  },
+  defaults: {
+    VBtn: { rounded: 'xl' },
+    VCard: { rounded: 'lg' },
+    VTextField: { rounded: 'sm' },
+    VChip: { rounded: 'sm' },
+    VDialog: { rounded: 'xl' },
+    VSheet: { rounded: 'md' }
   },
   theme: {
-    defaultTheme: 'light',
+    defaultTheme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     themes: {
       light: {
         colors: {
-          // YouTube usa fondo blanco principal y elementos secundarios en gris claro
-          'surface-container': '#f2f2f2',        // Gris claro para elementos secundarios/chips/botones
-          'surface-container-low': '#f9f9f9',    // Muy sutilmente gris para hover states
-          'surface-container-high': '#e5e5e5',   // Gris más oscuro para bordes/divisores
-          'surface-container-highest': '#d9d9d9', // Gris oscuro para elementos de mayor énfasis
-          'on-surface-container': '#212121',      // Texto sobre elementos grises
+          'surface-container': '#f2f2f2',
+          'surface-container-low': '#f9f9f9',
+          'surface-container-high': '#e5e5e5',
+          'surface-container-highest': '#d9d9d9',
+          'on-surface-container': '#212121',
+          'warning-container': '#FFF3E0',
+          'error-container': '#FFEBEE',
+          'success-container': '#E8F5E9',
+          'info-container': '#E3F2FD'
         }
       },
       dark: {
         colors: {
-          // Versiones oscuras equivalentes
-          'surface-container': '#303030',        // grey-darken-3
-          'surface-container-low': '#212121',    // grey-darken-4
-          'surface-container-high': '#424242',   // grey-darken-2
-          'surface-container-highest': '#616161', // grey-darken-1
-          'on-surface-container': '#f5f5f5',      // grey-lighten-4
+          'surface-container': '#303030',
+          'surface-container-low': '#212121',
+          'surface-container-high': '#424242',
+          'surface-container-highest': '#616161',
+          'on-surface-container': '#f5f5f5',
+          'warning-container': '#3E2723',
+          'error-container': '#4E342E',
+          'success-container': '#1B5E20',
+          'info-container': '#0D47A1'
         }
       }
     }

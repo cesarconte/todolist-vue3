@@ -50,7 +50,7 @@ const closeDialog = () => {
     <v-card class="notification-list-card pa-4">
       <v-card-title class="d-flex align-center justify-space-between mb-2">
         <span class="text-h6 font-weight-medium">Notifications</span>
-        <v-btn icon @click="closeDialog" variant="text">
+        <v-btn icon @click="closeDialog" variant="text" color="on-surface-variant">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
@@ -82,17 +82,13 @@ const closeDialog = () => {
 
               <template v-slot:default>
                 <v-sheet color="transparent" class="d-flex align-center">
-                  <v-icon
-                    :icon="item.icon"
-                    size="large"
-                    class="mr-4"
-                  />
+                  <v-icon :icon="item.icon" size="large" class="mr-4" />
                   <v-sheet color="transparent">
                     <v-list-item-title lines="one" class="text-body-1 font-weight-medium mb-2">
-                       {{ item.message }}
+                      {{ item.message }}
                     </v-list-item-title>
                     <v-list-item-subtitle lines="one" class="mb-2">
-                       {{ formatDate(item.timestamp) }}
+                      {{ formatDate(item.timestamp) }}
                     </v-list-item-subtitle>
                   </v-sheet>
                 </v-sheet>
@@ -117,22 +113,23 @@ const closeDialog = () => {
       <v-divider class="mb-4" />
 
       <v-card-actions class="justify-end px-4 pb-0">
-        <v-tooltip text="Mark all notifications as read" location="top">
+        <v-tooltip text="mark all notifications as read" location="top">
           <template v-slot:activator="{ props }">
             <v-btn
               v-bind="props"
               :disabled="notificationsStore.unreadCount === 0"
               variant="tonal"
-              rounded
+              color="primary"
               size="large"
               prepend-icon="mdi-check-all"
               class="text-none text-button"
+              rounded="xl"
               @click="notificationsStore.markAllAsRead()"
             >
               <template v-slot:loader>
                 <v-progress-circular indeterminate size="20" width="2" />
               </template>
-              Mark all as read
+              mark all as read
             </v-btn>
           </template>
         </v-tooltip>

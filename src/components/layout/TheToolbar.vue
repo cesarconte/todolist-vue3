@@ -326,7 +326,7 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for creating a new task - note index [2] is for Submit in new order
-btnsForm[0].text = 'Create Task' // Botón primario de confirmación (ahora en índice 2)
+btnsForm[0].text = 'create task' // Botón primario de confirmación (ahora en índice 2)
 btnsForm[0].icon = 'mdi-plus-circle' // Icono más distintivo para crear, consistente con Add Project
 
 const btnsFormAddProject = [
@@ -335,25 +335,24 @@ const btnsFormAddProject = [
   {
     type: 'button',
     height: '2.5rem',
-    text: 'Cancel',
+    text: 'cancel',
     icon: 'mdi-close',
     function: () => (dialogAddProject.value = false),
-    color: 'onSurfaceVariant', // Color neutro para cancelación (MD3)
     variant: 'text' // Variante menos prominente para cancelación (MD3)
   },
   {
     type: 'button',
     height: '2.5rem',
-    text: 'Reset',
+    text: 'reset',
     icon: 'mdi-refresh',
     function: resetAddProjectFormUnified,
-    color: 'secondary', // Color secundario para acción alternativa (MD3)
+    color: 'surface-variant', // Color secundario para acción alternativa (MD3)
     variant: 'tonal' // Variante intermedia para acción secundaria (MD3)
   },
   {
     type: 'submit',
     height: '2.5rem',
-    text: 'Create Project', // Texto más claro y consistente (MD3)
+    text: 'create project', // Texto más claro y consistente (MD3)
     icon: 'mdi-plus-circle', // Icono más distintivo para crear (MD3)
     function: addNewProject,
     color: 'primary', // Color primario para acción principal (MD3)
@@ -631,7 +630,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           />
           <v-icon
             v-else
-            color="grey-darken-1"
+            color="on-surface-variant"
             :size="xs ? 16 : sm ? 18 : md ? 20 : lg ? 24 : xl ? 28 : 20"
             >mdi-account-circle</v-icon
           >

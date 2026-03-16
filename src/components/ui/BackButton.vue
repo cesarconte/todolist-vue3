@@ -1,6 +1,6 @@
 <template>
   <v-fade-transition>
-    <v-sheet 
+    <v-sheet
       v-if="isVisible"
       color="transparent"
       class="v-back-btn-wrapper"
@@ -41,7 +41,7 @@ const router = useRouter()
 const props = defineProps({
   label: {
     type: String,
-    default: 'Back'
+    default: 'back'
   },
   to: {
     type: String,
@@ -68,15 +68,15 @@ const handleScroll = () => {
   const scrollY = window.scrollY
   const windowHeight = window.innerHeight
   const documentHeight = document.documentElement.scrollHeight
-  
+
   isVisible.value = scrollY > 150
 
   const footerElement = document.querySelector('.v-footer')
   const footerHeight = footerElement ? footerElement.offsetHeight : 0
   const distanceFromBottom = documentHeight - (scrollY + windowHeight)
-  
+
   const baseBottom = xs.value ? 24 : 32
-  
+
   if (distanceFromBottom < footerHeight) {
     bottomOffset.value = baseBottom + (footerHeight - distanceFromBottom)
   } else {
@@ -119,6 +119,6 @@ onUnmounted(() => {
 
 .v-back-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
 }
 </style>

@@ -234,7 +234,7 @@ const { btnsForm } = useFormBtnActions(
 )
 
 // Configure the submit button for editing a task
-btnsForm[0].text = 'Update Task' // Set the text for the submit button
+btnsForm[0].text = 'update task' // Set the text for the submit button
 btnsForm[0].icon = 'mdi-pencil' // Set the icon for the submit button
 
 // Botones para el formulario de edición de proyecto usando el composable
@@ -243,7 +243,7 @@ const { btnsForm: btnsFormEditProject } = useFormBtnActions(
   resetEditProject,
   () => (dialogEditProject.value = false)
 )
-btnsFormEditProject[0].text = 'Save Edit'
+btnsFormEditProject[0].text = 'save edit'
 btnsFormEditProject[0].icon = 'mdi-check'
 
 // Define the buttons Project array
@@ -436,24 +436,22 @@ const confirmDeleteAndClose = () => {
             :class="mobile ? 'd-flex flex-column align-stretch w-100 ga-4' : ''"
           >
             <v-btn
-              color="on-surface"
-              variant="outlined"
-              rounded
+              variant="text"
+              class="text-none text-button"
+              rounded="xl"
               @click="confirmDialog = false"
-              class="text-button text-none mr-2"
-              prepend-icon="mdi-close"
             >
-              Cancel
+              cancel
             </v-btn>
             <v-btn
               color="error"
-              variant="flat"
-              rounded
+              variant="tonal"
+              rounded="xl"
               @click="confirmDeleteAndClose"
               class="text-button text-none"
               prepend-icon="mdi-delete"
             >
-              Delete All
+              delete all
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -579,19 +577,19 @@ const confirmDeleteAndClose = () => {
                     >
                     </v-btn>
                   </template>
-                  <span>Add Task</span>
+                  <span>add task</span>
                 </v-tooltip>
                 <v-btn
                   v-else
                   color="primary"
                   variant="tonal"
-                  rounded
                   size="large"
                   prepend-icon="mdi-plus"
                   class="text-none text-button"
+                  rounded="xl"
                   @click="handleAddTaskClick"
                 >
-                  Add Task
+                  add task
                 </v-btn>
               </v-col>
             </v-row>
@@ -752,13 +750,13 @@ const confirmDeleteAndClose = () => {
             <v-btn
               color="primary"
               variant="tonal"
-              rounded
               size="large"
               prepend-icon="mdi-plus"
               class="mt-6 text-none text-button"
+              rounded="xl"
               @click="handleAddTaskClick"
             >
-              Add Task
+              add task
             </v-btn>
           </EmptyState>
         </v-col>

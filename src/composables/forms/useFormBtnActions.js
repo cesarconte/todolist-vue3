@@ -16,8 +16,8 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
       text: '', // Se configurará en el componente
       icon: '', // Se configurará en el componente
       color: 'primary', // Color primario para acción principal (MD3)
-      variant: 'flat', // La variante más prominente para acción principal (MD3)
-      rounded: 'pill', // Bordes redondeados para un aspecto más moderno
+      variant: 'elevated', // La variante más prominente para acción principal (MD3)
+      rounded: 'xl', // Bordes redondeados según MD3 shape scale
       function: async () => {
         try {
           await submitFn()
@@ -39,21 +39,20 @@ export const useFormBtnActions = (submitFn, resetFn, closeFn) => {
     {
       type: 'button',
       height: '2.5rem',
-      text: 'Reset',
+      text: 'reset',
       icon: 'mdi-refresh',
-      color: 'on-surface', // Color secundario para acción alternativa (MD3)
+      color: 'surface-variant', // Color secundario para acción alternativa (MD3)
       variant: 'tonal', // Variante intermedia para acción secundaria (MD3)
-      rounded: 'pill', // Bordes redondeados para un aspecto más moderno
+      rounded: 'xl', // Bordes redondeados según MD3 shape scale
       function: resetFn
     },
     {
       type: 'button',
       height: '2.5rem',
-      text: 'Cancel',
+      text: 'cancel',
       icon: 'mdi-close',
-      color: 'surface-variant', // Cambiado de 'on-surface-variant' para mejorar contraste
-      variant: 'outlined', // Cambiado de 'text' para mejor visibilidad
-      rounded: 'pill', // Bordes redondeados para un aspecto más moderno
+      variant: 'text', // Variante menos prominente para cancelación (MD3)
+      rounded: 'xl', // Bordes redondeados según MD3 shape scale
       function: closeFn
     }
   ]

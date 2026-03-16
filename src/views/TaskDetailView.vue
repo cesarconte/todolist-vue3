@@ -68,9 +68,8 @@ const { btnsForm } = useFormBtnActions(
   () => (taskStore.dialogEditTask = false)
 )
 
-btnsForm[0].text = 'Update Task'
+btnsForm[0].text = 'update task'
 btnsForm[0].icon = 'mdi-pencil'
-
 
 const rules = useMaxLengthRule()
 
@@ -96,10 +95,7 @@ onMounted(() => {
           >
             Task {{ task.title }}
           </h2>
-          <BackButton 
-            to="/" 
-            aria-label="Back to Home" 
-          />
+          <BackButton to="/" aria-label="Back to Home" />
           <v-divider></v-divider>
         </v-col>
       </v-row>
@@ -129,12 +125,18 @@ onMounted(() => {
               />
             </template>
             <template #fallback>
-              <v-card flat color="surface-variant" rounded="lg" class="pa-6 d-flex flex-column align-center justify-center">
-                <v-progress-circular indeterminate color="primary" class="mb-4"></v-progress-circular>
-                <v-sheet 
-                  color="transparent" 
-                  class="text-body-1 text-on-surface-variant"
-                >
+              <v-card
+                flat
+                color="surface-variant"
+                rounded="lg"
+                class="pa-6 d-flex flex-column align-center justify-center"
+              >
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  class="mb-4"
+                ></v-progress-circular>
+                <v-sheet color="transparent" class="text-body-1 text-on-surface-variant">
                   Loading task details...
                 </v-sheet>
               </v-card>

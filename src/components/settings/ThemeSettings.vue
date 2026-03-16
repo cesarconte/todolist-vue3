@@ -56,15 +56,10 @@ const applyTheme = (mode) => {
   let target = mode
 
   if (mode === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    target = prefersDark ? 'dark' : 'light'
+    target = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   }
 
-  if (typeof theme.change === 'function') {
-    theme.change(target)
-  } else {
-    theme.global.name.value = target
-  }
+  theme.global.name.value = target
 }
 
 const applyAccentColor = (color) => {
@@ -197,9 +192,24 @@ const cancelDialog = () => {
       <v-divider class="my-4" />
 
       <v-card-actions :class="xs ? 'justify-end px-2 pb-3' : 'justify-end px-6 pb-4'">
-        <v-btn variant="text" @click="cancelDialog"> Cancel </v-btn>
-        <v-btn color="primary" variant="tonal" rounded size="large" @click="closeDialog">
-          Done
+        <v-btn
+          variant="text"
+          class="text-none text-button"
+          rounded="xl"
+          size="large"
+          @click="cancelDialog"
+        >
+          cancel
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="tonal"
+          size="large"
+          class="text-none text-button"
+          rounded="xl"
+          @click="closeDialog"
+        >
+          done
         </v-btn>
       </v-card-actions>
     </v-card>
