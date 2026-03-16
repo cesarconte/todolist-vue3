@@ -13,12 +13,12 @@ import { useResetForm } from '@/composables/forms/useResetForm'
 import ActionButtons from '@/components/tasks/ActionButtons.vue'
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import CardTask from '@/components/tasks/CardTask.vue'
 import TaskPagination from '@/components/tasks/TaskPagination.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import ProjectForm from '@/components/projects/ProjectForm.vue'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
 import EmptyState from '@/components/tasks/EmptyState.vue'
+import TaskList from '@/components/tasks/TaskList.vue'
 import { useMotivationalProgress } from '@/composables/ui/useMotivationalProgress.js'
 import BackButton from '@/components/ui/BackButton.vue'
 
@@ -716,8 +716,6 @@ const confirmDeleteAndClose = () => {
         class="tasks d-flex flex-wrap align-items-center justify-content-center mb-8"
       >
         <v-col
-          v-for="task in taskStore.paginatedTasksInSelectedProject"
-          :key="task.id"
           cols="12"
           sm="11"
           md="10"
@@ -726,44 +724,14 @@ const confirmDeleteAndClose = () => {
           class="py-0 mb-8"
           :class="xs ? 'mx-auto my-2' : 'mx-auto my-4'"
         >
-          <Suspense>
-            <template #default>
-              <CardTask
-                v-if="task"
-                :key="task.id"
-                :title="task.title"
-                :id="task.id"
-                :description="task.description"
-                :label="task.label"
-                :project="task.project"
-                :priority="task.priority"
-                :status="task.status"
-                :startDate="task.startDate"
-                :endDate="task.endDate"
-                :createdAt="task.createdAt"
-                :completed="task.completed"
-                :color="task.color ? task.color : 'primary'"
-                :projectId="task.projectId"
-                :startDateHour="task.startDateHour"
-                :endDateHour="task.endDateHour"
-                @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
-                @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
-                @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
-              >
-              </CardTask>
-            </template>
-            <template #fallback>
-              <v-sheet class="fallback d-flex align-center justify-center pa-4" color="transparent">
-                <v-progress-circular
-                  indeterminate
-                  color="primary"
-                  size="24"
-                  class="me-2"
-                ></v-progress-circular>
-                <span class="text-body-2">Loading Task...</span>
-              </v-sheet>
-            </template>
-          </Suspense>
+          <TaskList
+            :tasks="taskStore.paginatedTasksInSelectedProject"
+            :loading="taskStore.state.isLoading"
+            empty-message="No tasks in this project"
+            @edit-task="(projectId, taskId) => taskStore.editTask(taskId)"
+            @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
+            @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
+          />
         </v-col>
       </v-row>
 
