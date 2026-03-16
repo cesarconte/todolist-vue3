@@ -128,7 +128,7 @@ const updateView = (value) => emit('update:currentView', value)
               rounded="lg"
               bg-color="surface"
               class="font-weight-bold"
-              style="min-width: 160px"
+              style="min-width: 160px; max-width: 238px"
               @update:model-value="updateView"
             />
           </v-col>
