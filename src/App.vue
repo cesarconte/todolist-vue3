@@ -2,8 +2,7 @@
 import { RouterView } from 'vue-router'
 import TheToolbar from '@/components/layout/TheToolbar.vue'
 import TheFooter from '@/components/layout/TheFooter.vue'
-import NotificationList from '@/components/notifications/NotificationList.vue'
-import BaseSnackbar from '@/components/notifications/BaseSnackbar.vue'
+import NotificationCenter from '@/components/notifications/NotificationCenter.vue'
 import { onMounted } from 'vue'
 import { useDataInitialization } from '@/composables/data/useDataInitialization'
 
@@ -21,8 +20,7 @@ onMounted(() => {
       <RouterView />
     </v-main>
     <TheFooter />
-    <NotificationList />
-    <BaseSnackbar />
+    <NotificationCenter />
   </v-app>
 </template>
 

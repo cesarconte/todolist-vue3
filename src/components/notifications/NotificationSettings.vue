@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useNotificationsStore } from '@/stores/notificationsStore.js'
 import { useUserStore } from '@/stores/userStore.js'
 import { useDisplay } from 'vuetify'
@@ -47,6 +47,19 @@ const switchColor = computed(() =>
   notificationsStore.notificationSettings.enabled ? 'primary' : 'on-surface-variant'
 ) // Sets the color of the notification switch using semantic MD3 colors
 const isDisabled = computed(() => !notificationsStore.hasFullSupport || !userStore.isLoggedIn) // Determines if the notification switch should be disabled
+
+/************************************
+ * Watchers
+ ************************************/
+watch(
+  () => notificationsStore.notificationSettings.time,
+  () => {
+    if (notificationsStore.notificationSettings.enabled) {
+      notificationsStore.scheduleNotifications()
+    }
+  },
+  { deep: true }
+)
 
 /************************************
  * Methods / Functions
@@ -321,9 +334,7 @@ const { xs } = useDisplay() // Accesses display breakpoints from Vuetify
 
       <v-divider class="my-6" />
 
-      <v-card-actions
-        :class="xs ? 'justify-end px-2 pb-3' : 'justify-end px-6 pb-4'"
-      >
+      <v-card-actions :class="xs ? 'justify-end px-2 pb-3' : 'justify-end px-6 pb-4'">
         <v-btn
           :disabled="isDisabled || !notificationsStore.notificationSettings.enabled"
           color="surface-variant"

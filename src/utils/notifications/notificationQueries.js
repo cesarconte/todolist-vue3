@@ -13,9 +13,7 @@ export function buildNotificationQuery(userId, options = {}) {
   if (options.lastVisible) {
     constraints.push(startAfter(options.lastVisible))
   }
-  if (options.pageSize) {
-    constraints.push(limit(options.pageSize))
-  }
+  constraints.push(limit(options.pageSize || 50))
 
   return query(q, ...constraints)
 }

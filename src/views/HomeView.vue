@@ -114,10 +114,10 @@ onUnmounted(() => {
 
 watch(
   () => userStore.isLoggedIn,
-  (loggedIn) => {
+  async (loggedIn) => {
     if (loggedIn) {
-      taskStore.loadAllUserTasks()
-      notificationsStore.scheduleNotifications(taskStore.tasksData)
+      await taskStore.loadAllUserTasks()
+      notificationsStore.scheduleNotifications()
     } else {
       taskStore.clearTaskStore()
     }

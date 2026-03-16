@@ -18,7 +18,7 @@ import { useToolbarNav } from '@/composables/layout/useToolbarNav'
 import useThemeToggle from '@/composables/ui/useThemeToggle' // Importar el composable para alternar el tema
 import ActionButtons from '@/components/tasks/ActionButtons.vue'
 import NotificationSettings from '@/components/notifications/NotificationSettings.vue'
-import NotificationList from '@/components/notifications/NotificationList.vue'
+import NotificationCenter from '@/components/notifications/NotificationCenter.vue'
 import TaskForm from '@/components/tasks/TaskForm.vue'
 import ProjectForm from '@/components/projects/ProjectForm.vue'
 import BaseSnackbar from '@/components/notifications/BaseSnackbar.vue'
@@ -563,7 +563,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
 
   <NotificationSettings v-model="dialogNotificationsSettings" />
 
-  <NotificationList v-model="dialogNotificationsList" />
+  <NotificationCenter v-model="dialogNotificationsList" />
 
   <v-navigation-drawer
     v-model="menus.drawer"

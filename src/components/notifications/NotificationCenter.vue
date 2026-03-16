@@ -1,12 +1,18 @@
-// VNotifications.vue
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
 import BaseSnackbar from './BaseSnackbar.vue'
+import NotificationDialog from './NotificationDialog.vue'
 
-/************************************
- * Stores
- ************************************/
-const notificationsStore = useNotificationsStore() // Accesses the notifications store
+const notificationsStore = useNotificationsStore()
+
+defineProps({
+  modelValue: {
+    type: Boolean,
+    required: true
+  }
+})
+
+defineEmits(['update:modelValue'])
 </script>
 
 <template>
@@ -16,6 +22,9 @@ const notificationsStore = useNotificationsStore() // Accesses the notifications
     :color="notificationsStore.showSnackbar.color"
     :prepend-icon="notificationsStore.showSnackbar.prependIcon"
     :append-icon="notificationsStore.showSnackbar.appendIcon"
-  >
-  </BaseSnackbar>
+  />
+  <NotificationDialog
+    :model-value="modelValue"
+    @update:model-value="(val) => $emit('update:modelValue', val)"
+  />
 </template>

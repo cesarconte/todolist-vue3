@@ -23,8 +23,6 @@ import {
 import { mapFirestoreNotification } from '@/utils/notifications/notificationMappers.js'
 import { buildNotificationQuery } from '@/utils/notifications/notificationQueries.js'
 import { batchDeleteDocuments } from '@/utils/firestore/firestoreBatch.js'
-import { useNotificationsStore } from '@/stores/notificationsStore.js'
-import { showSnackbar, handleError } from '@/utils/notifications/notificationHelpers.js'
 
 /**
  * Carga la configuración de notificaciones del usuario.
@@ -52,16 +50,12 @@ export async function loadSettings(userId) {
  * @returns {Promise<void>}
  */
 export async function saveSettings(userId, settings) {
-  const notificationsStore = useNotificationsStore()
-
   try {
     await updateDoc(doc(db, 'users', userId), {
       notificationSettings: settings
     })
-    showSnackbar(notificationsStore, 'Settings saved!', 'success', 'mdi-content-save')
   } catch (error) {
-    handleError(notificationsStore, 'Error saving settings', error)
-    throw error
+    throw new Error(`Error saving settings: ${error.message}`)
   }
 }
 
@@ -98,14 +92,10 @@ export async function createNotification(userId, data) {
  * @returns {Promise<void>}
  */
 export async function deleteNotification(userId, notificationId) {
-  const notificationsStore = useNotificationsStore()
-
   try {
     await deleteDocument(doc(db, 'users', userId, 'notifications', notificationId))
-    showSnackbar(notificationsStore, 'Notification deleted', 'success', 'mdi-bell-check')
   } catch (error) {
-    handleError(notificationsStore, 'Error deleting notification', error)
-    throw error
+    throw new Error(`Error deleting notification: ${error.message}`)
   }
 }
 
@@ -116,8 +106,6 @@ export async function deleteNotification(userId, notificationId) {
  * @returns {Promise<void>}
  */
 export async function markAllAsRead(userId) {
-  const notificationsStore = useNotificationsStore()
-
   try {
     const notificationsRef = collection(db, 'users', userId, 'notifications')
     const q = query(notificationsRef, where('read', '==', false))
@@ -127,16 +115,8 @@ export async function markAllAsRead(userId) {
 
     const docRefs = snapshot.docs.map((d) => d.ref)
     await batchDeleteDocuments(db, docRefs)
-
-    showSnackbar(
-      notificationsStore,
-      'All notifications marked as read successfully',
-      'success',
-      'mdi-check-all'
-    )
   } catch (error) {
-    handleError(notificationsStore, 'Error marking all as read', error)
-    throw error
+    throw new Error(`Error marking all as read: ${error.message}`)
   }
 }
 
