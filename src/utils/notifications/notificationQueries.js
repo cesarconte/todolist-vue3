@@ -1,5 +1,5 @@
 import { collection, query, where, orderBy, limit, startAfter } from 'firebase/firestore'
-import { db } from '@/firebase'
+import { db } from '@/config/firebase.js'
 
 export function buildNotificationQuery(userId, options = {}) {
   let q = collection(db, 'users', userId, 'notifications')

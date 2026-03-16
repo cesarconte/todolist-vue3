@@ -1,23 +1,12 @@
 import { defineStore } from 'pinia'
-import { db } from '@/firebase'
-import { doc, updateDoc, getDocs, query, where, onSnapshot, collection } from 'firebase/firestore'
 import { useUserStore } from '@/stores/userStore'
-// import { useDataStore } from '@/stores/dataStore'
 import { useTaskStore } from '@/stores/taskStore'
-import {
-  getDocument,
-  getCollection,
-  addDocument,
-  deleteDocument
-} from '@/utils/firestore/firestoreCrud.js'
-import { mapFirestoreNotification } from '@/utils/notifications/notificationMappers.js'
 import {
   showSnackbar,
   handleError,
   requireUserId
 } from '@/utils/notifications/notificationHelpers.js'
-import { buildNotificationQuery } from '@/utils/notifications/notificationQueries.js'
-import { batchDeleteDocuments } from '@/utils/firestore/firestoreBatch.js'
+import * as notificationService from '@/services/notificationService.js'
 
 /**
  * Notification Store - Manages all notification-related functionality
@@ -91,23 +80,15 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         const userId = requireUserId(userStore)
 
-        // Fetch user document from Firestore
-        const userDoc = await getDocument(doc(db, 'users', userId))
-        if (userDoc) {
-          const data = userDoc
-          if (data.notificationSettings) {
-            // Update local state with stored settings
-            this.notificationSettings = data.notificationSettings
-
-            // Schedule notifications if enabled
-            if (this.notificationSettings.enabled) {
-              const taskStore = useTaskStore()
-              this.scheduleNotifications(taskStore.tasksData)
-            }
+        const settings = await notificationService.loadSettings(userId)
+        if (settings) {
+          this.notificationSettings = settings
+          if (this.notificationSettings.enabled) {
+            const taskStore = useTaskStore()
+            this.scheduleNotifications(taskStore.tasksData)
           }
         }
 
-        // Suscribirse a notificaciones en tiempo real
         this.subscribeToNotifications()
       } catch (error) {
         handleError(this, 'Error loading settings', error)
@@ -120,12 +101,13 @@ export const useNotificationsStore = defineStore('notifications', {
 
       try {
         const userId = requireUserId(userStore)
-        const q = buildNotificationQuery(userId, { unreadOnly, pageSize, lastVisible, order })
-
-        this.unsubscribeNotifications = onSnapshot(q, (snapshot) => {
-          // Forzar una actualización reactiva
-          this.activeNotifications = snapshot.docs.map(mapFirestoreNotification)
-        })
+        this.unsubscribeNotifications = notificationService.subscribeToNotifications(
+          userId,
+          { unreadOnly, pageSize, lastVisible, order },
+          (notifications) => {
+            this.activeNotifications = notifications
+          }
+        )
       } catch (error) {
         handleError(this, 'Error subscribing to notifications', error)
       }
@@ -140,12 +122,8 @@ export const useNotificationsStore = defineStore('notifications', {
       try {
         const userId = requireUserId(userStore)
 
-        // Update Firestore document with current settings
-        await updateDoc(doc(db, 'users', userId), {
-          notificationSettings: this.notificationSettings
-        })
+        await notificationService.saveSettings(userId, this.notificationSettings)
 
-        // Clear existing timeouts and reschedule
         this.clearTimeouts()
         if (this.notificationSettings.enabled) {
           const taskStore = useTaskStore()
@@ -203,10 +181,8 @@ export const useNotificationsStore = defineStore('notifications', {
         const userId = requireUserId(userStore)
 
         // Guardar en Firestore
-        await addDocument(collection(db, 'users', userId, 'notifications'), {
+        await notificationService.createNotification(userId, {
           message: 'Test notification',
-          timestamp: new Date().toISOString(),
-          read: false,
           icon: 'mdi-bell-ring-outline'
         })
 
@@ -256,10 +232,8 @@ export const useNotificationsStore = defineStore('notifications', {
               const timeoutId = setTimeout(async () => {
                 try {
                   // 1. Guardar notificación en Firestore
-                  await addDocument(collection(db, 'users', userId, 'notifications'), {
+                  await notificationService.createNotification(userId, {
                     message: `Task "${task.title}" due soon!`,
-                    timestamp: new Date().toISOString(),
-                    read: false,
                     taskId: task.id,
                     icon: 'mdi-email-mark-as-unread'
                   })
@@ -313,9 +287,13 @@ export const useNotificationsStore = defineStore('notifications', {
       const userStore = useUserStore()
       try {
         const userId = requireUserId(userStore)
-        const q = buildNotificationQuery(userId, { unreadOnly, pageSize, lastVisible, order })
-        const docs = await getCollection(q)
-        this.activeNotifications = docs.map(mapFirestoreNotification)
+        const notifications = await notificationService.loadNotifications(userId, {
+          unreadOnly,
+          pageSize,
+          lastVisible,
+          order
+        })
+        this.activeNotifications = notifications
       } catch (error) {
         handleError(this, 'Error loading notifications', error)
       }
@@ -325,11 +303,7 @@ export const useNotificationsStore = defineStore('notifications', {
       const userStore = useUserStore()
       try {
         const userId = requireUserId(userStore)
-
-        // Eliminar de Firestore
-        await deleteDocument(doc(db, 'users', userId, 'notifications', notificationId))
-
-        // Actualizar estado local
+        await notificationService.deleteNotification(userId, notificationId)
         this.activeNotifications = this.activeNotifications.filter((n) => n.id !== notificationId)
         showSnackbar(this, 'Notification marked as read successfully', 'success', 'mdi-bell-check')
       } catch (error) {
@@ -341,25 +315,9 @@ export const useNotificationsStore = defineStore('notifications', {
       const userStore = useUserStore()
       try {
         const userId = requireUserId(userStore)
-
-        // Referencia a la colección de notificaciones
-        const notificationsRef = collection(db, 'users', userId, 'notifications')
-
-        // Obtener todas las notificaciones no leídas
-        const q = query(notificationsRef, where('read', '==', false))
-        const snapshot = await getDocs(q)
-
-        // Obtener referencias de documentos
-        const docRefs = snapshot.docs.map((doc) => doc.ref)
-
-        // Eliminar documentos en batch
-        await batchDeleteDocuments(db, docRefs)
-
-        // Actualizar estado local
-        this.activeNotifications = this.activeNotifications.filter(
-          (n) => !snapshot.docs.some((d) => d.id === n.id)
-        )
-
+        await notificationService.markAllAsRead(userId)
+        // We need to reload or filter locally. Since we deleted all, empty the list.
+        this.activeNotifications = []
         showSnackbar(
           this,
           'All notifications marked as read successfully',

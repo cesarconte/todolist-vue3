@@ -2,7 +2,7 @@
 import { useNotificationsStore } from '@/stores/notificationsStore'
 // import { useDisplay } from 'vuetify'
 import { formatDate } from '@/utils/date/dateFormat'
-import VEmptyState from '@/components/tasks/VEmptyState.vue'
+import EmptyState from '@/components/tasks/EmptyState.vue'
 
 /************************************
  * Props & Emits
@@ -101,14 +101,14 @@ const closeDialog = () => {
           </template>
           <template v-else>
             <v-container class="empty-state-container">
-              <VEmptyState
+              <EmptyState
                 icon="mdi-checkbox-marked-circle-auto-outline"
                 :icon-size="96"
                 title="All caught up!"
                 subtitle="No new notifications"
               >
                 <p class="text-caption mt-2">Check back later for new notifications</p>
-              </VEmptyState>
+              </EmptyState>
             </v-container>
           </template>
         </v-list>

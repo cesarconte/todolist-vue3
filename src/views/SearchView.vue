@@ -9,11 +9,11 @@ import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
 import { useResetForm } from '@/composables/forms/useResetForm'
-import VCardTask from '@/components/tasks/VCardTask.vue'
-import VActionButtons from '@/components/tasks/VActionButtons.vue'
-import VTaskForm from '@/components/tasks/VTaskForm.vue'
-import VEmptyState from '@/components/tasks/VEmptyState.vue'
-import VBackButton from '@/components/ui/VBackButton.vue'
+import CardTask from '@/components/tasks/CardTask.vue'
+import ActionButtons from '@/components/tasks/ActionButtons.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
+import EmptyState from '@/components/tasks/EmptyState.vue'
+import BackButton from '@/components/ui/BackButton.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -140,7 +140,7 @@ onMounted(() => {
           >
             Search Tasks
           </h2>
-          <VBackButton 
+          <BackButton 
             to="/" 
             aria-label="Back to Home" 
           />
@@ -268,7 +268,7 @@ onMounted(() => {
           <!-- Estado sin búsqueda activa -->
           <v-row v-if="!hasActiveSearch && userStore.isLoggedIn">
             <v-col>
-              <VEmptyState
+              <EmptyState
                 icon="mdi-text-search"
                 :icon-size="xs ? 60 : sm ? 70 : 80"
                 :title="xs ? 'Search for tasks' : 'Type a task title in the search box above'"
@@ -393,7 +393,7 @@ onMounted(() => {
           >
             <Suspense>
               <template #default>
-                <VCardTask
+                <CardTask
                   v-if="task"
                   :key="task.id"
                   :title="task.title"
@@ -464,7 +464,7 @@ onMounted(() => {
             <span>Edit task: {{ taskStore.editedTask?.title }}</span>
           </v-card-title>
           <v-card-text :class="xs ? 'px-1 py-2' : ''">
-            <VTaskForm
+            <TaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
@@ -473,7 +473,7 @@ onMounted(() => {
               :rules="rules"
               ref="form"
               @submit="submitEditedTask"
-            ></VTaskForm>
+            ></TaskForm>
           </v-card-text>
           <v-card-actions
             :class="
@@ -482,7 +482,7 @@ onMounted(() => {
                 : 'd-flex flex-wrap justify-space-around py-3'
             "
           >
-            <VActionButtons :buttons="btnsForm" />
+            <ActionButtons :buttons="btnsForm" />
           </v-card-actions>
         </v-card>
       </v-dialog>

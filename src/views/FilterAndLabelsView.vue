@@ -1,12 +1,12 @@
 <!-- FilterAndLabelsView.vue  -->
 
 <script setup>
-import VActionButtons from '@/components/tasks/VActionButtons.vue'
-import VCardTask from '@/components/tasks/VCardTask.vue'
-import VPagination from '@/components/tasks/VPagination.vue'
-import VTaskForm from '@/components/tasks/VTaskForm.vue'
-import VEmptyState from '@/components/tasks/VEmptyState.vue'
-import VBackButton from '@/components/ui/VBackButton.vue'
+import ActionButtons from '@/components/tasks/ActionButtons.vue'
+import CardTask from '@/components/tasks/CardTask.vue'
+import TaskPagination from '@/components/tasks/TaskPagination.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
+import EmptyState from '@/components/tasks/EmptyState.vue'
+import BackButton from '@/components/ui/BackButton.vue'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useResetForm } from '@/composables/forms/useResetForm'
 import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
@@ -100,7 +100,6 @@ const { btnsForm } = useFormBtnActions(
 )
 btnsForm[0].text = 'Update Task'
 btnsForm[0].icon = 'mdi-pencil'
-
 
 const rules = useMaxLengthRule()
 
@@ -209,8 +208,6 @@ const skeletonLoaderWidth = computed(() => {
 
 const taskCardColClass = computed(() => (xs.value ? 'mx-auto my-2' : 'mx-auto my-4'))
 
-
-
 const editDialogMaxWidth = computed(() => {
   switch (name.value) {
     case 'xs':
@@ -243,10 +240,7 @@ const editDialogActionsClass = computed(() =>
           <h2 class="text-center text-on-surface font-weight-bold" :class="pageTitleClass">
             Filter and Label Tasks
           </h2>
-          <VBackButton 
-            to="/"
-            aria-label="Go back to Home" 
-          />
+          <BackButton to="/" aria-label="Go back to Home" />
         </v-col>
       </v-row>
 
@@ -277,7 +271,10 @@ const editDialogActionsClass = computed(() =>
                 >
                   Filter Options
                 </v-sheet>
-                <v-sheet color="transparent" class="text-caption text-onSurfaceVariant mt-1 text-wrap">
+                <v-sheet
+                  color="transparent"
+                  class="text-caption text-onSurfaceVariant mt-1 text-wrap"
+                >
                   {{ filterSubtitleText }}
                 </v-sheet>
               </v-sheet>
@@ -409,17 +406,20 @@ const editDialogActionsClass = computed(() =>
                 </template>
                 <template v-slot:no-data>
                   <v-list-item class="pa-4">
-                  <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
-                    <v-icon
-                      icon="mdi-filter-remove"
-                      color="grey-darken-1"
-                      :size="28"
-                      class="mb-3"
-                    ></v-icon>
-                    <span class="text-subtitle-2 text-grey-darken-1 text-center"
-                      >No matching priorities</span
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex flex-column align-center justify-center pa-2"
                     >
-                  </v-sheet>
+                      <v-icon
+                        icon="mdi-filter-remove"
+                        color="grey-darken-1"
+                        :size="28"
+                        class="mb-3"
+                      ></v-icon>
+                      <span class="text-subtitle-2 text-grey-darken-1 text-center"
+                        >No matching priorities</span
+                      >
+                    </v-sheet>
                   </v-list-item>
                 </template>
               </v-autocomplete>
@@ -619,17 +619,20 @@ const editDialogActionsClass = computed(() =>
                 </template>
                 <template v-slot:no-data>
                   <v-list-item class="pa-4">
-                  <v-sheet color="transparent" class="d-flex flex-column align-center justify-center pa-2">
-                    <v-icon
-                      icon="mdi-filter-remove"
-                      color="grey-darken-1"
-                      :size="28"
-                      class="mb-3"
-                    ></v-icon>
-                    <span class="text-subtitle-2 text-grey-darken-1 text-center">
-                      No matching completion status
-                    </span>
-                  </v-sheet>
+                    <v-sheet
+                      color="transparent"
+                      class="d-flex flex-column align-center justify-center pa-2"
+                    >
+                      <v-icon
+                        icon="mdi-filter-remove"
+                        color="grey-darken-1"
+                        :size="28"
+                        class="mb-3"
+                      ></v-icon>
+                      <span class="text-subtitle-2 text-grey-darken-1 text-center">
+                        No matching completion status
+                      </span>
+                    </v-sheet>
                   </v-list-item>
                 </template>
               </v-autocomplete>
@@ -639,7 +642,7 @@ const editDialogActionsClass = computed(() =>
 
         <v-row v-if="!hasActiveFilters()">
           <v-col>
-            <VEmptyState
+            <EmptyState
               icon="mdi-filter-outline"
               :icon-size="emptyStateIconSize"
               :title="emptyStateTitle"
@@ -766,7 +769,7 @@ const editDialogActionsClass = computed(() =>
           >
             <Suspense>
               <template #default>
-                <VCardTask
+                <CardTask
                   :title="task.title"
                   :id="task.id"
                   :description="task.description"
@@ -790,7 +793,12 @@ const editDialogActionsClass = computed(() =>
                 />
               </template>
               <template #fallback>
-                <v-sheet color="transparent" class="fallback d-flex align-center justify-center pa-4" role="status" aria-live="polite">
+                <v-sheet
+                  color="transparent"
+                  class="fallback d-flex align-center justify-center pa-4"
+                  role="status"
+                  aria-live="polite"
+                >
                   <v-progress-circular
                     indeterminate
                     color="primary"
@@ -810,7 +818,7 @@ const editDialogActionsClass = computed(() =>
         v-if="taskStore.tasksPage.length > 0 && taskStore.totalPages > 1 && hasActiveFilters()"
         class="pa-3 mt-4 d-flex justify-center"
       >
-        <VPagination
+        <TaskPagination
           :currentPage="taskStore.state.currentPage"
           :totalPages="taskStore.totalPages"
           :hasPrevPage="taskStore.state.hasPrevPage"
@@ -825,9 +833,8 @@ const editDialogActionsClass = computed(() =>
               Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
             </span>
           </template>
-        </VPagination>
+        </TaskPagination>
       </v-row>
-
 
       <!-- Diálogo de edición -->
       <v-dialog
@@ -852,7 +859,7 @@ const editDialogActionsClass = computed(() =>
             <span>Edit task: {{ taskStore.editedTask?.title }}</span>
           </v-card-title>
           <v-card-text :class="editDialogContentClass">
-            <VTaskForm
+            <TaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
@@ -861,10 +868,10 @@ const editDialogActionsClass = computed(() =>
               :rules="rules"
               ref="form"
               @submit="submitEditedTask"
-            ></VTaskForm>
+            ></TaskForm>
           </v-card-text>
           <v-card-actions :class="editDialogActionsClass">
-            <VActionButtons :buttons="btnsForm" />
+            <ActionButtons :buttons="btnsForm" />
           </v-card-actions>
         </v-card>
       </v-dialog>

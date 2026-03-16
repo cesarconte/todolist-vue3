@@ -1,5 +1,5 @@
 <script setup>
-import VCardTask from '@/components/tasks/VCardTask.vue'
+import CardTask from '@/components/tasks/CardTask.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useDataStore } from '@/stores/dataStore.js'
 import { useProjectStore } from '@/stores/projectStore.js'
@@ -8,10 +8,10 @@ import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
 import { useResetForm } from '@/composables/forms/useResetForm'
-import VActionButtons from '@/components/tasks/VActionButtons.vue'
-import VTaskForm from '@/components/tasks/VTaskForm.vue'
+import ActionButtons from '@/components/tasks/ActionButtons.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
 import { useDisplay } from 'vuetify'
-import VBackButton from '@/components/ui/VBackButton.vue'
+import BackButton from '@/components/ui/BackButton.vue'
 
 const dataStore = useDataStore()
 const projectStore = useProjectStore()
@@ -96,7 +96,7 @@ onMounted(() => {
           >
             Task {{ task.title }}
           </h2>
-          <VBackButton 
+          <BackButton 
             to="/" 
             aria-label="Back to Home" 
           />
@@ -107,7 +107,7 @@ onMounted(() => {
         <v-col cols="12" sm="11" md="10" lg="9" xl="8" class="mx-auto px-4">
           <Suspense>
             <template #default>
-              <VCardTask
+              <CardTask
                 v-if="task"
                 :title="task.title"
                 :id="task.id"
@@ -155,7 +155,7 @@ onMounted(() => {
         <span class="text-h6">Edit task {{ taskStore.editedTask.title }}</span>
       </v-card-title>
       <v-card-text>
-        <VTaskForm
+        <TaskForm
           v-model="taskStore.editedTask"
           :projects="projectStore.projects"
           :labels="dataStore.labels"
@@ -164,14 +164,14 @@ onMounted(() => {
           :rules="rules"
           ref="form"
           @submit="submitEditedTask"
-        ></VTaskForm>
+        ></TaskForm>
       </v-card-text>
       <v-card-actions
         :class="
           smAndDown ? 'd-flex flex-column align-center' : 'd-flex flex-wrap justify-space-around'
         "
       >
-        <VActionButtons :buttons="btnsForm" />
+        <ActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>
   </v-dialog>

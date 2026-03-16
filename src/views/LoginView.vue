@@ -1,6 +1,6 @@
 <script setup>
 // import { useDisplay } from 'vuetify'
-import LoginCard from '@/components/auth/VLoginCard.vue'
+import LoginCard from '@/components/auth/LoginCard.vue'
 
 // const { xs } = useDisplay()
 </script>

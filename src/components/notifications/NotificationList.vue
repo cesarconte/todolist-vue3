@@ -1,7 +1,7 @@
 // VNotifications.vue
 <script setup>
 import { useNotificationsStore } from '@/stores/notificationsStore'
-import VBaseSnackbar from './VBaseSnackbar.vue'
+import BaseSnackbar from './BaseSnackbar.vue'
 
 /************************************
  * Stores
@@ -10,12 +10,12 @@ const notificationsStore = useNotificationsStore() // Accesses the notifications
 </script>
 
 <template>
-  <VBaseSnackbar
+  <BaseSnackbar
     v-model="notificationsStore.showSnackbar.show"
     :message="notificationsStore.showSnackbar.message"
     :color="notificationsStore.showSnackbar.color"
     :prepend-icon="notificationsStore.showSnackbar.prependIcon"
     :append-icon="notificationsStore.showSnackbar.appendIcon"
   >
-  </VBaseSnackbar>
+  </BaseSnackbar>
 </template>

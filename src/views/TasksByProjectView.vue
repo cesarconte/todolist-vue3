@@ -10,17 +10,17 @@ import { useSubmitEditedTask } from '@/composables/forms/useSubmitEditedTask'
 import { useFormBtnActions } from '@/composables/forms/useFormBtnActions'
 import { useMaxLengthRule } from '@/composables/forms/validationFormRules.js'
 import { useResetForm } from '@/composables/forms/useResetForm'
-import VActionButtons from '@/components/tasks/VActionButtons.vue'
+import ActionButtons from '@/components/tasks/ActionButtons.vue'
 import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import VCardTask from '@/components/tasks/VCardTask.vue'
-import VPagination from '@/components/tasks/VPagination.vue'
-import VTaskForm from '@/components/tasks/VTaskForm.vue'
-import VProjectForm from '@/components/projects/VProjectForm.vue'
+import CardTask from '@/components/tasks/CardTask.vue'
+import TaskPagination from '@/components/tasks/TaskPagination.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
+import ProjectForm from '@/components/projects/ProjectForm.vue'
 import { showSnackbar } from '@/utils/notifications/notificationHelpers.js' // Import the helper
-import VEmptyState from '@/components/tasks/VEmptyState.vue'
+import EmptyState from '@/components/tasks/EmptyState.vue'
 import { useMotivationalProgress } from '@/composables/ui/useMotivationalProgress.js'
-import VBackButton from '@/components/ui/VBackButton.vue'
+import BackButton from '@/components/ui/BackButton.vue'
 
 const userStore = useUserStore()
 const projectStore = useProjectStore()
@@ -315,7 +315,6 @@ const confirmDeleteAndClose = () => {
   confirmDialog.value = false
   showSnackbar(notificationsStore, 'All tasks deleted from project', 'success', 'mdi-delete-sweep')
 }
-
 </script>
 
 <template>
@@ -344,7 +343,7 @@ const confirmDeleteAndClose = () => {
             <span class="text-h6">Add new task</span>
           </v-card-title>
           <v-card-text :class="mobile ? 'px-0' : ''">
-            <VTaskForm
+            <TaskForm
               v-model="taskStore.newTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
@@ -354,10 +353,10 @@ const confirmDeleteAndClose = () => {
               ref="taskFormRef"
               @submit="submitNewTask"
             >
-            </VTaskForm>
+            </TaskForm>
           </v-card-text>
           <v-card-actions class="justify-center px-4 pb-4">
-            <VActionButtons :buttons="btnsNewTaskForm" />
+            <ActionButtons :buttons="btnsNewTaskForm" />
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -378,7 +377,7 @@ const confirmDeleteAndClose = () => {
             <span class="text-h5">Edit Project {{ projectStore.selectedProjectTitle }} </span>
           </v-card-title>
           <v-card-text>
-            <VProjectForm
+            <ProjectForm
               v-model="projectStore.editedProject"
               :project-templates="dataStore.projectTemplates"
               :icons="dataStore.icons"
@@ -388,7 +387,7 @@ const confirmDeleteAndClose = () => {
             />
           </v-card-text>
           <v-card-actions class="justify-center px-4 pb-4">
-            <VActionButtons :buttons="btnsFormEditProject" />
+            <ActionButtons :buttons="btnsFormEditProject" />
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -409,7 +408,7 @@ const confirmDeleteAndClose = () => {
             <span class="text-h6">Edit task {{ taskStore.editedTask.title }} </span>
           </v-card-title>
           <v-card-text>
-            <VTaskForm
+            <TaskForm
               v-model="taskStore.editedTask"
               :projects="projectStore.projects"
               :labels="dataStore.labels"
@@ -418,10 +417,10 @@ const confirmDeleteAndClose = () => {
               :rules="rules"
               ref="form"
               @submit="submitEditedTask"
-            ></VTaskForm>
+            ></TaskForm>
           </v-card-text>
           <v-card-actions class="justify-end px-4 pb-4">
-            <VActionButtons :buttons="btnsForm" />
+            <ActionButtons :buttons="btnsForm" />
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -471,7 +470,7 @@ const confirmDeleteAndClose = () => {
           >
             {{ projectStore.selectedProjectTitle }} tasks
           </h2>
-          <VBackButton
+          <BackButton
             v-if="!taskStore.state.isLoading && !taskStore.state.initialLoadPending"
             to="/"
             aria-label="Back to Home"
@@ -527,10 +526,7 @@ const confirmDeleteAndClose = () => {
                   variant="text"
                 >
                   <template v-slot:prepend>
-                    <v-icon
-                      class="me-2"
-                      >{{ btn.icon }}</v-icon
-                    >
+                    <v-icon class="me-2">{{ btn.icon }}</v-icon>
                   </template>
                   <v-list-item-title>
                     {{ btn.text }}
@@ -653,10 +649,7 @@ const confirmDeleteAndClose = () => {
                     class="me-2"
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
-                  <span
-                    class="font-weight-medium"
-                    :class="sm ? 'text-body-2' : 'text-body-1'"
-                  >
+                  <span class="font-weight-medium" :class="sm ? 'text-body-2' : 'text-body-1'">
                     Remaining: {{ taskStore.remainingFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -667,10 +660,7 @@ const confirmDeleteAndClose = () => {
                     class="me-2"
                     :size="sm ? 22 : md ? 24 : 26"
                   ></v-icon>
-                  <span
-                    class="font-weight-medium"
-                    :class="sm ? 'text-body-2' : 'text-body-1'"
-                  >
+                  <span class="font-weight-medium" :class="sm ? 'text-body-2' : 'text-body-1'">
                     Completed: {{ taskStore.completedFilteredTasksInProject }}
                   </span>
                 </v-col>
@@ -738,7 +728,7 @@ const confirmDeleteAndClose = () => {
         >
           <Suspense>
             <template #default>
-              <VCardTask
+              <CardTask
                 v-if="task"
                 :key="task.id"
                 :title="task.title"
@@ -760,14 +750,19 @@ const confirmDeleteAndClose = () => {
                 @delete-task="(projectId, taskId) => taskStore.deleteTask(projectId, taskId)"
                 @complete-task="(projectId, taskId) => taskStore.completeTask(projectId, taskId)"
               >
-              </VCardTask>
+              </CardTask>
             </template>
-              <template #fallback>
-                <v-sheet class="fallback d-flex align-center justify-center pa-4" color="transparent">
-                  <v-progress-circular indeterminate color="primary" size="24" class="me-2"></v-progress-circular>
-                  <span class="text-body-2">Loading Task...</span>
-                </v-sheet>
-              </template>
+            <template #fallback>
+              <v-sheet class="fallback d-flex align-center justify-center pa-4" color="transparent">
+                <v-progress-circular
+                  indeterminate
+                  color="primary"
+                  size="24"
+                  class="me-2"
+                ></v-progress-circular>
+                <span class="text-body-2">Loading Task...</span>
+              </v-sheet>
+            </template>
           </Suspense>
         </v-col>
       </v-row>
@@ -780,7 +775,7 @@ const confirmDeleteAndClose = () => {
         "
       >
         <v-col>
-          <VEmptyState
+          <EmptyState
             icon="mdi-clipboard-text-off"
             :icon-size="128"
             title="No tasks in this project"
@@ -792,12 +787,12 @@ const confirmDeleteAndClose = () => {
               rounded
               size="large"
               prepend-icon="mdi-plus"
-              class="mt-6  text-none text-button"
+              class="mt-6 text-none text-button"
               @click="handleAddTaskClick"
             >
               Add Task
             </v-btn>
-          </VEmptyState>
+          </EmptyState>
         </v-col>
       </v-row>
 
@@ -810,7 +805,7 @@ const confirmDeleteAndClose = () => {
         "
         class="pa-3 mt-4 d-flex justify-center"
       >
-        <VPagination
+        <TaskPagination
           :currentPage="taskStore.state.currentPage"
           :totalPages="taskStore.totalPages"
           :hasPrevPage="taskStore.state.currentPage > 1"
@@ -825,9 +820,8 @@ const confirmDeleteAndClose = () => {
               Page {{ taskStore.state.currentPage }} of {{ taskStore.totalPages }}
             </span>
           </template>
-        </VPagination>
+        </TaskPagination>
       </v-row>
-
     </v-responsive>
   </v-container>
 </template>

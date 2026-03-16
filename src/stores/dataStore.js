@@ -1,6 +1,6 @@
 //dataStore.js
 import { defineStore } from 'pinia'
-import { db } from '../firebase.js'
+import { db } from '@/config/firebase.js'
 import { ref, computed, watch, reactive } from 'vue'
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { useUserStore } from './userStore.js'

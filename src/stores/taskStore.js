@@ -3,7 +3,7 @@
 // 1. Imports
 import { defineStore } from 'pinia'
 import { computed, reactive, watch, ref } from 'vue'
-import { db } from '../firebase.js'
+import { db } from '@/config/firebase.js'
 import {
   doc,
   collection,
@@ -284,7 +284,7 @@ export const useTaskStore = defineStore('tasks', () => {
       // Obtener todas las tareas filtradas (no paginadas)
       const countQuery = buildQuery('first', true)
       const countSnapshot = await getCollection(countQuery)
-      
+
       // Asegurar unicidad por ID al mapear para evitar duplicados en el estado
       const taskMap = new Map()
       countSnapshot.forEach((doc) => {
@@ -293,7 +293,7 @@ export const useTaskStore = defineStore('tasks', () => {
           taskMap.set(mappedTask.id, mappedTask)
         }
       })
-      
+
       state.tasks = Array.from(taskMap.values())
       state.totalTasks = state.tasks.length
 

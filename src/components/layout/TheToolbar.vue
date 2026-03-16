@@ -16,12 +16,12 @@ import { useDialogCleanup } from '@/composables/ui/useDialogCleanup'
 import { useAddNewProject } from '@/composables/projects/useAddNewProject'
 import { useToolbarNav } from '@/composables/layout/useToolbarNav'
 import useThemeToggle from '@/composables/ui/useThemeToggle' // Importar el composable para alternar el tema
-import VActionButtons from '@/components/tasks/VActionButtons.vue'
-import VNotificationSettings from '@/components/notifications/VNotificationSettings.vue'
-import VNotificationsList from '@/components/notifications/VNotificationsList.vue'
-import VTaskForm from '@/components/tasks/VTaskForm.vue'
-import VProjectForm from '@/components/projects/VProjectForm.vue'
-import VBaseSnackbar from '@/components/notifications/VBaseSnackbar.vue'
+import ActionButtons from '@/components/tasks/ActionButtons.vue'
+import NotificationSettings from '@/components/notifications/NotificationSettings.vue'
+import NotificationList from '@/components/notifications/NotificationList.vue'
+import TaskForm from '@/components/tasks/TaskForm.vue'
+import ProjectForm from '@/components/projects/ProjectForm.vue'
+import BaseSnackbar from '@/components/notifications/BaseSnackbar.vue'
 
 /************************************
  * Stores
@@ -426,9 +426,8 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </v-sheet>
 
     <v-spacer></v-spacer>
-    
+
     <template v-if="mdAndUp">
-      
       <!-- 1. Notificaciones (primero para mayor accesibilidad) -->
       <v-tooltip location="bottom">
         <template v-slot:activator="{ props }">
@@ -459,7 +458,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         </template>
         <span>{{ notificationTooltipText }}</span>
       </v-tooltip>
-      
+
       <!-- 2. Botón para alternar entre modo claro y oscuro -->
       <v-btn
         icon
@@ -473,7 +472,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           {{ isDarkMode ? 'Switch to light mode' : 'Switch to dark mode' }}
         </v-tooltip>
       </v-btn>
-      
+
       <!-- 3. Configuración/Settings -->
       <v-menu v-model="menus.settings" class="mr-2">
         <template v-slot:activator="{ props }">
@@ -523,11 +522,11 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           {{ loginLogoutText }}
         </v-tooltip>
       </v-btn>
-      
+
       <!-- 5. Avatar de usuario (último elemento a la derecha) -->
       <template v-if="userStore.isLoggedIn">
-        <v-avatar 
-          class="mr-2" 
+        <v-avatar
+          class="mr-2"
           variant="elevated"
           :size="xs ? 24 : sm ? 28 : md ? 32 : lg ? 32 : xl ? 32 : 32"
           color="white"
@@ -538,14 +537,19 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
             alt="Profile Picture"
             cover
           />
-          <v-icon v-else color="grey-darken-1" :size="xs ? 16 : sm ? 18 : md ? 20 : lg ? 24 : xl ? 28 : 20">mdi-account-circle</v-icon>
+          <v-icon
+            v-else
+            color="grey-darken-1"
+            :size="xs ? 16 : sm ? 18 : md ? 20 : lg ? 24 : xl ? 28 : 20"
+            >mdi-account-circle</v-icon
+          >
           <v-tooltip activator="parent" location="bottom" class="login-btn tooltip">
-          {{ userStore.userName }}
-        </v-tooltip>
+            {{ userStore.userName }}
+          </v-tooltip>
         </v-avatar>
       </template>
     </template>
-    
+
     <template v-else>
       <v-btn
         icon="mdi-dots-vertical"
@@ -557,9 +561,9 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </template>
   </v-app-bar>
 
-  <VNotificationSettings v-model="dialogNotificationsSettings" />
+  <NotificationSettings v-model="dialogNotificationsSettings" />
 
-  <VNotificationsList v-model="dialogNotificationsList" />
+  <NotificationList v-model="dialogNotificationsList" />
 
   <v-navigation-drawer
     v-model="menus.drawer"
@@ -693,7 +697,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         <span class="text-h6">Add new task</span>
       </v-card-title>
       <v-card-text :class="mobile ? 'px-0' : ''">
-        <VTaskForm
+        <TaskForm
           v-model="taskStore.newTask"
           :projects="projectStore.projects"
           :labels="dataStore.labels"
@@ -704,10 +708,10 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
           @submit="submitNewTask"
           @invalid-project="handleInvalidProject"
         >
-        </VTaskForm>
+        </TaskForm>
       </v-card-text>
       <v-card-actions class="justify-end px-4 pb-4">
-        <VActionButtons :buttons="btnsForm" />
+        <ActionButtons :buttons="btnsForm" />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -722,18 +726,18 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
         <span class="text-h6">Add new project</span>
       </v-card-title>
       <v-card-text>
-        <VProjectForm
+        <ProjectForm
           v-model="projectStore.newProject"
           :projectTemplates="dataStore.projectTemplates"
           :icons="dataStore.icons"
           :colors="dataStore.colors"
           ref="forms.addProject"
           @submit="addNewProject"
-        ></VProjectForm>
+        ></ProjectForm>
       </v-card-text>
 
       <v-card-actions class="justify-end px-4 pb-4">
-        <VActionButtons :buttons="btnsFormAddProject" />
+        <ActionButtons :buttons="btnsFormAddProject" />
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -791,7 +795,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
     </v-list>
   </v-navigation-drawer>
 
-  <VBaseSnackbar
+  <BaseSnackbar
     v-model="snackbarGroup.show"
     :message="snackbarGroup.message"
     :color="snackbarGroup.color"
@@ -800,7 +804,7 @@ const getTooltipTextForSnackbarIcon = (iconName) => {
       snackbarGroup.icon ? getTooltipTextForSnackbarIcon(snackbarGroup.icon) : ''
     "
   >
-  </VBaseSnackbar>
+  </BaseSnackbar>
 </template>
 
 <style scoped></style>
