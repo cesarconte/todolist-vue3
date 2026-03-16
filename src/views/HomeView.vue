@@ -30,7 +30,7 @@ const router = useRouter()
 
 // Composables
 const { labelIcons } = useLabelIcons()
-const { xs, name } = useDisplay()
+const { xs, sm, name } = useDisplay()
 const { sortedTasks: filteredTasks } = useFilteredTasks(computed(() => taskStore.tasksData))
 
 // --- State Management ---
@@ -51,9 +51,9 @@ const responsiveContainerWidth = computed(() => {
     case 'sm':
       return 600
     case 'md':
-      return 840
+      return 960
     case 'lg':
-      return 1140
+      return 1280
     default:
       return 1440
   }
@@ -61,7 +61,7 @@ const responsiveContainerWidth = computed(() => {
 
 const pageTitleClass = computed(() => {
   if (xs.value) return 'text-h5 my-4 mb-2'
-  if (xs.value) return 'text-h4 my-6'
+  if (sm.value) return 'text-h4 my-6'
   return 'text-h3 my-8'
 })
 

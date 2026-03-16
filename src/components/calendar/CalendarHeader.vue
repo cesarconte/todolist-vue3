@@ -10,17 +10,12 @@ const props = defineProps({
   currentView: {
     type: String,
     required: true
-  },
-  weekdayMode: {
-    type: String,
-    required: true
   }
 })
 
 const emit = defineEmits([
   'update:currentDate',
   'update:currentView',
-  'update:weekdayMode',
   'go-to-today',
   'prev-year',
   'prev-month',
@@ -28,18 +23,12 @@ const emit = defineEmits([
   'next-year'
 ])
 
-const { xs } = useDisplay()
+const { xs, sm } = useDisplay()
 
 const CALENDAR_VIEW_TYPES = [
   { text: 'Month View', value: 'month' },
   { text: 'Week View', value: 'week' },
   { text: 'Day View', value: 'day' }
-]
-
-const WEEKDAY_MODES = [
-  { title: 'Sun - Sat', value: [0, 1, 2, 3, 4, 5, 6] },
-  { title: 'Mon - Sun', value: [1, 2, 3, 4, 5, 6, 0] },
-  { title: 'Mon - Fri', value: [1, 2, 3, 4, 5] }
 ]
 
 const formattedTitle = computed(() => {
@@ -50,15 +39,14 @@ const formattedTitle = computed(() => {
 })
 
 const updateView = (value) => emit('update:currentView', value)
-const updateWeekday = (value) => emit('update:weekdayMode', value)
 </script>
 
 <template>
   <v-row class="ma-0 mb-4">
-    <v-col cols="12" :class="xs ? 'pa-1' : 'pa-4'">
+    <v-col cols="12" :class="xs || sm ? 'pa-1' : 'pa-4'">
       <v-sheet border rounded="xl" class="bg-surface overflow-hidden px-4 py-4">
-        <!-- Desktop (sm+): Single row -->
-        <v-row no-gutters align="center" class="d-none d-sm-flex">
+        <!-- Desktop (md+): Single row -->
+        <v-row no-gutters align="center" :class="xs || sm ? 'd-none' : 'd-flex'">
           <!-- Left: Navigation Buttons -->
           <v-col class="d-flex align-center">
             <v-sheet border rounded="pill" class="d-flex align-center bg-surface overflow-hidden">
@@ -126,8 +114,8 @@ const updateWeekday = (value) => emit('update:weekdayMode', value)
             </v-sheet>
           </v-col>
 
-          <!-- Right: Selectors -->
-          <v-col class="d-flex justify-end align-center ga-4">
+          <!-- Right: View Selector -->
+          <v-col class="d-flex justify-end align-center">
             <v-select
               :model-value="currentView"
               :items="CALENDAR_VIEW_TYPES"
@@ -143,28 +131,13 @@ const updateWeekday = (value) => emit('update:weekdayMode', value)
               style="min-width: 160px"
               @update:model-value="updateView"
             />
-            <v-select
-              :model-value="weekdayMode"
-              :items="WEEKDAY_MODES"
-              item-title="title"
-              item-value="title"
-              label="WEEKDAYS"
-              hide-details
-              density="compact"
-              variant="outlined"
-              rounded="lg"
-              bg-color="surface"
-              class="font-weight-bold"
-              style="min-width: 160px"
-              @update:model-value="updateWeekday"
-            />
           </v-col>
         </v-row>
 
-        <!-- Mobile (xs): Three rows -->
-        <v-row class="d-flex d-sm-none ma-0" no-gutters>
+        <!-- Mobile (xs, sm): Three rows -->
+        <v-row :class="xs || sm ? 'd-flex' : 'd-none'" class="ma-0" no-gutters>
           <!-- Row 1: Navigation + Title -->
-          <v-col cols="12" class="d-flex align-center justify-space-between mb-3">
+          <v-col cols="12" class="d-flex align-center justify-space-between mb-4">
             <v-btn variant="text" icon size="small" @click="emit('prev-year')">
               <v-icon>mdi-chevron-double-left</v-icon>
             </v-btn>
@@ -181,9 +154,9 @@ const updateWeekday = (value) => emit('update:weekdayMode', value)
               <v-icon>mdi-chevron-double-right</v-icon>
             </v-btn>
           </v-col>
-          <v-divider class="mb-3" />
+          <v-divider class="mb-4" />
           <!-- Row 2: Today Button -->
-          <v-col cols="12" class="mb-3">
+          <v-col cols="12" class="mb-4">
             <v-btn
               block
               rounded="lg"
@@ -195,8 +168,8 @@ const updateWeekday = (value) => emit('update:weekdayMode', value)
               Today
             </v-btn>
           </v-col>
-          <!-- Row 3: Selects -->
-          <v-col cols="6" class="pe-2">
+          <!-- Row 3: View Selector -->
+          <v-col cols="12">
             <v-select
               :model-value="currentView"
               :items="CALENDAR_VIEW_TYPES"
@@ -210,22 +183,6 @@ const updateWeekday = (value) => emit('update:weekdayMode', value)
               bg-color="surface"
               class="font-weight-bold"
               @update:model-value="updateView"
-            />
-          </v-col>
-          <v-col cols="6" class="ps-2">
-            <v-select
-              :model-value="weekdayMode"
-              :items="WEEKDAY_MODES"
-              item-title="title"
-              item-value="title"
-              label="WEEKDAYS"
-              hide-details
-              density="compact"
-              variant="outlined"
-              rounded="lg"
-              bg-color="surface"
-              class="font-weight-bold"
-              @update:model-value="updateWeekday"
             />
           </v-col>
         </v-row>

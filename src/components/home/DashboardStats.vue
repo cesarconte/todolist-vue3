@@ -154,15 +154,20 @@ const activeMotivationalInfo = computed(() =>
               </v-list>
             </v-expand-transition>
             <v-card-actions class="pa-0 pt-auto">
-              <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
+              <v-sheet
+                color="transparent"
+                class="d-flex flex-column flex-lg-row align-start align-lg-center justify-space-between w-100"
+              >
                 <v-sheet
                   color="transparent"
-                  class="d-flex align-center text-caption font-weight-medium text-warning"
+                  class="d-flex align-center text-caption font-weight-medium text-warning mb-1 mb-lg-0"
                 >
                   <v-icon size="small" class="me-2">mdi-calendar-clock</v-icon>
-                  {{ upcomingDeadlinesCount }} tasks with upcoming deadline
+                  {{ upcomingDeadlinesCount }} task{{ upcomingDeadlinesCount !== 1 ? 's' : '' }}
+                  with upcoming deadline
                 </v-sheet>
                 <v-btn
+                  v-if="upcomingDeadlinesCount > 0"
                   variant="text"
                   size="small"
                   class="text-none font-weight-bold"
@@ -277,15 +282,21 @@ const activeMotivationalInfo = computed(() =>
               </v-list>
             </v-expand-transition>
             <v-card-actions class="pa-0 pt-auto">
-              <v-sheet color="transparent" class="d-flex align-center justify-space-between w-100">
+              <v-sheet
+                color="transparent"
+                class="d-flex flex-column flex-lg-row align-start align-lg-center justify-space-between w-100"
+              >
                 <v-sheet
                   color="transparent"
-                  class="d-flex align-center text-caption font-weight-medium text-error"
+                  class="d-flex align-center text-caption font-weight-medium text-error mb-1 mb-lg-0"
                 >
-                  <v-icon size="small" class="me-2">mdi-alert-outline</v-icon>
-                  {{ overdueTasksCount }} tasks past deadline
+                  <v-icon :color="overdueIconColor" size="small" class="me-2"
+                    >mdi-alert-outline</v-icon
+                  >
+                  {{ overdueTasksCount }} task{{ overdueTasksCount !== 1 ? 's' : '' }} past deadline
                 </v-sheet>
                 <v-btn
+                  v-if="overdueTasksCount > 0"
                   variant="text"
                   size="small"
                   class="text-none font-weight-bold"
