@@ -184,6 +184,16 @@ const ERROR_CONFIGURATIONS = Object.freeze({
     message: 'Session expired - please login again 🔄',
     icon: 'mdi-account-sync',
     level: 'error'
+  },
+  'auth/unauthorized-domain': {
+    message: 'Domain not authorized - check Google Cloud Console 🔐',
+    icon: 'mdi-shield-lock',
+    level: 'error'
+  },
+  default: {
+    message: 'Authentication error - try again 🔄',
+    icon: 'mdi-alert',
+    level: 'error'
   }
 })
 
